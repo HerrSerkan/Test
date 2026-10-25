@@ -4,6 +4,10 @@
 
 const W = 1080, H = 1920;
 const GY = 1400;                 // Boden (Welt-Koordinaten)
+const SCY = 680;                 // Bildschirm-Höhe der Kameramitte (Szene oben, Text darunter)
+const TEXT_TOP = 1095;           // Text unter der Szene – frei von TikTok-Tabs oben und Beschriftung unten
+const TEXT_CX = 500;             // leicht links, damit die Buttons rechts nichts verdecken
+const TEXT_W = 840;
 const TX = 200, MX0 = 285;       // Denker / Macher (Startposition)
 const PEAK = [662, 708];
 const cv = document.getElementById("c");
@@ -724,8 +728,8 @@ function layoutCard(card) {
         items.push({ tok, size, x: width, w });
         width += w;
       });
-      if (width <= 970) break;
-      scale *= 970 / width;
+      if (width <= TEXT_W) break;
+      scale *= TEXT_W / width;
     }
     const big = items.reduce((a, b) => (b.size > a.size ? b : a));
     const st = big.tok.style;
@@ -742,9 +746,9 @@ function drawCard(card, t, si) {
   const L = layoutCard(card);
   const out = ramp(t, card.end - 0.22, card.end);
   if (out >= 1) return;
-  const top = 205 - Math.max(0, L.height - 200) * 0.3;
+  const top = TEXT_TOP;
   for (const line of L.lines) {
-    const x0 = (W - line.width) / 2;
+    const x0 = TEXT_CX - line.width / 2;
     for (const it of line.items) {
       const tok = it.tok;
       const p = ramp(t, tok.s - 0.04, tok.s + 0.26);
@@ -780,7 +784,7 @@ function drawCard(card, t, si) {
     ctx.fillStyle = `rgba(255,255,255,${0.8 * (1 - out) * ramp(t, card.start, card.start + 0.3)})`;
     const s = `TAG ${day}`;
     const w = ctx.measureText(s).width;
-    ctx.fillText(s, (W - w) / 2, top + L.height + 46);
+    ctx.fillText(s, TEXT_CX - w / 2, top + L.height + 46);
     ctx.letterSpacing = "0px";
   }
 }
@@ -798,9 +802,16 @@ window.renderFrame = function (t) {
   const cam = camera(t);
   Z = cam.z;
   const st = state(t);
-  ctx.setTransform(Z, 0, 0, Z, W / 2 - cam.x * Z, H / 2 - cam.y * Z);
+  ctx.setTransform(Z, 0, 0, Z, W / 2 - cam.x * Z, SCY - cam.y * Z);
   drawWorld(t, st);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  // dunkler Verlauf hinter dem Text (Lesbarkeit über dem Berg)
+  const band = ctx.createLinearGradient(0, TEXT_TOP - 120, 0, TEXT_TOP + 120);
+  band.addColorStop(0, "rgba(0,0,0,0)");
+  band.addColorStop(1, "rgba(0,0,0,0.6)");
+  ctx.fillStyle = band;
+  ctx.fillRect(0, TEXT_TOP - 120, W, H - TEXT_TOP + 120);
 
   // Vignette
   const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.78);
