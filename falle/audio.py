@@ -229,6 +229,9 @@ envv = lowpass(np.abs(voice), 4)
 envv = envv / (envv.max() + 1e-6)
 duck = (1 - 0.45 * np.clip(envv * 4, 0, 1)).astype(np.float32)
 
+import sys
+if "--no-music" in sys.argv:          # nur Stimme + Effekte
+    music[:] = 0
 mix = music * duck[:, None] + sfx * 0.9 + voice[:, None] * 0.95
 # Einfacher Hall für Musik/Effekte (Echos)
 for d, g in ((0.083, 0.25), (0.137, 0.18), (0.211, 0.12)):
