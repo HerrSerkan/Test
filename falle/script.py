@@ -218,5 +218,67 @@ def main(force=False):
     print("Gesamtdauer:", total)
 
 
+def transcribe_words(path):
+    """Wortzeiten einer fertigen Aufnahme per Spracherkennung (faster-whisper)."""
+    import numpy as np
+    from faster_whisper import WhisperModel
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
+                         capture_output=True, check=True).stdout
+    audio = np.frombuffer(raw, np.int16).astype(np.float32) / 32768
+    prompt = " ".join(spoken_text(c) for _, c in SENTENCES)
+    model = WhisperModel("small", device="cpu", compute_type="int8")
+    segs, _ = model.transcribe(audio, language="de", word_timestamps=True, initial_prompt=prompt[:800])
+    return [dict(w=w.word.strip(), s=w.start, e=w.end) for sg in segs for w in sg.words]
+
+
+def main_external(voice_file, lead=0.25):
+    """Timeline aus EINER fertigen Aufnahme (z.B. ElevenLabs) bauen."""
+    cache = os.path.join(BUILD, "external_words.json")
+    if os.path.exists(cache) and json.load(open(cache)).get("file") == os.path.abspath(voice_file):
+        words = json.load(open(cache))["words"]
+    else:
+        words = transcribe_words(voice_file)
+        json.dump(dict(file=os.path.abspath(voice_file), words=words), open(cache, "w"), ensure_ascii=False)
+    print(" ".join(w["w"] for w in words))
+    timeline = dict(sentences=[], cards=[])
+    tokens_all, per_sentence = [], []
+    for si, (_, cards) in enumerate(SENTENCES):
+        cl = [parse_card(c) for c in cards]
+        per_sentence.append(cl)
+        for lines in cl:
+            for line in lines:
+                tokens_all.extend(line)
+    times = align(tokens_all, words)
+    k = 0
+    for si, cl in enumerate(per_sentence):
+        s_start = None
+        for lines in cl:
+            for line in lines:
+                for tok in line:
+                    tok["s"] = round(lead + times[k][0], 3)
+                    tok["e"] = round(lead + times[k][1], 3)
+                    s_start = tok["s"] if s_start is None else s_start
+                    s_end = tok["e"]
+                    k += 1
+            timeline["cards"].append(dict(sentence=si, lines=lines, start=lines[0][0]["s"]))
+        text = spoken_text(SENTENCES[si][1])
+        timeline["sentences"].append(dict(start=s_start, end=s_end, text=text))
+        print(f"{si:2d} {s_start:6.2f}-{s_end:6.2f}  {text}")
+    last = timeline["sentences"][-1]["end"]
+    for i, c in enumerate(timeline["cards"]):
+        nxt = timeline["cards"][i + 1]["start"] if i + 1 < len(timeline["cards"]) else last + 1.6
+        c["end"] = round(nxt, 3)
+    total = round(max(last + 3.2, lead + duration(voice_file) + 0.5), 2)
+    timeline["duration"] = total
+    json.dump(timeline, open(os.path.join(BUILD, "timeline.json"), "w"), ensure_ascii=False, indent=1)
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", voice_file, "-af",
+                    f"adelay={int(lead * 1000)}:all=1,apad,atrim=0:{total}", "-ac", "1", "-ar", "44100",
+                    os.path.join(BUILD, "voice.wav")], check=True)
+    print("Gesamtdauer:", total)
+
+
 if __name__ == "__main__":
-    main(force="--force" in sys.argv)
+    if "--voice" in sys.argv:
+        main_external(sys.argv[sys.argv.index("--voice") + 1])
+    else:
+        main(force="--force" in sys.argv)
