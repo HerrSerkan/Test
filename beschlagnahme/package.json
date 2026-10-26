@@ -1,0 +1,6 @@
+{
+  "name": "beschlagnahme",
+  "private": true,
+  "description": "Deutsche Version: Wie die Polizei dein Geld nehmen kann – erklärt mit Klötzchen",
+  "dependencies": { "three": "0.170.0" }
+}
