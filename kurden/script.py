@@ -85,10 +85,8 @@ def parse_card(card):
 
 
 def norm(w):
-    w = w.lower()
-    if w in NUM_WORDS:
-        return NUM_WORDS[w]
-    return re.sub(r"[^a-z0-9äöüß]", "", w)
+    w = re.sub(r"[^a-z0-9äöüß]", "", w.lower())
+    return NUM_WORDS.get(w, w)
 
 
 def spoken_sentence(cards):
