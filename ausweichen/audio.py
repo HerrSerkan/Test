@@ -18,7 +18,6 @@ DUR = EV["duration"]
 N = int(DUR * SR)
 rng = np.random.default_rng(12)
 out = np.zeros((N, 2), np.float32)
-BOOST_DB = 5.0
 
 
 def band(x, lo, hi):
@@ -183,10 +182,24 @@ for k, tw in enumerate((fl + 0.47, fl + 0.77, fl + 1.07)):
     place(tw, boom(0.6), 0.3)
     place(tw, glide(300 - k * 30, 280 - k * 30, 0.4, 7, (1, 0.5, 0.25)), 0.12)
 
-# ---------------------------------------------------------------- Ausgabe
+# Plattenkratzer: Musik bricht beim rosa Blitz ab
+n = int(0.32 * SR)
+x = np.arange(n) / SR
+scr = band(rng.normal(0, 1, n), 600, 6000) * np.abs(np.sin(2 * np.pi * np.cumsum(np.linspace(24, 6, n)) / SR)) * np.sin(np.pi * x / 0.32)
+place(fl - 0.3, scr.astype(np.float32), 0.35)
+place(fl - 0.3, glide(900, 120, 0.3, 4, (1, 0.5)), 0.12)
+
+t_ = np.arange(N) / SR
+END_ENV = np.clip((DUR - t_) / 0.4, 0, 1).astype(np.float32)
+MUSIC_ENV = (np.minimum(1, t_ / 0.1) * np.clip((fl - 0.02 - t_) / 0.04, 0, 1)).astype(np.float32)
+MUSIC_LUFS = -17.5
+
+# ---------------------------------------------------------------- Ausgabe: Effekte + Hintergrundmusik
+import re
+import subprocess
+from scipy.ndimage import maximum_filter1d, minimum_filter1d
+
 t = np.arange(N) / SR
-out *= np.clip((DUR - t) / 0.4, 0, 1)[:, None]
-out /= np.abs(out).max() + 1e-6
 TMP = os.path.join(B, "audio_tmp.wav")
 
 
@@ -199,8 +212,6 @@ def write(path, x):
 
 
 def lufs(x):
-    import re
-    import subprocess
     write(TMP, x)
     r = subprocess.run(["ffmpeg", "-hide_banner", "-i", TMP, "-af", "ebur128", "-f", "null", "-"], capture_output=True, text=True).stderr
     return float(re.findall(r"I:\s+(-?[\d.]+) LUFS", r)[-1])
@@ -213,16 +224,31 @@ def limit(x, ceil=0.8):
     return x * np.minimum(g, np.minimum(1, ceil / (pk + 1e-9)))[:, None]
 
 
-# Lautheit exakt auf -14 LUFS (EBU R128), Spitzen per Limiter unter -2 dBFS
-boost = BOOST_DB
-for _ in range(4):
-    res = limit(out * 10 ** (boost / 20))
-    boost += -14.0 - lufs(res)
-out = limit(out * 10 ** (boost / 20))
+def to_lufs(x, target, lim=True):
+    gdb = 0.0
+    for _ in range(4):
+        y = x * 10 ** (gdb / 20)
+        gdb += target - lufs(limit(y) if lim else y)
+    y = x * 10 ** (gdb / 20)
+    return limit(y) if lim else y
+
+
+# Effekte allein auf -16 LUFS
+sfx = out / (np.abs(out).max() + 1e-6)
+sfx = to_lufs(sfx, -16.0)
+# Hintergrundmusik (ElevenLabs Music, build/music.mp3) etwas leiser darunter
+MUSIC = os.path.join(B, "music.mp3")
+music = np.zeros((N, 2), np.float32)
+if os.path.exists(MUSIC):
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", MUSIC, "-ac", "2", "-ar", str(SR), "-f", "f32le", "-"],
+                         capture_output=True, check=True).stdout
+    m = np.frombuffer(raw, np.float32).reshape(-1, 2)[:N]
+    music[: len(m)] = m
+    music *= MUSIC_ENV[:, None]
+    music = to_lufs(music, MUSIC_LUFS, lim=False)
+mix = sfx + music
+mix *= END_ENV[:, None]
+mix = to_lufs(mix, -14.0)                  # gesamt exakt -14 LUFS (EBU R128), Spitzen unter -2 dBFS
 os.remove(TMP)
-with wave.open(os.path.join(B, "audio.wav"), "wb") as w:
-    w.setnchannels(2)
-    w.setsampwidth(2)
-    w.setframerate(SR)
-    w.writeframes((np.clip(out, -1, 1) * 32767).astype(np.int16).tobytes())
+write(os.path.join(B, "audio.wav"), mix)
 print("audio.wav geschrieben:", DUR, "s")

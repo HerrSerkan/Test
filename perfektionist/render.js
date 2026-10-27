@@ -50,17 +50,12 @@ const grab = (page, t, type) =>
   const duration = await page0.evaluate(() => window.DURATION);
   await page0.close();
   const n = Math.round(duration * FPS);
-  // Lautheit in zwei Durchgängen exakt auf -14 LUFS
-  const wav = path.join(HERE, "build", "audio.wav");
-  const meas = require("child_process").spawnSync("ffmpeg", ["-hide_banner", "-i", wav, "-af",
-    "loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"], { encoding: "utf8" }).stderr;
-  const m = JSON.parse(meas.slice(meas.lastIndexOf("{")));
-  const ln = `loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`;
+  // Lautheit ist bereits in audio.py auf -14 LUFS gebracht (EBU R128)
   const out = path.join(HERE, NAME + ".mp4");
   const ff = spawn("ffmpeg", ["-y", "-v", "error", "-f", "image2pipe", "-framerate", String(FPS), "-c:v", "mjpeg", "-i", "-",
     "-i", path.join(HERE, "build", "audio.wav"),
     "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "8M", "-bufsize", "16M", "-pix_fmt", "yuv420p",
-    "-af", ln, "-ar", "44100", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out],
+    "-ar", "44100", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out],
     { stdio: ["pipe", "inherit", "inherit"] });
 
   const pages = await Promise.all(Array.from({ length: WORKERS }, () => openPage(browser)));
