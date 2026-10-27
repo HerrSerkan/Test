@@ -29,7 +29,8 @@ Text:
 Ton:
 - ElevenLabs, Stimme „Thomas – Confidential & calm“ (voice_id CU0jw02q6zyti7Fzfgx5), Modell eleven_v4, ganzer Text am Stück.
 - Mit voice_prep.py Pausen auf 0,6 s kürzen, Tempo leicht anheben (meist 1,10–1,12), etwas mehr Bass und Kompression. Wortzeiten per Whisper (script.py).
-- Keine Musik. Nur Stimme + dezente Effekte (Whoosh beim Szenenwechsel, Klicks, Plopps, Münzklimpern, Glöckchen). Lautheit -14 LUFS (EBU-R128-Messung in audio.py).
+- WICHTIG: passende Hintergrundmusik, damit das Video nicht still und langweilig wirkt. Instrumental (ohne Gesang), erzeugt mit ElevenLabs Music (eleven_music), z. B. ruhige, moderne Ambient-/Piano-Musik mit leichtem Puls, die zum Thema passt und zum Schluss aufbaut. Musik deutlich leiser als die Stimme und automatisch abgesenkt, während gesprochen wird.
+- Dazu dezente Effekte (Whoosh beim Szenenwechsel, Klicks, Plopps, Münzklimpern, Glöckchen). Lautheit gesamt -14 LUFS (EBU-R128-Messung in audio.py).
 
 Format: 1080×1920, 30 fps, MP4, unter 60 MB.
 
@@ -62,7 +63,9 @@ Optik:
 - Titel „WENN …“ in fetten weißen Großbuchstaben UNTER der Szene. Sprechblasen dunkel mit weißer Schrift, Gedanken kursiv.
 - Alles vertikal mittig, gleich viel Rand oben und unten, Hintergrund ohne Kante. Nichts oben bei den TikTok-Tabs, nichts rechts bei den Buttons, nichts unten bei der Beschreibung.
 
-Ton: kein Sprecher, keine Musik. Nur Effekte: Schritte, Wisch-Geräusche, Turnschuh-Quietschen, Plopp + kleines Geplapper bei Sprechblasen, Pieptöne beim Balken, „Bonk“ beim Zusammenstoß, dramatischer Schlag beim rosa Blitz. Lautheit -14 LUFS (EBU-R128-Messung in audio.py).
+Ton: kein Sprecher.
+- WICHTIG: passende Hintergrundmusik, damit es nicht still wirkt. Instrumental (ohne Gesang), erzeugt mit ElevenLabs Music (eleven_music): verspielte, schräge Comedy-Musik (Pizzicato-Streicher, Fagott/Klarinette, Glockenspiel, leichtes Schlagzeug), die zum Höhepunkt hin an Spannung zunimmt. Beim rosa Blitz bricht die Musik mit einem Plattenkratzer abrupt ab.
+- Dazu Effekte: Schritte, Wisch-Geräusche, Turnschuh-Quietschen, Plopp + kleines Geplapper bei Sprechblasen, Pieptöne beim Balken, „Bonk“ beim Zusammenstoß, dramatischer Schlag beim rosa Blitz. Effekte gut hörbar über der Musik. Lautheit gesamt -14 LUFS (EBU-R128-Messung in audio.py).
 
 Format: 1080×1920, 30 fps, MP4, unter 60 MB.
 
@@ -93,7 +96,9 @@ Optik:
 - Nur die zwei Labels als Text, kein Sprecher.
 - Alles vertikal mittig, gleich viel Rand oben und unten, Hintergrund ohne Kante. Nichts oben bei den TikTok-Tabs, nichts rechts bei den Buttons, nichts unten bei der Beschreibung.
 
-Ton: keine Musik, kein Sprecher. Nur Effekte: Klacken beim Bauen, kleine Klicks beim Zögern/Prüfen, Rascheln bei Bewegungen, Glöckchen beim grünen Aufleuchten, Whoosh beim Sprung, dumpfe Landung außerhalb des Bildes. Lautheit -14 LUFS (EBU-R128-Messung in audio.py).
+Ton: kein Sprecher.
+- WICHTIG: passende Hintergrundmusik, damit es nicht still wirkt. Instrumental (ohne Gesang), erzeugt mit ElevenLabs Music (eleven_music): minimalistische, cineastische Musik (Piano, pulsierender Synth-Bass, leise Percussion, später warme Streicher), erst nachdenklich, dann aufbauend bis zu einem hoffnungsvollen Höhepunkt, wenn Typ B weiterzieht.
+- Dazu Effekte: Klacken beim Bauen, kleine Klicks beim Zögern/Prüfen, Rascheln bei Bewegungen, Glöckchen beim grünen Aufleuchten, Whoosh beim Sprung, dumpfe Landung außerhalb des Bildes. Effekte gut hörbar über der Musik. Lautheit gesamt -14 LUFS (EBU-R128-Messung in audio.py).
 
 Format: 1080×1920, 30 fps, MP4, unter 60 MB.
 
