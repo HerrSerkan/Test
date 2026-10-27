@@ -388,9 +388,9 @@ function renderScene(t) {
   label(LABEL_M, la);
 }
 
-window.renderFrame = function (t) {
+function drawFrame(t) {
   renderScene(t);
-  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#000"; ctx.fillRect(0, -OFF, W, H + 2 * OFF);
   // weiches Licht auf dem Boden
   const sp = ctx.createRadialGradient(W / 2, GY, 20, W / 2, GY, 620);
   sp.addColorStop(0, "rgba(70,70,70,0.55)"); sp.addColorStop(1, "rgba(0,0,0,0)");
@@ -412,7 +412,17 @@ window.renderFrame = function (t) {
   ctx.fillStyle = ln; ctx.fillRect(0, GY, W, 2);
   // Ausblenden am Ende
   const fo = ramp(t, FADE[0], FADE[1]);
-  if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo})`; ctx.fillRect(0, 0, W, H); }
+  if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo})`; ctx.fillRect(0, -OFF, W, H + 2 * OFF); }
+};
+
+// Inhalt (Szene + Text) vertikal mittig: gleich viel Rand oben und unten
+const OFF = 108;
+window.renderFrame = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.translate(0, OFF);
+  drawFrame(t);
+  ctx.restore();
 };
 
 window.exportEvents = function () {

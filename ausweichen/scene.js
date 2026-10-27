@@ -275,7 +275,7 @@ function drawHUD(t) {
   const shake = v > 100 ? (Math.sin(t * 90) * 4) : 0;
   // Batterie
   ctx.save();
-  ctx.translate(892, 300);
+  ctx.translate(892, 385);
   ctx.strokeStyle = "#cfc7ea"; ctx.lineWidth = 4; rr(ctx, -34, -17, 62, 34, 7); ctx.stroke();
   ctx.fillStyle = "#cfc7ea"; ctx.fillRect(30, -7, 6, 14);
   ["#9b8cd8", "#e7a35e", "#7cc58e"].forEach((col, i) => { ctx.fillStyle = col; rr(ctx, -27 + i * 18, -10, 15, 20, 3); ctx.fill(); });
@@ -331,10 +331,10 @@ function drawTitle(t) {
   ctx.restore();
 }
 
-window.renderFrame = function (t) {
+function drawFrame(t) {
   const [z, ax] = keys(CAM, t);
   ctx.save();
-  ctx.fillStyle = "#17142b"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#17142b"; ctx.fillRect(0, -OFF, W, H + 2 * OFF);
   ctx.translate(540, ZY); ctx.scale(z, z); ctx.translate(-ax, -ZY);
   drawWorld(ctx, t);
 
@@ -385,13 +385,23 @@ window.renderFrame = function (t) {
   // rosa Blitz beim neuen Passanten
   if (t > FLASH) {
     const f = 0.55 * (1 - ramp(t, FLASH, FLASH + 0.35)) + 0.22;
-    ctx.fillStyle = `rgba(214,96,128,${f})`; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = `rgba(214,96,128,${f})`; ctx.fillRect(0, -OFF, W, H + 2 * OFF);
   }
   drawHUD(t);
   drawTitle(t);
   // kurzes Abblenden am Ende
   const fo = ramp(t, window.DURATION - 0.35, window.DURATION);
-  if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo})`; ctx.fillRect(0, 0, W, H); }
+  if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo})`; ctx.fillRect(0, -OFF, W, H + 2 * OFF); }
+};
+
+// Inhalt (Szene + Text) vertikal mittig: gleich viel Rand oben und unten
+const OFF = 56;
+window.renderFrame = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "#17142b"; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.translate(0, OFF);
+  drawFrame(t);
+  ctx.restore();
 };
 
 window.exportEvents = function () {
