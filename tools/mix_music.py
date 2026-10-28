@@ -1,6 +1,9 @@
 """Effekt-Tonspur + Hintergrundmusik mischen (wie in perfektionist/audio.py).
 
-  python3 tools/mix_music.py <effekte.wav> <musik.mp3> <ausgabe.wav> [musik_lufs=-17.5] [effekte_lufs=-16]
+  python3 tools/mix_music.py <effekte.wav> <musik.mp3> <ausgabe.wav> [musik_lufs=-17.5] [effekte_lufs=-16] [start]
+
+start: Sekunde, ab der die Musik verwendet wird, oder "auto:<t>" – dann wird der Ausschnitt gewählt,
+der ab Sekunde <t> des Videos am kräftigsten ist und nirgends ausklingt.
 
 Effekte auf -16 LUFS, Musik auf -17.5 LUFS darunter, gesamt -14 LUFS (EBU R128), Spitzen begrenzt.
 Musik wird am Anfang kurz eingeblendet und in den letzten 0,6 s ausgeblendet.
@@ -19,6 +22,7 @@ SR = 44100
 sfx_path, music_path, out_path = sys.argv[1:4]
 MUSIC_LUFS = float(sys.argv[4]) if len(sys.argv) > 4 else -17.5
 SFX_LUFS = float(sys.argv[5]) if len(sys.argv) > 5 else -16.0
+START = sys.argv[6] if len(sys.argv) > 6 else "0"
 TMP = out_path + ".tmp.wav"
 
 
@@ -59,7 +63,32 @@ def to_lufs(x, target, lim=True):
 sfx = read(sfx_path)
 N = len(sfx)
 music = np.zeros_like(sfx)
-m = read(music_path)[:N]
+m_full = read(music_path)
+
+
+def best_start(m, n, climax):
+    """Ausschnitt der Länge n wählen: kräftig ab climax, ohne Stille/Ausklingen."""
+    hop = SR // 4
+    rms = np.array([np.sqrt((m[i:i + hop] ** 2).mean() + 1e-12) for i in range(0, len(m) - hop, hop)])
+    db = 20 * np.log10(rms)
+    best, best_s = 0, -1e9
+    for k in range(0, max(1, (len(m) - n) // hop)):
+        w = db[k:k + n // hop]
+        if len(w) < n // hop:
+            break
+        c = int(climax * 4)
+        score = w[c:].mean() - 3 * max(0, -38 - w.min()) - 0.5 * max(0, w[:c].mean() - w[c:].mean())
+        if score > best_s:
+            best, best_s = k, score
+    return best * hop
+
+
+if START.startswith("auto:"):
+    off = best_start(m_full, N, float(START[5:]))
+else:
+    off = int(float(START) * SR)
+print("Musik ab Sekunde", round(off / SR, 2))
+m = m_full[off:off + N]
 music[: len(m)] = m
 t = np.arange(N) / SR
 env = np.minimum(1, t / 0.3) * np.clip((t[-1] - t) / 0.6, 0, 1)
