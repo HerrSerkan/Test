@@ -1,9 +1,10 @@
 """Effekt-Tonspur + Hintergrundmusik mischen (wie in perfektionist/audio.py).
 
-  python3 tools/mix_music.py <effekte.wav> <musik.mp3> <ausgabe.wav> [musik_lufs=-17.5] [effekte_lufs=-16] [start]
+  python3 tools/mix_music.py <effekte.wav> <musik.mp3> <ausgabe.wav> [musik_lufs=-17.5] [effekte_lufs=-16] [start] [pause]
 
 start: Sekunde, ab der die Musik verwendet wird, oder "auto:<t>" – dann wird der Ausschnitt gewählt,
 der ab Sekunde <t> des Videos am kräftigsten ist und nirgends ausklingt.
+pause: optional "a-b" – Musik setzt zwischen Sekunde a und b aus (z. B. für einen Plattenkratzer) und kommt danach wieder.
 
 Effekte auf -16 LUFS, Musik auf -17.5 LUFS darunter, gesamt -14 LUFS (EBU R128), Spitzen begrenzt.
 Musik wird am Anfang kurz eingeblendet und in den letzten 0,6 s ausgeblendet.
@@ -23,6 +24,7 @@ sfx_path, music_path, out_path = sys.argv[1:4]
 MUSIC_LUFS = float(sys.argv[4]) if len(sys.argv) > 4 else -17.5
 SFX_LUFS = float(sys.argv[5]) if len(sys.argv) > 5 else -16.0
 START = sys.argv[6] if len(sys.argv) > 6 else "0"
+PAUSE = [float(v) for v in sys.argv[7].split("-")] if len(sys.argv) > 7 else None
 TMP = out_path + ".tmp.wav"
 
 
@@ -92,6 +94,9 @@ m = m_full[off:off + N]
 music[: len(m)] = m
 t = np.arange(N) / SR
 env = np.minimum(1, t / 0.3) * np.clip((t[-1] - t) / 0.6, 0, 1)
+if PAUSE:
+    a, b = PAUSE
+    env *= 1 - np.clip((t - a) / 0.06, 0, 1) * np.clip((b - t) / 0.4, 0, 1)
 music *= env[:, None].astype(np.float32)
 
 mix = to_lufs(sfx, SFX_LUFS) + to_lufs(music, MUSIC_LUFS, lim=False)
