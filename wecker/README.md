@@ -14,4 +14,5 @@ Eigener Stil: farbige Bohnen-Figuren mit Merkmal (Stirnband, Schlafmaske, Kapuze
     node tools/canvas_render.js wecker --out wecker/gleicher_wecker.mp4 --audio wecker/build/mix.wav
 
 Musik: ElevenLabs eleven_music_v2_5, als build/music.mp3 ablegen (nicht im Repo). Setzt am Höhepunkt kurz aus (Plattenkratzer).
+Aktuelle Fassung nutzt vorübergehend die Musik aus mensa/ (die eigene Generierung hing bei ElevenLabs).
 Schrift: Inter (SIL Open Font License).
