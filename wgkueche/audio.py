@@ -125,6 +125,9 @@ place(EV["flies"], buzz(EV["climax"] - EV["flies"] + 1.6), 0.05, pan=0.1)
 a, b = EV["whistle"]
 place(a, whistle(b - a), 0.12, pan=0.05)
 place(EV["robot"], bleep_robot(), 0.4)
+# Hook/Rehook: leiser Tick pro Wort
+for t in EV["hookWords"]:
+    place(t, tick(3400), 0.08)
 # Titel und Sticker
 for k, t in enumerate(EV["title"]):
     place(t, thump(80, 12), 0.35); place(t, pop(600 + k * 200), 0.25)

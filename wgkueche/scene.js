@@ -469,7 +469,7 @@ function counter(t) {
   ctx.save(); ctx.globalAlpha = fade;
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   ctx.font = "700 13px InterX"; ctx.letterSpacing = "3px"; ctx.fillStyle = "rgba(240,240,245,0.65)";
-  ctx.fillText("WG-KÜCHE", 288, 168);
+  if (!((t > 0.05 && t < 2.15) || (t > 5.45 && t < 7.75))) ctx.fillText("WG-KÜCHE", 288, 168);   // Platz für Hook/Rehook
   ctx.translate(288, 222); ctx.scale(popK, popK);
   ctx.font = "900 50px InterX"; ctx.letterSpacing = "-1px";
   ctx.shadowColor = red ? "rgba(255,60,60,0.7)" : "rgba(0,0,0,0.5)"; ctx.shadowBlur = red ? 18 : 8;
@@ -512,6 +512,39 @@ function grain(t) {
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.045;
   ctx.fillStyle = GRAIN[Math.floor(t * 10) % GRAIN.length]; ctx.fillRect(0, 0, 1080, 1920);
   ctx.restore();
+}
+
+// ------------------------------------------------------------ Hook + Rehook (nach kurzvideo-regeln)
+// Zeile erscheint Wort für Wort (0,28 s/Wort), Schlüsselwort in oranger Box, übrige Wörter etwas grauer.
+function hookLine(t, words, key, t0, t1, y) {
+  const out = ramp(t, t1 - 0.2, t1);
+  if (t < t0 || out >= 1) return false;
+  ctx.save(); ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+  ctx.font = "900 25px InterX"; ctx.letterSpacing = "0.5px";
+  const sp = ctx.measureText(" ").width;
+  const ws = words.map(w => ctx.measureText(w).width);
+  let x = 288 - (ws.reduce((a, b) => a + b, 0) + sp * (ws.length - 1)) / 2;
+  words.forEach((w, i) => {
+    const p = ramp(t, t0 + i * 0.28, t0 + i * 0.28 + 0.18);
+    if (p > 0) {
+      ctx.globalAlpha = easeOut(p) * (1 - out);
+      const dy = (1 - easeOut(p)) * 8;
+      if (i === key) {
+        const s = back(p);
+        ctx.save(); ctx.translate(x + ws[i] / 2, y - 9 + dy); ctx.scale(s, s);
+        ctx.fillStyle = "#f6b23a"; rr(-ws[i] / 2 - 7, -18, ws[i] + 14, 32, 7); ctx.fill();
+        ctx.fillStyle = "#1d1d22"; ctx.fillText(w, -ws[i] / 2, 9);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = "#d9dae2"; ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 6;
+        ctx.fillText(w, x, y + dy);
+        ctx.shadowBlur = 0;
+      }
+    }
+    x += ws[i] + sp;
+  });
+  ctx.restore();
+  return true;
 }
 
 // ------------------------------------------------------------ Bild
@@ -557,6 +590,8 @@ window.renderFrame = function (t) {
 
   ctx.setTransform(S, 0, 0, S, 0, 0);
   counter(tt);
+  hookLine(t, ["JEDE", "WG", "HAT", "DIESEN", "EINEN."], 4, 0.1, 2.0, 163);
+  hookLine(t, ["WARTE", "BIS", "TAG", "14", "…"], 3, 5.6, 7.6, 163);
   titles(t);
   sticker(t, ["WELCHER", "BIST DU?"]);
   grain(t);
@@ -564,7 +599,7 @@ window.renderFrame = function (t) {
 
 window.exportEvents = function () {
   return {
-    duration: DUR, days: DAYS.map(d => d[0]).slice(1), climax: T.climax, title: [T.title1, T.title2],
+    duration: DUR, hookWords: [0, 1, 2, 3, 4].map(i => 0.1 + i * 0.28).concat([0, 1, 2, 3, 4].map(i => (DUR > 0 ? (5.6) : 0) + i * 0.28)), days: DAYS.map(d => d[0]).slice(1), climax: T.climax, title: [T.title1, T.title2],
     pops: [T.morgen, T.weich1, T.heute, T.weich2, T.look + 0.2, T.look + 0.5],
     puffs: [T.weich1 + 1.05, T.weich2 + 0.95, T.whistle + 0.65, T.whistle + 0.85],
     washes: [T.wash1, T.wash2], scrubs: DAYS.map(d => d[0] + 0.05).filter(x => x > 0.3), whistle: [T.whistle, T.climax],

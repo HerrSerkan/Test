@@ -2,16 +2,17 @@
 // Die Szene muss window.setup() (liefert {duration}) und window.renderFrame(t) bereitstellen.
 //
 //   node tools/canvas_render.js <ordner> --preview 1 4.5      -> <ordner>/build/preview_*.png
-//   node tools/canvas_render.js <ordner> --out video.mp4 [--audio ton.wav]
+//   node tools/canvas_render.js <ordner> --out video.mp4 [--audio ton.wav] [--fps 60]
 const { chromium } = require("playwright");
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const FPS = 30, WORKERS = 4;
+const WORKERS = 4;
 const dir = path.resolve(process.argv[2]);
 const args = process.argv.slice(3);
 const opt = k => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
+const FPS = parseInt(opt("--fps") || "30", 10);   // optional: --fps 60
 fs.mkdirSync(path.join(dir, "build"), { recursive: true });
 
 async function openPage(browser) {
