@@ -1,6 +1,6 @@
 """Einfacher Instrumental-Groove als Ersatz, wenn ElevenLabs Music nicht verfügbar ist.
 
-  python3 tools/synth_music.py <ausgabe.wav> [dauer=32] [bpm=112] [stil=verspielt|cool] [seed=1]
+  python3 tools/synth_music.py <ausgabe.wav> [dauer=32] [bpm=112] [stil=verspielt|cool|spuk] [seed=1]
 
 Kick + Clap + Hi-Hat, Bass auf den Grundtönen, Marimba-Arpeggio. Ohne Gesang, gleichmäßig kräftig ab Sekunde 0,
 damit tools/mix_music.py einen Ausschnitt wählen kann.
@@ -78,7 +78,9 @@ def keys(fs, L):
     return (lp(s, 2200) * np.minimum(1, x / 0.01) * np.exp(-x * 1.6) * 0.3).astype(np.float32)
 
 
-if STYLE == "cool":                     # Am - F - C - G, etwas lässiger
+if STYLE == "spuk":                     # Am - F - Dm - E, gruselig-verspielt (Halloween)
+    PROG = [(57, [69, 72, 76]), (53, [69, 72, 77]), (50, [69, 74, 77]), (52, [68, 71, 76])]
+elif STYLE == "cool":                     # Am - F - C - G, etwas lässiger
     PROG = [(57, [69, 72, 76]), (53, [69, 72, 77]), (48, [67, 72, 76]), (55, [67, 71, 74])]
 else:                                   # C - G - Am - F, verspielt
     PROG = [(48, [72, 76, 79]), (55, [71, 74, 79]), (57, [72, 76, 81]), (53, [72, 77, 81])]
