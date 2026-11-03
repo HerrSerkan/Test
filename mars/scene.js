@@ -3,7 +3,19 @@
 "use strict";
 const W = 576, H = 1024, S = 1080 / 576;
 const cv = document.getElementById("c");
-const ctx = cv.getContext("2d");
+const MAIN = cv.getContext("2d");
+let ctx = MAIN;
+// Ebene für Objekte mit Comic-Umriss (Kuppel, Rakete, Astronaut …)
+const lc = document.createElement("canvas"); lc.width = 1080; lc.height = 1920; const LCTX = lc.getContext("2d");
+const oc = document.createElement("canvas"); oc.width = 1080; oc.height = 1920; const OCTX = oc.getContext("2d");
+function compositeOutline(px) {
+  OCTX.setTransform(1, 0, 0, 1, 0, 0); OCTX.globalCompositeOperation = "source-over"; OCTX.clearRect(0, 0, 1080, 1920);
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; OCTX.drawImage(lc, Math.cos(a) * px, Math.sin(a) * px); }
+  OCTX.globalCompositeOperation = "source-in"; OCTX.fillStyle = "#1b1424"; OCTX.fillRect(0, 0, 1080, 1920);
+  OCTX.globalCompositeOperation = "destination-out"; OCTX.drawImage(lc, 0, 0); OCTX.drawImage(lc, 0, 0);
+  OCTX.globalCompositeOperation = "source-over";
+  MAIN.save(); MAIN.setTransform(1, 0, 0, 1, 0, 0); MAIN.drawImage(oc, 0, 0); MAIN.drawImage(lc, 0, 0); MAIN.restore();
+}
 const WT = window.WORDS.map(w => w[1]);            // Startzeit je gesprochenem Wort
 const wt = i => WT[i];
 const SPEECH_END = window.CHUNKS.at(-1).e;
@@ -27,7 +39,7 @@ function glow(x, y, r, c, a) {
   ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
 }
 function outlined(txt, x, y, size, fill, line = "#14223a", lw = 6, weight = 900, align = "center") {
-  ctx.font = `${weight} ${size}px InterX, 'Noto Color Emoji'`; ctx.textAlign = align; ctx.textBaseline = "middle";
+  ctx.font = `${size}px Comic, 'Noto Color Emoji'`; ctx.textAlign = align; ctx.textBaseline = "middle";
   ctx.lineJoin = "round"; ctx.strokeStyle = line; ctx.lineWidth = lw; ctx.strokeText(txt, x, y);
   ctx.fillStyle = fill; ctx.fillText(txt, x, y);
 }
@@ -42,12 +54,12 @@ const T = {
 
 // ------------------------------------------------------------ Kamera
 const CAM = [ // t, cx, cy, zoom
-  [0, 330, 560, 0.42], [0.9, 330, 560, 0.42], [T.land - 0.3, 270, 590, 0.9], [T.astro - 0.2, 320, 600, 1.15],
-  [T.flag - 0.15, 330, 600, 1.2], [T.flag + 0.25, 480, 590, 1.45], [T.wide - 0.15, 480, 590, 1.47], [T.wide + 0.35, 330, 520, 0.36],
-  [T.card - 0.2, 330, 520, 0.38], [T.card + 0.2, 410, 610, 1.35], [T.crowd - 0.1, 410, 610, 1.35], [T.crowd + 0.35, 330, 640, 1.0],
-  [T.book - 0.15, 330, 640, 1.02], [T.book + 0.2, 410, 640, 1.65], [T.comment, 410, 645, 1.7], [T.comment + 0.3, 400, 650, 1.95],
-  [T.cal - 0.15, 400, 650, 1.95], [T.q - 0.15, 400, 650, 1.95], [T.q + 0.2, 390, 630, 1.55], [T.end, 385, 625, 1.6],
-  [DUR - 0.3, 370, 610, 1.35], [DUR, 330, 560, 0.42],
+  [0, 330, 600, 0.5], [0.9, 330, 600, 0.5], [T.land - 0.3, 300, 652, 1.25], [T.astro - 0.2, 335, 625, 1.5],
+  [T.flag - 0.15, 345, 625, 1.55], [T.flag + 0.25, 505, 640, 1.9], [T.wide - 0.15, 505, 640, 1.93], [T.wide + 0.35, 330, 540, 0.42],
+  [T.card - 0.2, 330, 540, 0.44], [T.card + 0.2, 420, 640, 1.75], [T.crowd - 0.1, 420, 640, 1.75], [T.crowd + 0.35, 330, 690, 1.12],
+  [T.book - 0.15, 330, 690, 1.15], [T.book + 0.2, 420, 650, 2.1], [T.comment, 420, 655, 2.15], [T.comment + 0.3, 415, 662, 2.45],
+  [T.cal - 0.15, 415, 662, 2.45], [T.q - 0.15, 415, 662, 2.45], [T.q + 0.2, 395, 650, 1.95], [T.end, 390, 648, 2.0],
+  [DUR - 0.3, 370, 640, 1.6], [DUR, 330, 600, 0.5],
 ];
 function cam(t) {
   if (t <= CAM[0][0]) return CAM[0].slice(1);
@@ -73,14 +85,15 @@ function sky(t) {
   g.addColorStop(0, "rgba(160,60,40,0)"); g.addColorStop(1, "rgba(200,90,55,0.55)");
   ctx.fillStyle = g; ctx.fillRect(-2000, HORIZON - 260, 5000, 260);
   // Erde (klein, blau) und Mond Phobos
-  const ex = 360, ey = 455;
-  glow(ex, ey, 70, "120,190,255", 0.35);
-  circle(ex, ey, 34, "#2e86de");
+  const ex = 365, ey = 440;
+  glow(ex, ey, 120, "120,190,255", 0.4);
+  ctx.save(); ctx.translate(ex, ey); ctx.scale(1.75, 1.75); ctx.translate(-ex, -ey);
+  circle(ex, ey, 36, "#1b1424"); circle(ex, ey, 34, "#2e86de");
   ctx.save(); ctx.beginPath(); ctx.arc(ex, ey, 34, 0, Math.PI * 2); ctx.clip();
   ctx.fillStyle = "#4cc36a"; for (const [dx, dy, rx, ry] of [[-12, -10, 14, 9], [10, 8, 12, 10], [-4, 18, 9, 5], [16, -16, 7, 5]]) { ctx.beginPath(); ctx.ellipse(ex + dx, ey + dy, rx, ry, 0.4, 0, Math.PI * 2); ctx.fill(); }
   ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.beginPath(); ctx.ellipse(ex - 6, ey - 26, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "rgba(0,0,30,0.25)"; ctx.beginPath(); ctx.arc(ex + 12, ey + 10, 34, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
+  ctx.restore(); ctx.restore();
   circle(40, 300, 9, "#9b8b7e"); circle(37, 298, 3, "#7d6e62");
 }
 function ground() {
@@ -99,8 +112,21 @@ function ground() {
   for (const [x, y, r, k] of ROCKS) { ctx.fillStyle = k < 0.5 ? "#7e3720" : "#9a4528"; ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.65, 0, Math.PI, 0); ctx.fill(); }
 }
 
+const BOULDERS = [[525, 708, 24], [612, 716, 16], [80, 716, 20], [262, 706, 12], [690, 742, 30], [-30, 748, 30], [205, 760, 14], [560, 790, 20]];
+function boulders() {
+  for (const [x, y, r] of BOULDERS) {
+    ctx.fillStyle = "#8c3c22"; ctx.beginPath(); ctx.moveTo(x - r, y); ctx.quadraticCurveTo(x - r * 1.05, y - r * 0.9, x - r * 0.2, y - r * 0.95);
+    ctx.quadraticCurveTo(x + r * 0.9, y - r * 1.0, x + r, y); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "rgba(255,170,120,0.35)"; ctx.beginPath(); ctx.ellipse(x - r * 0.3, y - r * 0.6, r * 0.35, r * 0.18, -0.3, 0, Math.PI * 2); ctx.fill();
+  }
+}
+const DUST = (() => { const r = rng(44), a = []; for (let i = 0; i < 45; i++) a.push([r() * W, r() * H, 0.6 + r() * 1.6, 8 + r() * 18, r() * 6]); return a; })();
+function dust(t) {
+  for (const [x0, y0, rad, sp, p] of DUST) { const x = (x0 + t * sp) % (W + 20) - 10, y = y0 + Math.sin(t * 0.8 + p) * 8; ctx.globalAlpha = 0.35 + 0.25 * Math.sin(t * 2 + p); circle(x, y, rad, "#f2b48a"); }
+  ctx.globalAlpha = 1;
+}
 // ------------------------------------------------------------ Objekte
-function shadow(x, y, w, a = 0.3) { ctx.fillStyle = `rgba(70,20,10,${a})`; ctx.beginPath(); ctx.ellipse(x, y, w, w * 0.16, 0, 0, Math.PI * 2); ctx.fill(); }
+function shadow(x, y, w, a = 0.3) { if (!(w > 0)) return; const m = ctx.getTransform(); MAIN.save(); MAIN.setTransform(m); MAIN.fillStyle = `rgba(70,20,10,${a})`; MAIN.beginPath(); MAIN.ellipse(x, y, w, w * 0.16, 0, 0, Math.PI * 2); MAIN.fill(); MAIN.restore(); }
 function rocket(x, y, s, fire) { // y = Unterkante
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
   if (fire > 0) {
@@ -123,7 +149,7 @@ function dome(x, y) { // Mitte unten
   shadow(x, y + 4, 160, 0.3);
   // Glas
   const g = ctx.createRadialGradient(x - 50, y - 120, 10, x, y - 60, 170);
-  g.addColorStop(0, "rgba(230,250,255,0.75)"); g.addColorStop(1, "rgba(160,210,230,0.35)");
+  g.addColorStop(0, "rgba(232,250,255,0.92)"); g.addColorStop(1, "rgba(170,215,232,0.8)");
   ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y, 150, 140, 0, Math.PI, 0); ctx.fill();
   // innen: Möbel angedeutet
   ctx.fillStyle = "rgba(120,140,160,0.35)"; ctx.fillRect(x - 90, y - 50, 50, 50); ctx.fillRect(x + 50, y - 40, 40, 40);
@@ -244,16 +270,16 @@ function ghost(x, y, s, a) { // gestrichelter Astronaut mit „?“
   ctx.fillStyle = "#fff"; ctx.font = "900 22px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("?", 0, -100);
   ctx.restore();
 }
-const CROWD = (() => { const r = rng(21), a = []; for (let row = 0; row < 3; row++) for (let i = 0; i < 9; i++) a.push({ x: 40 + i * 70 + (row % 2) * 35 + (r() - 0.5) * 14, y: 735 + row * 62, s: 0.62 + row * 0.12, d: r() * 0.9 + row * 0.25 }); return a; })();
+const CROWD = (() => { const r = rng(21), a = []; for (let row = 0; row < 3; row++) for (let i = 0; i < 9; i++) a.push({ x: 20 + i * 78 + (row % 2) * 39 + (r() - 0.5) * 14, y: 740 + row * 70, s: 0.8 + row * 0.15, d: r() * 0.9 + row * 0.25 }); return a; })();
 const PLATZ = 13; // der Geist, auf den „DEIN PLATZ“ zeigt
 
 // ------------------------------------------------------------ Einblendungen (Bildschirm-Koordinaten)
 function pill(txt, x, y, s, bg = "#14223a", fg = "#fff", icon = "") {
   if (s <= 0.01) return;
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
-  ctx.font = "900 15px InterX, 'Noto Color Emoji'"; ctx.letterSpacing = "1px";
-  const w = ctx.measureText(icon + txt).width + 26;
-  ctx.fillStyle = bg; rr(-w / 2, -15, w, 30, 15); ctx.fill();
+  ctx.font = "19px Comic, 'Noto Color Emoji'"; ctx.letterSpacing = "1px";
+  const w = ctx.measureText(icon + txt).width + 30;
+  ctx.fillStyle = bg; rr(-w / 2, -17, w, 34, 17); ctx.fill();
   ctx.strokeStyle = "rgba(255,255,255,0.9)"; ctx.lineWidth = 2; ctx.stroke();
   ctx.fillStyle = fg; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(icon + txt, 1, 1);
   ctx.restore();
@@ -348,10 +374,10 @@ function calendar(t, k) {
   ctx.restore();
   const a = back(ramp(t, T.cal, T.cal + 0.25));
   ctx.save(); ctx.translate(288, 270); ctx.scale(a, a);
-  ctx.font = "900 40px InterX"; const w1 = ctx.measureText("KEIN ").width, w2 = ctx.measureText("MONTAG").width;
-  outlined("KEIN ", -(w1 + w2) / 2, 0, 40, "#fff", "#14223a", 8, 900, "left");
-  outlined("MONTAG", -(w1 + w2) / 2 + w1, 0, 40, RED, "#14223a", 8, 900, "left");
-  if (t >= wt(71)) outlined("MEHR?", 0, 46, 40, "#fff", "#14223a", 8);
+  ctx.font = "44px Comic"; const w1 = ctx.measureText("KEIN ").width, w2 = ctx.measureText("MONTAG").width;
+  outlined("KEIN ", -(w1 + w2) / 2, 0, 44, "#fff", "#14223a", 8, 900, "left");
+  outlined("MONTAG", -(w1 + w2) / 2 + w1, 0, 44, RED, "#14223a", 8, 900, "left");
+  if (t >= wt(71)) outlined("MEHR?", 0, 50, 44, "#fff", "#14223a", 8);
   ctx.restore();
   ctx.restore();
 }
@@ -373,16 +399,17 @@ function captions(t) {
   const C = window.CHUNKS; let c = null;
   for (let i = 0; i < C.length; i++) if (t >= C[i].s - 0.02) c = C[i];
   if (!c || t > c.e + 0.6 && c === C.at(-1)) return;
-  ctx.save(); ctx.font = "900 30px InterX"; ctx.letterSpacing = "0.5px";
+  ctx.save(); ctx.font = "38px Comic"; ctx.letterSpacing = "0.5px";
   const sp = ctx.measureText(" ").width;
   const parts = c.w.map(([w, s, col]) => [w, s, col, ctx.measureText(w).width]);
   const tw = parts.reduce((a, p) => a + p[3] + sp, -sp);
+  const fit = Math.min(1, 500 / tw); ctx.translate(W / 2, 795); ctx.scale(fit, fit); ctx.translate(-W / 2, -795);
   let x = W / 2 - tw / 2;
   for (const [w, s, col, ww] of parts) {
     const k = ramp(t, s - 0.02, s + 0.1);
     if (k > 0) {
-      ctx.save(); ctx.translate(x + ww / 2, 760); const sc = 0.6 + 0.4 * back(k); ctx.scale(sc, sc);
-      outlined(w, 0, 0, 30, col === 1 ? CYAN : col === 2 ? RED : "#ffffff", "#14223a", 7);
+      ctx.save(); ctx.translate(x + ww / 2, 795); const sc = 0.6 + 0.4 * back(k); ctx.scale(sc, sc);
+      outlined(w, 0, 0, 38, col === 1 ? CYAN : col === 2 ? RED : "#ffffff", "#14223a", 10);
       ctx.restore();
     }
     x += ww + sp;
@@ -398,6 +425,9 @@ window.renderFrame = function (t) {
   const [cx, cy, z] = cam(t);
   ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-cx, -cy);
   sky(t); ground();
+  const worldM = ctx.getTransform();
+  ctx = LCTX; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, 1080, 1920); ctx.setTransform(worldM);
+  boulders();
   // Rakete: fliegt ein und landet links neben der Kuppel
   const lk = 1 - Math.pow(1 - ramp(t, 0.1, T.land), 2);
   const rx = lerp(330, 150, lk), ry = lerp(-200, 690, lk);
@@ -406,7 +436,6 @@ window.renderFrame = function (t) {
   flag(575, 700, easeOut(ramp(t, T.flag, T.flag + 0.3)), t);
   shadow(150, 694, 60 * lk, 0.3);
   rocket(rx, ry, 0.95, t < T.land ? 1 : 0);
-  puffs(150, 700, t, T.land - 0.05);
   // Astronaut
   const as = t >= T.astro ? back(ramp(t, T.astro, T.astro + 0.3)) : 0;
   let face = "smile", o = { t };
@@ -424,16 +453,23 @@ window.renderFrame = function (t) {
     if (t >= T.end) face = "smile";
   }
   if (as > 0) astronaut(430, 742, 1.0 * as, face, o);
+  ctx = MAIN;
+  compositeOutline(clamp(2.2 * S * Math.pow(z, 0.75), 2.5, 8));
+  puffs(150, 700, t, T.land - 0.05);
   // Geister-Astronauten (Schlange für die Rakete)
   if (t >= T.crowd && t < T.book) {
     for (const [i, g] of CROWD.entries()) ghost(g.x, g.y, g.s, clamp((t - T.crowd - g.d * 0.6) / 0.25) * (1 - ramp(t, T.book - 0.2, T.book)));
   }
   ctx.restore();
+  dust(t);
+  // Vignette
+  const vg = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.3, W / 2, H * 0.5, H * 0.8);
+  vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(20,5,5,0.45)"); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
   // ---- Bildschirm-Einblendungen
   // „TAG 1“
   const tagA = t < T.astro + 0.6 ? back(ramp(t, 0.15, 0.45)) * (1 - ramp(t, T.astro + 0.3, T.astro + 0.6)) : 0;
-  if (tagA > 0) { ctx.save(); ctx.translate(288, 200); ctx.scale(tagA, tagA); outlined("TAG 1", 0, 0, 66, CYAN, "#0e1a30", 10); ctx.restore(); }
+  if (tagA > 0) { ctx.save(); ctx.translate(288, 200); ctx.scale(tagA, tagA); outlined("TAG 1", 0, 0, 92, CYAN, "#0e1a30", 13); ctx.restore(); }
   // Abzeichen + „1 FOLLOW = 1 ASTRONAUT“
   if (t >= T.badge && t < T.flag) {
     const a = back(ramp(t, T.badge, T.badge + 0.3)) * (1 - ramp(t, T.flag - 0.15, T.flag));
@@ -441,23 +477,23 @@ window.renderFrame = function (t) {
     if (t >= wt(16)) {
       const b = back(ramp(t, wt(16), wt(16) + 0.25)) * a;
       ctx.save(); ctx.translate(288, 335); ctx.scale(b, b);
-      ctx.font = "900 26px InterX"; const w1 = ctx.measureText("1 FOLLOW = ").width, w2 = ctx.measureText("1 ASTRONAUT").width;
-      outlined("1 FOLLOW = ", -(w1 + w2) / 2, 0, 26, "#fff", "#0e1a30", 7, 900, "left");
-      outlined("1 ASTRONAUT", -(w1 + w2) / 2 + w1, 0, 26, CYAN, "#0e1a30", 7, 900, "left");
+      ctx.font = "30px Comic"; const w1 = ctx.measureText("1 FOLLOW = ").width, w2 = ctx.measureText("1 ASTRONAUT").width;
+      outlined("1 FOLLOW = ", -(w1 + w2) / 2, 0, 30, "#fff", "#0e1a30", 8, 900, "left");
+      outlined("1 ASTRONAUT", -(w1 + w2) / 2 + w1, 0, 30, CYAN, "#0e1a30", 8, 900, "left");
       ctx.restore();
     }
   }
   // Landesname
   if (t >= T.name && t < T.wide) {
     const a = back(ramp(t, T.name, T.name + 0.3)) * (1 - ramp(t, T.wide - 0.1, T.wide + 0.05));
-    ctx.save(); ctx.translate(288, 280); ctx.rotate(-0.03); ctx.scale(a, a); outlined("ROTANIEN", 0, 0, 52, "#fff", "#0e1a30", 9); ctx.restore();
+    ctx.save(); ctx.translate(268, 225); ctx.rotate(-0.07); ctx.scale(a, a); outlined("ROTANIEN", 0, 0, 72, "#fff", "#0e1a30", 12); ctx.restore();
     confetti(t, T.name);
   }
   // Einwohner-Zähler + „ICH“
   if (t >= T.wide && t < T.card) {
     const a = back(ramp(t, T.wide + 0.15, T.wide + 0.4)) * (1 - ramp(t, T.card - 0.15, T.card));
     pill("EINWOHNER", 288, 250, a, "#fff", "#14223a", "👨‍🚀 ");
-    ctx.save(); ctx.translate(288, 318); ctx.scale(a, a); outlined("1", 0, 0, 72, "#fff", "#0e1a30", 9); ctx.restore();
+    ctx.save(); ctx.translate(288, 318); ctx.scale(a, a); outlined("1", 0, 6, 84, "#fff", "#0e1a30", 11); ctx.restore();
     confetti(t, T.wide + 0.1);
     if (t >= T.ich) {
       const b = back(ramp(t, T.ich, T.ich + 0.25)) * a;
@@ -485,15 +521,15 @@ window.renderFrame = function (t) {
   if (t >= T.comment && t < T.cal) {
     const out = 1 - ramp(t, T.cal - 0.15, T.cal);
     commentCard(back(ramp(t, T.comment + 0.1, T.comment + 0.4)) * out);
-    if (t >= T.law1) { const b = back(ramp(t, T.law1, T.law1 + 0.25)) * out; ctx.save(); ctx.translate(288, 318); ctx.scale(b, b); outlined("= GESETZ NR. 1", 0, 0, 34, CYAN, "#0e1a30", 8); ctx.restore(); }
+    if (t >= T.law1) { const b = back(ramp(t, T.law1, T.law1 + 0.25)) * out; ctx.save(); ctx.translate(288, 318); ctx.scale(b, b); outlined("= GESETZ NR. 1", 0, 0, 40, CYAN, "#0e1a30", 9); ctx.restore(); }
   }
   // Kalender
   calendar(t, t >= T.cal && t < T.q ? clamp((t - T.cal) / 0.12) * (1 - ramp(t, T.q - 0.12, T.q)) : 0);
   // „GESETZ NR. 1: ???“
   if (t >= T.q) {
     const a = back(ramp(t, T.q, T.q + 0.25)) * (1 - ramp(t, DUR - 0.35, DUR - 0.1));
-    ctx.save(); ctx.translate(288, 200); ctx.scale(a, a); outlined("GESETZ NR. 1:", 0, 0, 40, "#fff", "#0e1a30", 8);
-    const q = back(ramp(t, T.q + 0.2, T.q + 0.45)); ctx.scale(q, q); outlined("???", 0, 68 / q, 72, CYAN, "#0e1a30", 10); ctx.restore();
+    ctx.save(); ctx.translate(288, 200); ctx.scale(a, a); outlined("GESETZ NR. 1:", 0, 0, 50, "#fff", "#0e1a30", 10);
+    const q = back(ramp(t, T.q + 0.2, T.q + 0.45)); ctx.scale(q, q); outlined("???", 0, 78 / q, 96, CYAN, "#0e1a30", 13); ctx.restore();
   }
   captions(t);
 };
@@ -504,6 +540,6 @@ window.exportEvents = function () {
     whooshes: CAM.slice(1).filter((c, i) => Math.abs(Math.log(c[3] / CAM[i][3])) > 0.25).map((c, i) => c[0] - 0.25), end: T.end };
 };
 window.setup = async function () {
-  await Promise.all([document.fonts.load("900 30px InterX"), document.fonts.load("700 12px InterX"), document.fonts.load("16px 'Noto Color Emoji'")]);
+  await Promise.all([document.fonts.load("38px Comic"), document.fonts.load("900 30px InterX"), document.fonts.load("700 12px InterX"), document.fonts.load("16px 'Noto Color Emoji'")]);
   return { duration: DUR };
 };

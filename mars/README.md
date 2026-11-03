@@ -13,4 +13,5 @@ Stimme: vidIQ voiceover (Stimme „Liam“), Pausen gekürzt und Tempo 1,2. Musi
     python3 tools/mix_music.py mars/build/audio.wav mars/build/music.wav mars/build/mix.wav -22 -15 0
     node tools/canvas_render.js mars --out mars/rotanien.mp4 --audio mars/build/mix.wav
 
-Stimme und Musik als build/voice_raw.mp3 und build/music.wav ablegen (nicht im Repo). Schrift: Inter (SIL OFL), Emoji: Noto Color Emoji.
+Stimme und Musik als build/voice_raw.mp3 und build/music.wav ablegen (nicht im Repo). Schriften: Luckiest Guy (Apache 2.0) für Titel und Untertitel, Inter (SIL OFL) für die Karten; Emoji: Noto Color Emoji.
+Optik wie im Original: Kamera nah dran, Comic-Umriss um Kuppel, Rakete, Astronaut und Felsen (eigene Ebene, compositeOutline).
