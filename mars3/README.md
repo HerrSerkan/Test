@@ -3,7 +3,7 @@
 Animation mit Sprecher, 45,9 s, Hochformat 1080×1920. Stand der Zahlen: 04.11.2026 – 629 Follower (+611), 630 Einwohner, 3.858 Likes.
 Gesetz Nr. 2 „Keine Steuern“ (Top-Kommentar von Luca), Wünsche aus den Kommentaren: Gabriel Emilijan (Laserschwert),
 elster (pinker Anzug mit Hundeohren), Entenlover/Nr. 410 (Enten-Freund), Bonus: Dönerladen (meistgewünscht).
-Dann Alien-Funkspruch mit unserer gestohlenen Fahne, Ultimatum 24 Stunden, Flotte hinter Phobos, Umfrage „Abhauen oder kämpfen?“.
+Dann Alien-Funkspruch mit unserer gestohlenen Fahne, Ultimatum 24 Stunden, Krater mit leerer Fahnenstange („Unsere Fahne? Die haben die Aliens geklaut.“), Flotte hinter dem Mond, Umfrage „Abhauen oder kämpfen?“.
 
 Aufbau: base.js + helpers3.js + tag3.js -> scene.js
 
@@ -15,6 +15,7 @@ Aufbau: base.js + helpers3.js + tag3.js -> scene.js
     python3 -c "import librosa,soundfile as sf,numpy as np; y,sr=librosa.load('mars3/build/music_day.wav',sr=44100,mono=False); sf.write('mars3/build/music_day_c.wav',np.stack([librosa.effects.pitch_shift(c,sr=sr,n_steps=-1) for c in y]).T,sr)"
     ffmpeg -y -i mars3/build/music_day_c.wav -af "atempo=1.042,treble=g=4:f=4000,bass=g=1.5:f=90" mars3/build/music_day117.wav
     python3 tools/tension_music.py mars3/build/music_dark.wav 26 129 2
+    python3 mars3/splice.py           # neue Sätze (build/piece.wav) einsetzen; danach words.py, „pinken“+„Anzug“ zu einem Token zusammenfassen
     node tools/canvas_render.js mars3 --events
     python3 mars3/audio.py            # Effekte, Alien-Stimme, Musikwechsel bei „heute Nacht“ -> build/audio.wav + build/music.wav
     python3 tools/mix_music.py mars3/build/audio.wav mars3/build/music.wav mars3/build/mix.wav -21 -15 0

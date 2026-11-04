@@ -440,8 +440,8 @@ const pop = (t, a, b = 99, d = 0.28) => (t < a || t > b + 0.2 ? 0 : back(ramp(t,
 const T = {
   e630: wt(5), land: wt(7), count0: wt(9), count1: wt(13), card: wt(13) + 0.1, unauf: wt(18) - 0.05, top: wt(19), comment: wt(24), keine: wt(25),
   law: wt(27), lawWrite: wt(32), steuern: wt(35), gab: wt(36), sword: wt(39), els: wt(40), suit: wt(42), ente: wt(45), duck: wt(48),
-  doner: wt(50), shop: wt(57), shopDone: wt(61), night: wt(62), funk: wt(67), alien: wt(71), alienEnd: wt(83), attack: wt(83), scout: wt(88),
-  fleet: wt(91), ufos: wt(95), together: wt(97), z630: wt(100), choose: wt(105), cardA: wt(108), cardB: wt(116), poll: wt(121), vote: wt(125),
+  doner: wt(50), shop: wt(57), shopDone: wt(61), night: wt(62), funk: wt(67), alien: wt(71), alienEnd: wt(83), attack: wt(83), crater: wt(84), stolen: wt(88),
+  fleet: wt(90), ufos: wt(95), together: wt(97), z630: wt(100), choose: wt(105), cardA: wt(108), cardB: wt(116), poll: wt(121), vote: wt(125),
   follow: wt(130), end: SPEECH_END,
 };
 const PASS_LABEL = "RAKETE 3";
@@ -491,7 +491,7 @@ const CAM = [
   [T.law - 0.1, 410, 650, 1.7], [T.law + 0.2, 420, 650, 2.0], [T.gab - 0.15, 420, 650, 2.0], [T.gab + 0.25, NAMED.gab.x - 10, 690, 2.3],
   [T.els - 0.15, NAMED.gab.x - 10, 690, 2.3], [T.els + 0.25, NAMED.els.x + 10, 690, 2.3], [T.ente - 0.15, NAMED.els.x + 10, 690, 2.3],
   [T.ente + 0.25, NAMED.ente.x, 692, 2.3], [T.doner - 0.15, NAMED.ente.x, 692, 2.3], [T.doner + 0.3, 140, 640, 1.5], [T.night - 0.15, 140, 640, 1.5],
-  [T.night + 0.3, 400, 645, 1.6], [T.attack - 0.1, 400, 645, 1.6], [T.attack + 0.3, 380, 600, 1.3], [T.fleet - 0.15, 380, 600, 1.3],
+  [T.night + 0.3, 400, 645, 1.6], [T.attack - 0.1, 400, 645, 1.6], [T.attack + 0.3, 380, 600, 1.3], [T.crater - 0.1, 380, 600, 1.3], [T.crater + 0.35, 840, 800, 2.1], [T.fleet - 0.15, 860, 810, 2.25],
   [T.fleet + 0.4, 330, 260, 0.9], [T.together - 0.15, 330, 260, 0.9], [T.together + 0.3, 400, 650, 1.6], [T.choose - 0.1, 400, 650, 1.6],
   [T.choose + 0.3, 330, 300, 0.9], [T.poll - 0.15, 330, 300, 0.9], [T.poll + 0.3, 410, 650, 1.75], [T.end, 410, 650, 1.8], [DUR, 400, 645, 1.7],
 ];
@@ -504,6 +504,23 @@ function cam(t) {
   return CAM.at(-1).slice(1);
 }
 const toScreen = (x, y, t) => { const [cx, cy, z] = cam(t); return [W / 2 + (x - cx) * z, H / 2 + (y - cy) * z, z]; };
+
+// ------------------------------------------------------------ Krater mit leerer Fahnenstange
+const PAWS3 = (() => { const a = []; for (let i = 0; i < 14; i++) { const k = i / 13; a.push([lerp(590, 840, k) + (i % 2 ? 9 : -9), lerp(785, 830, k) + Math.sin(k * 5) * 6]); } return a; })();
+function craterScene(t) {
+  ctx.fillStyle = "#4a1c10";
+  for (const [x, y] of PAWS3) { ctx.beginPath(); ctx.ellipse(x, y, 6, 4, 0, 0, Math.PI * 2); ctx.fill(); for (const [dx, dy] of [[-6, -6], [-2, -8.5], [2, -8.5], [6, -6]]) { ctx.beginPath(); ctx.ellipse(x + dx, y + dy, 2, 2.4, 0, 0, Math.PI * 2); ctx.fill(); } }
+  const x = 885, y = 845;
+  ctx.fillStyle = "#7e3218"; ctx.beginPath(); ctx.ellipse(x, y, 70, 22, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#3a120a"; ctx.beginPath(); ctx.ellipse(x, y + 3, 56, 15, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "rgba(255,160,110,0.45)"; ctx.beginPath(); ctx.ellipse(x, y + 12, 70, 12, 0, 0.1, Math.PI - 0.1); ctx.fill();
+  // leere Stange, schief im Krater stehen gelassen, mit Stofffetzen
+  ctx.save(); ctx.translate(x + 10, y + 4); ctx.rotate(0.28);
+  ctx.fillStyle = "#1b1424"; ctx.fillRect(-4.5, -152, 9, 152); ctx.fillStyle = "#e6e9ee"; ctx.fillRect(-3, -150, 6, 150);
+  circle(0, -154, 9, "#1b1424"); circle(0, -154, 7.5, "#ffd23a");
+  ctx.fillStyle = "#4a2b9a"; ctx.beginPath(); ctx.moveTo(3, -146); ctx.lineTo(22, -142); ctx.lineTo(12, -134); ctx.lineTo(20, -126); ctx.lineTo(3, -122); ctx.fill();
+  ctx.restore();
+}
 
 // ------------------------------------------------------------ Gegenstände
 function book(x, y, s, state, t) {
@@ -609,7 +626,7 @@ function tvBreaking(t, s) {
   ctx.fillStyle = "#1b1424"; ctx.font = "16px Comic"; ctx.fillText("BOTSCHAFT AN ROTANIEN: „DIESER PLANET GEHÖRT UNS!“", -218, 99.5);
   ctx.fillStyle = "#1b1424"; ctx.fillRect(-228, 114, 456, 26);
   ctx.save(); ctx.beginPath(); ctx.rect(-228, 114, 456, 26); ctx.clip();
-  ctx.fillStyle = "#ffd23a"; ctx.font = "15px Comic"; const tick = "+++ ULTIMATUM +++ ANGRIFF IN 24 STUNDEN +++ UNSERE FAHNE GESICHTET +++ ALIEN-FLOTTE HINTER PHOBOS ";
+  ctx.fillStyle = "#ffd23a"; ctx.font = "15px Comic"; const tick = "+++ ULTIMATUM +++ ANGRIFF IN 24 STUNDEN +++ UNSERE FAHNE GESICHTET +++ ALIEN-FLOTTE HINTER DEM MOND ";
   const off = -((t - T.alien) * 120) % 700; ctx.fillText(tick + tick, -228 + off, 128);
   ctx.restore();
   ctx.restore();
@@ -671,7 +688,7 @@ function counterTimer(t, s) {
 }
 
 // ------------------------------------------------------------ Effekte
-const IMPACTS = [T.e630, T.card + 0.5, T.lawWrite, T.shopDone, T.alien, T.attack, T.z630, T.cardA, T.cardB];
+const IMPACTS = [T.e630, T.card + 0.5, T.lawWrite, T.shopDone, T.alien, T.attack, T.stolen, T.z630, T.cardA, T.cardB];
 function shakeAt(t) {
   let dx = 0, dy = 0;
   for (const t0 of IMPACTS) { const d = t - t0; if (d < 0 || d > 0.35) continue; const a = 7 * Math.exp(-d * 12); dx += Math.sin(d * 90) * a; dy += Math.cos(d * 70) * a * 0.6; }
@@ -732,6 +749,7 @@ window.renderFrame = function (t) {
     for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, rr2 = 110 + (i % 3) * 45; if (k * 14 > i) ufo(330 + Math.cos(a) * rr2 * 1.4, 150 + Math.sin(a) * rr2 * 0.55, 0.55 + (i % 3) * 0.12, t, i); }
   }
   for (const [x, y, s] of BGROCKETS) rocket(x, y, s, 0);
+  craterScene(t);
   massCrowd(t, (t >= T.unauf && t < T.top) || (t >= T.together && t < T.choose) ? 1 : 0);
   const worldM = ctx.getTransform();
   ctx = LCTX; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, 1080, 1920); ctx.setTransform(worldM);
@@ -824,8 +842,9 @@ window.renderFrame = function (t) {
   if (t >= T.alien && t < T.attack) { tvBreaking(t, pop(t, T.alien, T.attack - 0.12, 0.25)); glitch(t, T.alien); }
   if (t >= T.attack && t < T.together) {
     label("⏳ ANGRIFF IN 24 STUNDEN", 288, 175, pop(t, T.attack, T.together - 0.15));
-    counterTimer(t, pop(t, T.attack + 0.15, T.fleet - 0.1) * (1 + 0.04 * Math.max(0, Math.sin(t * Math.PI * 4))));
-    label("SPÄHER 👀", 288, 330, pop(t, T.scout + 0.15, T.fleet - 0.1), "#2fa84f");
+    counterTimer(t, pop(t, T.attack + 0.1, T.crater + 0.15) * (1 + 0.04 * Math.max(0, Math.sin(t * Math.PI * 4))));
+    label("UNSERE FAHNE?! 🚩", 288, 250, pop(t, T.crater + 0.35, T.fleet - 0.1), "#4a2b9a");
+    label("GEKLAUT! 👽", 300, 315, pop(t, T.stolen, T.fleet - 0.1));
   }
   if (t >= T.together && t < T.choose) {
     const a = pop(t, T.z630, T.choose - 0.12);
