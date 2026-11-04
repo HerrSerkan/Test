@@ -62,7 +62,8 @@ def tick(f):
 
 # Landung, Zähler, Karte
 place(EV["land"], roar(EV["count"][1] - EV["land"] + 0.6), 0.3)
-place(EV["count"][1] + 0.3, thud(), 0.6)
+for i in range(3):
+    place(EV["rockets"][1] + i * 0.3, thud(), 0.55)   # drei Raketen setzen auf
 a, b = EV["count"]
 for k in range(26):
     place(a + (b - a) * (k / 25) ** 0.6, tick(1200 + 30 * k), 0.22)
@@ -92,6 +93,48 @@ n = int(2.0 * SR); x = np.arange(n) / SR
 place(EV["ufos"] - 0.6, np.sin(2 * np.pi * (180 + 40 * np.sin(2 * np.pi * 5 * x)) * x) * np.minimum(1, x / 0.4) * np.minimum(1, (2 - x) / 0.5), 0.3)
 for t in EV["whooshes"]:
     place(t, whoosh(), 0.3)
+# Einschläge (Kamera-Stoß)
+def boom():
+    n = int(1.0 * SR); x = np.arange(n) / SR
+    return np.sin(2 * np.pi * (38 + 70 * np.exp(-x * 14)) * x) * env(n, 0.002, 0.3) + lp(rng.normal(0, 1, n), 2500) * env(n, 0.001, 0.06) * 0.5
+for t in EV["impacts"]:
+    place(t, boom(), 0.55)
+# Kasse + Münzen bei „keine Steuern“
+def kaching():
+    n = int(0.9 * SR); x = np.arange(n) / SR
+    bell = sum(np.sin(2 * np.pi * f * x) * env(n, 0.002, 0.25) for f in (2637, 3136, 3951)) / 3
+    clk = bp(rng.normal(0, 1, n), 1500, 6000) * env(n, 0.001, 0.02)
+    return bell * 0.8 + clk
+place(EV["steuern"] - 0.05, kaching(), 0.5)
+for k in range(12):
+    n = int(0.12 * SR); x = np.arange(n) / SR
+    place(EV["steuern"] + 0.1 + k * 0.09 + rng.random() * 0.05, np.sin(2 * np.pi * (3000 + rng.random() * 1500) * x) * env(n, 0.001, 0.03), 0.18)
+# Hammerschläge beim Bau des Dönerladens
+for k in range(3):
+    n = int(0.2 * SR)
+    place(EV["shop"] + k * 0.13, (bp(rng.normal(0, 1, n), 800, 4000) + np.sin(2 * np.pi * 900 * np.arange(n) / SR)) * env(n, 0.001, 0.04), 0.45)
+# Riser vor dem Musikwechsel + Eilmeldungs-Fanfare
+n = int(1.3 * SR); x = np.arange(n) / SR
+place(EV["night"] - 1.3, bp(rng.normal(0, 1, n), 600, 7000) * (x / x[-1]) ** 2.2, 0.45)
+def stab(fs, L=0.7):
+    n = int(L * SR); x = np.arange(n) / SR
+    s = sum(2 * ((f * x) % 1) - 1 for f in fs) / len(fs)
+    return lp(s, 2200) * env(n, 0.01, 0.3)
+place(EV["alien"][0], stab([196, 233, 294, 392]), 0.45)
+# Funk: Piepton + Rauschen am Anfang und Ende des Alien-Funks
+def beep():
+    n = int(0.12 * SR); return np.sin(2 * np.pi * 1400 * np.arange(n) / SR) * env(n, 0.002, 0.05)
+for t in (EV["alien"][0] - 0.12, EV["alien"][1] - 0.05):
+    place(t, beep(), 0.35); place(t + 0.02, bp(rng.normal(0, 1, int(0.3 * SR)), 1200, 5000) * env(int(0.3 * SR), 0.005, 0.1), 0.3)
+n = len(fx[int(EV["alien"][0] * SR):int(EV["alien"][1] * SR)])
+place(EV["alien"][0], bp(rng.normal(0, 1, n), 1500, 6000) * 0.08, 1.0)          # leises Funkrauschen darunter
+# Countdown-Ticken
+t = EV["attack"] + 0.15
+while t < EV["fleet"]:
+    place(t, tick(2200), 0.35); place(t + 0.25, tick(1600), 0.25); t += 0.5
+# Umfrage füllt sich + Follow-Pling
+place(EV["vote"], whoosh(0.6), 0.25)
+place(EV["check"], ding(2093), 0.4); place(EV["check"] + 0.1, ding(2637), 0.3)
 
 raw = subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(HERE, "build", "voice.wav"), "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
 voice = np.frombuffer(raw, np.float32).copy()
@@ -115,12 +158,12 @@ with wave.open(os.path.join(HERE, "build", "audio.wav"), "wb") as w:
 def read(p):
     r = subprocess.run(["ffmpeg", "-v", "error", "-i", p, "-ac", "2", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
     return np.frombuffer(r, np.float32).reshape(-1, 2)
-day, dark = read(os.path.join(HERE, "build", "music_day.wav")), read(os.path.join(HERE, "build", "music_dark.wav"))
+day, dark = read(os.path.join(HERE, "build", "music_day117.wav")), read(os.path.join(HERE, "build", "music_dark.wav"))
 def lufs_norm(x):
     return x / (np.sqrt((x ** 2).mean()) + 1e-9) * 0.12
 day, dark = lufs_norm(day), lufs_norm(dark)
 m = np.zeros((N, 2), np.float32)
-tn, xf = int((EV["night"] - 0.3) * SR), int(0.8 * SR)
+tn, xf = int((EV["night"] - 0.05) * SR), int(0.25 * SR)
 d = day[:min(len(day), tn + xf)]; m[:len(d)] += d * np.clip((tn + xf - np.arange(len(d))) / xf, 0, 1)[:, None]
 dk = dark[: N - tn]; m[tn:tn + len(dk)] += dk * np.clip(np.arange(len(dk)) / xf, 0, 1)[:, None]
 with wave.open(os.path.join(HERE, "build", "music.wav"), "wb") as w:

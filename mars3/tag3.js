@@ -1,6 +1,6 @@
 // ============================================================ Tag 3 (base.js + helpers3.js + tag3.js -> scene.js)
 const T = {
-  e630: wt(5), land: wt(7), count0: wt(9), count1: wt(13), card: wt(13) + 0.1, unauf: wt(14), top: wt(19), comment: wt(24), keine: wt(25),
+  e630: wt(5), land: wt(7), count0: wt(9), count1: wt(13), card: wt(13) + 0.1, unauf: wt(18) - 0.05, top: wt(19), comment: wt(24), keine: wt(25),
   law: wt(27), lawWrite: wt(32), steuern: wt(35), gab: wt(36), sword: wt(39), els: wt(40), suit: wt(42), ente: wt(45), duck: wt(48),
   doner: wt(50), shop: wt(57), shopDone: wt(61), night: wt(62), funk: wt(67), alien: wt(71), alienEnd: wt(83), attack: wt(83), scout: wt(88),
   fleet: wt(91), ufos: wt(95), together: wt(97), z630: wt(100), choose: wt(105), cardA: wt(108), cardB: wt(116), poll: wt(121), vote: wt(125),
@@ -232,12 +232,58 @@ function counterTimer(t, s) {
   ctx.restore();
 }
 
+// ------------------------------------------------------------ Effekte
+const IMPACTS = [T.e630, T.card + 0.5, T.lawWrite, T.shopDone, T.alien, T.attack, T.z630, T.cardA, T.cardB];
+function shakeAt(t) {
+  let dx = 0, dy = 0;
+  for (const t0 of IMPACTS) { const d = t - t0; if (d < 0 || d > 0.35) continue; const a = 7 * Math.exp(-d * 12); dx += Math.sin(d * 90) * a; dy += Math.cos(d * 70) * a * 0.6; }
+  return [dx, dy];
+}
+const CUTS = CAM.slice(1).filter((c, i) => Math.abs(Math.log(c[3] / CAM[i][3])) > 0.2).map(c => c[0] - 0.05);
+function flash(t) {
+  let a = 0; for (const t0 of CUTS) { const d = t - t0; if (d >= 0 && d < 0.14) a = Math.max(a, 0.22 * (1 - d / 0.14)); }
+  for (const t0 of [T.e630, T.alien, T.night]) { const d = t - t0; if (d >= 0 && d < 0.2) a = Math.max(a, 0.5 * (1 - d / 0.2)); }
+  if (a > 0) { ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillRect(0, 0, W, H); }
+}
+const MONEY = (() => { const r = rng(55), a = []; for (let i = 0; i < 26; i++) a.push({ x: r() * W, d: r() * 0.8, v: 260 + r() * 260, rot: r() * 6, sp: (r() - 0.5) * 6, e: r() < 0.6 ? "💸" : "🪙" }); return a; })();
+function moneyRain(t, t0) {
+  ctx.save(); ctx.font = "34px 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const m of MONEY) { const d = t - t0 - m.d; if (d < 0 || d > 1.5) continue; ctx.save(); ctx.globalAlpha = Math.min(1, (1.5 - d) * 3); ctx.translate(m.x, -30 + d * m.v * 1.6); ctx.rotate(m.rot + d * m.sp); ctx.fillText(m.e, 0, 0); ctx.restore(); }
+  ctx.restore();
+}
+function sparkleBurst(x, y, t, t0) {
+  const d = t - t0; if (d < 0 || d > 0.7) return;
+  ctx.save(); ctx.globalAlpha = 1 - d / 0.7; ctx.fillStyle = "#fff7a8";
+  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, r = 20 + d * 120, sz = 7 * (1 - d / 0.7) + 2;
+    const px = x + Math.cos(a) * r, py = y + Math.sin(a) * r * 0.8;
+    ctx.beginPath(); ctx.moveTo(px, py - sz * 1.8); ctx.lineTo(px + sz * 0.5, py - sz * 0.5); ctx.lineTo(px + sz * 1.8, py); ctx.lineTo(px + sz * 0.5, py + sz * 0.5);
+    ctx.lineTo(px, py + sz * 1.8); ctx.lineTo(px - sz * 0.5, py + sz * 0.5); ctx.lineTo(px - sz * 1.8, py); ctx.lineTo(px - sz * 0.5, py - sz * 0.5); ctx.fill(); }
+  ctx.restore();
+}
+function speedLines(t, a) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = 0.35 * a; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+  const r = rng(Math.floor(t * 20));
+  for (let i = 0; i < 14; i++) { const x = r() * W, y = r() * H * 0.7, l = 60 + r() * 120; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 10, y + l); ctx.stroke(); }
+  ctx.restore();
+}
+function glitch(t, t0) { // RGB-Versatz + Scanlines über dem Alien-TV
+  ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = "#000"; for (let y = 140; y < 400; y += 4) ctx.fillRect(58, y, 460, 2); ctx.restore();
+  const d = t - t0, burst = d < 0.35 || (Math.sin(t * 7) > 0.97);
+  if (burst) { const r = rng(Math.floor(t * 30)); ctx.save(); ctx.globalCompositeOperation = "screen";
+    for (let i = 0; i < 5; i++) { ctx.fillStyle = i % 2 ? "rgba(255,0,80,0.25)" : "rgba(0,255,220,0.25)"; ctx.fillRect(58 + r() * 40 - 20, 120 + r() * 260, 460, 6 + r() * 14); }
+    ctx.restore(); }
+}
+
 // ------------------------------------------------------------ Bild
 window.renderFrame = function (t) {
   MAIN.setTransform(1, 0, 0, 1, 0, 0);
   MAIN.fillStyle = "#000"; MAIN.fillRect(0, 0, 1080, 1920);
   ctx.setTransform(S, 0, 0, S, 0, 0);
-  const [cx, cy, z] = cam(t);
+  let [cx, cy, z] = cam(t);
+  cx += Math.sin(t * 0.9) * 3 / z; cy += Math.cos(t * 0.7) * 2 / z;
+  const [shx, shy] = shakeAt(t);
+  ctx.translate(shx, shy);
   const night = t >= T.night ? ramp(t, T.night, T.night + 0.6) : 0;
   ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-cx, -cy);
   sky(t); ground();
@@ -294,6 +340,11 @@ window.renderFrame = function (t) {
   const vg = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.3, W / 2, H * 0.5, H * 0.8);
   vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(20,5,5,0.45)"); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
+  speedLines(t, t >= T.count0 && t < T.card ? 1 : 0);
+  if (t >= T.steuern) moneyRain(t, T.steuern - 0.4);
+  for (const [c, t0] of [[NAMED.gab, T.sword], [NAMED.els, T.suit], [NAMED.ente, T.duck]]) if (t >= t0 && t < t0 + 0.8) { const [sx, sy] = toScreen(c.x, c.y - 100, t); sparkleBurst(sx, sy, t, t0); }
+  if (t >= T.shopDone && t < T.night) { const [sx, sy] = toScreen(30, 600, t); sparkleBurst(sx, sy, t, T.shopDone); }
+
   // ---- Einblendungen
   const tag = pop(t, 0.12, T.e630 - 0.15);
   if (tag > 0) { ctx.save(); ctx.translate(288, 190); ctx.scale(tag, tag); outlined("TAG 3", 0, 0, 92, CYAN, "#0e1a30", 13); ctx.restore(); }
@@ -309,7 +360,7 @@ window.renderFrame = function (t) {
     ctx.save(); ctx.translate(288, 200); ctx.scale(a, a); outlined("+" + n, 0, 0, 92, CYAN, "#0e1a30", 13); outlined("NEUE ASTRONAUTEN", 0, 60, 26, "#fff", "#0e1a30", 7); ctx.restore();
   }
   if (t >= T.card && t < T.unauf) { profileCard(t, pop(t, T.card, T.unauf - 0.12)); confetti(t, T.card + 0.4); }
-  pill("UNAUFHALTSAM", 288, 190, pop(t, T.unauf + 0.1, T.top - 0.12), "#fff", "#14223a", "✊ ");
+  pill("UNAUFHALTSAM", 288, 190, pop(t, T.unauf + 0.05, T.top - 0.12), "#fff", "#14223a", "✊ ");
   pill("TOP-KOMMENTAR", 288, 165, pop(t, T.top, T.law - 0.15), "#fff", "#14223a", "👑 ");
   tkComment(pop(t, T.comment - 0.1, T.law - 0.15), "Luca", "Keine Steuern", "Vor 16 Std.", 1, AV.luca, 265);
   if (t >= T.law && t < T.gab) {
@@ -332,10 +383,10 @@ window.renderFrame = function (t) {
   label("MEISTGEWÜNSCHT: DÖNER 🥙", 288, 210, pop(t, T.doner + 0.1, T.shop - 0.1), "#ff8a2a");
   stamp("✓ ERÖFFNET", 300, 250, pop(t, T.shopDone, T.night - 0.15));
   label("⚠ EINGEHENDER FUNKSPRUCH", 288, 210, pop(t, T.funk - 0.1, T.alien - 0.1));
-  if (t >= T.alien && t < T.attack) tvBreaking(t, pop(t, T.alien, T.attack - 0.12, 0.25));
+  if (t >= T.alien && t < T.attack) { tvBreaking(t, pop(t, T.alien, T.attack - 0.12, 0.25)); glitch(t, T.alien); }
   if (t >= T.attack && t < T.together) {
     label("⏳ ANGRIFF IN 24 STUNDEN", 288, 175, pop(t, T.attack, T.together - 0.15));
-    counterTimer(t, pop(t, T.attack + 0.15, T.fleet - 0.1));
+    counterTimer(t, pop(t, T.attack + 0.15, T.fleet - 0.1) * (1 + 0.04 * Math.max(0, Math.sin(t * Math.PI * 4))));
     label("SPÄHER 👀", 288, 330, pop(t, T.scout + 0.15, T.fleet - 0.1), "#2fa84f");
   }
   if (t >= T.together && t < T.choose) {
@@ -356,6 +407,7 @@ window.renderFrame = function (t) {
     avatarBadge(288, 210, pop(t, T.follow, DUR - 0.2), ramp(t, wt(131), wt(131) + 0.25));
     if (t >= wt(133)) { const b = pop(t, wt(133), DUR - 0.2); ctx.save(); ctx.translate(288, 300); ctx.scale(b, b); outlined("JEDER ASTRONAUT", 0, -20, 34, "#fff", "#0e1a30", 9); outlined("ZÄHLT!", 0, 20, 34, CYAN, "#0e1a30", 9); ctx.restore(); }
   }
+  ctx.save(); ctx.setTransform(S, 0, 0, S, 0, 0); flash(t); ctx.restore();
   // Untertitel; Alien-Funk in grüner Box
   if (t >= T.alien - 0.05 && t < T.alienEnd - 0.05) {
     ctx.save(); ctx.translate(288, 795);
@@ -369,7 +421,8 @@ window.exportEvents = function () {
   return { duration: DUR, land: T.land, count: [T.count0, T.count1], card: T.card, e630: T.e630,
     pops: [T.unauf + 0.1, T.top, T.comment - 0.1, T.law, T.lawWrite, T.gab, T.els, T.ente, T.doner + 0.1, T.shop, T.attack, T.together, T.cardA, T.cardB, T.poll, T.vote, T.follow],
     dings: [T.sword + 0.15, T.suit + 0.4, T.duck + 0.2, T.shopDone], sword: T.sword, duck: T.duck, confetti: [T.e630, T.card + 0.4, T.steuern],
-    night: T.night, funk: T.funk, alien: [T.alien, T.alienEnd], ufos: T.ufos, end: T.end,
+    night: T.night, funk: T.funk, alien: [T.alien, T.alienEnd], ufos: T.ufos, end: T.end, impacts: IMPACTS, steuern: T.steuern, shop: T.shop,
+    attack: T.attack, fleet: T.fleet, check: wt(131), vote: T.vote, rockets: [T.land, T.count1],
     whooshes: CAM.slice(1).filter((c, i) => Math.abs(Math.log(c[3] / CAM[i][3])) > 0.2).map(c => c[0] - 0.25) };
 };
 window.setup = async function () {
