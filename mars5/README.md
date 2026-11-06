@@ -7,6 +7,7 @@ Hook „TAG 5 / ROTANIEN 💥 ZERSTÖRT“ (Kolonie brennt), Zurückspulen „�
 Stille, ein Schuss (Schild 100 → 51 → 0 %), Kuppel zerspringt, Montage: Raketenwerft · Funkturm · Wachtürme · Dönerladen · Häuser je „Weg!“,
 über 800 Astronauten rennen, letzte Rakete / nicht genug Platz, Luke (3-2-1), Start, Schildzentrale explodiert, der Mars bricht auseinander,
 „4 TAGE. / 1 MINUTE.“, Reihe der Überlebenden, Treibstoff 9 % / verfolgt, „Neuer Planet gesucht“, „Wo landen wir?“ + eigener Kommentar.
+Alle Astronauten rennen in die letzte Rakete – nach dem Start steht niemand mehr auf dem Mars (Wunsch des Nutzers).
 Ende: Treibstoff 8 %, Alien-Schiff füllt das Bild, roter Blitz → passt auf den roten Blitz in Frame 1 (Loop).
 
 Easter Eggs / Fans (ohne Kommentarkarten):

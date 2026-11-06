@@ -330,15 +330,17 @@ const ARCHERS = [[150, 640], [210, 646], [470, 640], [540, 646], [270, 650], [60
 const SWORDS = [[60, 742], [140, 748], [220, 742], [520, 742], [600, 748], [680, 742]];
 
 // Menge, die zur Rakete rennt
-function runCrowd(t) {
-  const k = ramp(t, T.run - 0.1, T.hatch);
+function runCrowd(t) { // alle rennen zur Rakete und verschwinden darin – beim Start ist niemand mehr draußen
   for (const [i, m] of MASS.entries()) {
     const sp = SPR[m.acc]; if (!sp) continue;
-    const dirx = LAST.x - m.x, dist = Math.abs(dirx);
-    const x = m.x + Math.sign(dirx) * Math.min(Math.max(0, dist - 60), 900 * k * (0.6 + 0.4 * ((i * 7) % 10) / 10));
+    const arrive = T.run + 0.5 + ((i * 37) % 100) / 100 * (T.start - T.run - 0.7);
+    if (t >= arrive) continue;
+    const k = Math.pow(ramp(t, T.run - 0.1, arrive), 1.6);
+    const x = lerp(m.x, LAST.x, k), y = lerp(m.y, LAST.y + 4, k);
+    const sc = m.s * (1 - 0.6 * ramp(k, 0.85, 1));
     const hop = Math.abs(Math.sin(t * 14 + m.ph)) * 7;
-    const w = 88 * m.s, h = 158 * m.s;
-    ctx.drawImage(sp, x - w / 2, m.y - h - hop, w, h);
+    const w = 88 * sc, h = 158 * sc;
+    ctx.drawImage(sp, x - w / 2, y - h - hop, w, h);
   }
 }
 
@@ -353,7 +355,7 @@ function drawWorld(t, z) {
   // Häuser
   for (const h of HOUSES) { if (ruin("houses")) { rubble(h.x, h.y, 40 * h.s); continue; } house(h.x, h.y, h.s, h.c); }
   for (const [x, y, s] of BGROCKETS) if (!ruin("houses")) rocket(x, y, s, 0);
-  if (t >= T.run && t < T.lift + 0.5) runCrowd(t);
+  if (t >= T.run) runCrowd(t);
   else if (!(t < T.rew + 0.25)) massCrowd(t, t >= T.party && t < T.four ? 1 : 0);
   // Scheinwerfer
   if (!ruin("wach") && t >= T.night) { beam(790, 455, -2.2 + Math.sin(t * 0.8) * 0.5, 520, 70, 1); beam(-430, 470, -1.0 + Math.sin(t * 0.7 + 1) * 0.5, 520, 70, 1); }
