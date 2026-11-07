@@ -19,7 +19,7 @@ function compositeOutline(px) {
 const WT = window.WORDS.map(w => w[1]);            // Startzeit je gesprochenem Wort
 const wt = i => WT[i];
 const SPEECH_END = window.CHUNKS.at(-1).e;
-const DUR = SPEECH_END + 1.0;   // + Loop am Ende (Lichtantrieb überhitzt)
+const DUR = SPEECH_END + 0.85;   // + Loop am Ende (Lichtantrieb überhitzt)
 
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const ramp = (t, a, b) => clamp((t - a) / (b - a));

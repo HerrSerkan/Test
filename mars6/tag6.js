@@ -6,7 +6,7 @@ const FOLLOWERS = 824;
 const T = {
   fall: wt(3), impact: wt(7) - 0.62, vote: wt(7), tablet: wt(11), hatch: wt(17), noam: wt(20), horizon: wt(23), eyes: wt(26),
   rehook: wt(28), fast: wt(31), delon: wt(33), twist: wt(38), sniff: wt(40), doner: wt(45), hut: wt(47), stamm: wt(51),
-  cta: wt(55), follow: wt(58), og: wt(63), decide: wt(69), vote2: wt(72), loop: SPEECH_END + 0.1,
+  cta: wt(55), follow: wt(58), og: wt(63), weiter: wt(69), decide: wt(73), stay: wt(74), go: wt(78), vote2: wt(84), loop: SPEECH_END + 0.1,
 };
 const AV = {};
 const scene = t => t < T.fall ? "cockpit" : t < T.impact ? "fall" : t < T.tablet ? "world" : t < T.hatch ? "cabin" : t < T.decide ? "world" : t < T.loop ? "split" : "world";
@@ -303,7 +303,7 @@ function drawWorld(t, z) {
   // Crew vorne
   for (const [i, c] of CREW.entries()) { if (t >= T.rehook + 0.4 && t < T.hut && c.id !== "delon" && !(c.id === "tim" && t >= T.twist + 0.3)) continue; drawCrewMember(c, i, t); }
   // Lichtantrieb + OGnani schiebt
-  if (t >= T.og) { const k = easeOut(ramp(t, T.og, T.og + 1.0)); const mx = lerp(860, 470, k); lightDrive(mx, 790, 1, t, t >= T.loop); astronaut(mx + 115, 792, 0.85, "happy", { t, acc: "#3fd3f2", armL: 1.6, armR: 1.4 }); tablet(mx + 145, 735, 0.35); }
+  if (t >= T.og) { const k = easeOut(ramp(t, T.og, T.og + 1.0)); const mx = lerp(860, 470, k); lightDrive(mx, 790, 1 + (t >= T.weiter && t < T.decide ? 0.06 * Math.max(0, Math.sin((t - T.weiter) * 9)) : 0), t, t >= T.loop); astronaut(mx + 115, 792, 0.85, "happy", { t, acc: "#3fd3f2", armL: 1.6, armR: 1.4 }); tablet(mx + 145, 735, 0.35); }
   ctx = MAIN;
   compositeOutline(clamp(2.2 * S * Math.pow(z, 0.75), 2.5, 8));
   // Aufprall: Eisstaub
@@ -367,6 +367,24 @@ function drawCabin(t) {
   tablet(288, lerp(700, 470, up), 1.75);
   const [nx, ny] = [288, 300]; pill("OGnani", nx, ny + 12, pop(t, T.tablet + 0.35, T.hatch - 0.1), "#fff", "#14223a");
 }
+function pollCard(t, s) { // TikTok-Umfrage zum Abstimmen (noch ohne Ergebnis)
+  if (s <= 0.01) return;
+  ctx.save(); ctx.translate(SX, 545); ctx.scale(s, s);
+  ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 14; ctx.fillStyle = "#1e1e22"; rr(-210, -100, 420, 200, 16); ctx.fill(); ctx.shadowColor = "transparent";
+  ctx.strokeStyle = "rgba(255,255,255,0.85)"; ctx.lineWidth = 2; ctx.stroke();
+  if (AV.me) { ctx.save(); ctx.beginPath(); ctx.arc(-172, -64, 20, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(AV.me, -192, -84, 40, 40); ctx.restore(); }
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#a9a9b0"; ctx.font = "800 15px InterX"; ctx.fillText("Gedacht ·", -140, -76); ctx.fillStyle = "#5aa7e6"; ctx.fillText("Creator*in", -64, -76);
+  ctx.fillStyle = "#fff"; ctx.font = "800 20px InterX, 'Noto Color Emoji'"; ctx.fillText("Bleiben oder weiterfliegen? 🪐", -140, -50);
+  for (const [i, txt] of ["🥙 Auf Pluto bleiben", "🚀 Besseren Planeten suchen"].entries()) {
+    const y = -22 + i * 50; ctx.fillStyle = "#2a2a30"; rr(-188, y, 376, 42, 12); ctx.fill(); ctx.strokeStyle = "#45454d"; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.font = "800 17px InterX, 'Noto Color Emoji'"; ctx.fillText(txt, -172, y + 22);
+  }
+  ctx.fillStyle = "#8a8a92"; ctx.font = "700 12px InterX"; ctx.fillText("🗳 Umfrage · Die Mehrheit entscheidet Tag 7", -188, 86);
+  // tippender Finger
+  const k = (t - T.vote2) % 1.2, fy = k < 0.25 ? -k * 20 : 0; ctx.font = "34px 'Noto Color Emoji'"; ctx.fillText("👆", 120 + Math.sin(t * 3) * 4, 48 + fy + 14 * Math.max(0, Math.sin(t * 5)));
+  ctx.restore();
+}
 function drawSplit(t) {
   const beat = 1 + 0.03 * Math.max(0, Math.sin(t * 2 * Math.PI * 1.1)) ** 8;
   // links: Pluto bleiben
@@ -385,12 +403,15 @@ function drawSplit(t) {
   ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.beginPath(); ctx.ellipse(410, 590, 60, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "rgba(0,0,30,0.3)"; ctx.beginPath(); ctx.arc(470, 720, R, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   ctx.save(); ctx.translate(370 + Math.sin(t * 2) * 6, 600); ctx.rotate(0.6); rocket(0, 0, 0.42, 1.2); ctx.restore();
   ctx.restore();
+  if (t >= T.stay && t < T.vote2) { ctx.fillStyle = "rgba(0,0,0,0.45)"; if (t < T.go) ctx.fillRect(288, 0, 288, H); else ctx.fillRect(0, 0, 288, H); }
+  if (t >= T.vote2) { ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.fillRect(0, 0, W, H); }
   // Trennlinie (Blitz)
   ctx.strokeStyle = "#fff"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(288, 0); for (let y = 0; y <= H; y += 60) ctx.lineTo(288 + (y / 60 % 2 ? 10 : -10), y); ctx.stroke();
   // Badges (innerhalb der sicheren Zone)
-  const a = pop(t, T.decide + 0.15, 99);
-  for (const [x, l1, l2, col] of [[140, "🥙 BLEIBEN", "AUF PLUTO", "#ffd23a"], [398, "🚀 WEITER", "NACH KEPLER-452b", "#3fd3f2"]]) {
-    if (a <= 0) continue; ctx.save(); ctx.translate(x, 470); ctx.scale(a * beat, a * beat);
+  const a = pop(t, T.decide + 0.15, T.vote2 - 0.05);
+  for (const [i, [x, l1, l2, col]] of [[140, "🥙 BLEIBEN", "AUF PLUTO", "#ffd23a"], [398, "🚀 WEITER", "BESSERER PLANET", "#3fd3f2"]].entries()) {
+    if (a <= 0) continue; const hi = i === 0 ? (t >= T.stay && t < T.go ? 1 : 0) : (t >= T.go ? 1 : 0);
+    ctx.save(); ctx.translate(x, 470); const sc = a * beat * (1 + 0.18 * hi); ctx.scale(sc, sc); ctx.globalAlpha = (t >= T.stay && !hi) ? 0.55 : 1;
     ctx.fillStyle = "#14223a"; rr(-82, -34, 164, 68, 14); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.stroke();
     ctx.fillStyle = col; ctx.font = "24px Comic, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(l1, 0, -10); ctx.fillStyle = "#fff"; ctx.font = "13px Comic"; ctx.fillText(l2, 0, 18);
     ctx.restore();
@@ -460,10 +481,11 @@ window.renderFrame = function (t) {
     if (a > 0) { ctx.save(); ctx.translate(SX, 240); ctx.rotate(-0.04); ctx.scale(a, a); ctx.fillStyle = "#ffd23a"; rr(-200, -36, 400, 72, 16); ctx.fill(); ctx.strokeStyle = "#14223a"; ctx.lineWidth = 5; ctx.stroke();
       ctx.fillStyle = "#14223a"; ctx.font = "36px Comic"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("1 FOLLOW = 1 BEWOHNER", 0, 3); ctx.restore(); }
   }
-  if (t >= T.og && t < T.decide) { const a = pop(t, T.og + 0.3, T.decide - 0.08); if (a > 0) { ctx.save(); ctx.translate(SX, 165); ctx.scale(a, a); outlined("⚡ LICHTANTRIEB", 0, 0, 44, CYAN, "#0e1a30", 10); outlined("GEBAUT VON OGNANI", 0, 40, 22, "#fff", "#0e1a30", 6); ctx.restore(); } }
+  if (t >= T.og && t < T.decide) { const a = pop(t, T.og + 0.3, T.decide - 0.08); if (a > 0) { ctx.save(); ctx.translate(SX, 165); ctx.scale(a, a); outlined("⚡ LICHTANTRIEB", 0, 0, 44, CYAN, "#0e1a30", 10); outlined("GEBAUT VON OGNANI", 0, 40, 22, "#fff", "#0e1a30", 6); ctx.restore(); }
+    const b = pop(t, T.weiter, T.decide - 0.08); if (b > 0) { ctx.save(); ctx.translate(SX, 262); ctx.rotate(-0.04); ctx.scale(b, b); ctx.fillStyle = "#14223a"; rr(-190, -26, 380, 52, 14); ctx.fill(); ctx.strokeStyle = CYAN; ctx.lineWidth = 4; ctx.stroke(); ctx.fillStyle = "#fff"; ctx.font = "26px Comic, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("= WIR KÖNNEN WEITER 🚀", 0, 3); ctx.restore(); } }
   if (t >= T.decide && t < T.loop) {
-    const a = pop(t, T.decide, 99); ctx.save(); ctx.translate(SX, 160); ctx.scale(a, a); outlined("BLEIBEN ODER", 0, -24, 40, "#fff", "#0e1a30", 10); outlined("WEITERFLIEGEN?", 0, 20, 40, "#ffd23a", "#0e1a30", 10); ctx.restore();
-    const b = pop(t, T.vote2 - 0.2, 99); if (b > 0) { ctx.save(); ctx.translate(SX, 250); ctx.scale(b, b); outlined("KOMMENTIER 🥙 ODER 🚀", 0, 0, 22, "#fff", "#0e1a30", 6); outlined("DIE MEHRHEIT ENTSCHEIDET TAG 7", 0, 26, 15, "#cfd6e4", "#0e1a30", 5); ctx.restore(); }
+    const a = pop(t, T.decide, 99); ctx.save(); ctx.translate(SX, 160); ctx.scale(a, a); outlined("DIE WICHTIGSTE FRAGE:", 0, -48, 22, "#fff", "#0e1a30", 6); outlined("BLEIBEN ODER", 0, -12, 40, "#fff", "#0e1a30", 10); outlined("WEITERFLIEGEN?", 0, 32, 40, "#ffd23a", "#0e1a30", 10); ctx.restore();
+    pollCard(t, pop(t, T.vote2, 99));
   }
   if (t >= T.loop) topLabel("⚠ ÜBERHITZT", pop(t, T.loop + 0.05, DUR) * (1 + 0.08 * Math.max(0, Math.sin(t * 20))), "#fff", 160, 40, RED);
   ctx.save(); ctx.setTransform(S, 0, 0, S, 0, 0); flash(t); ctx.restore();

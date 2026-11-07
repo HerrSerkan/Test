@@ -202,6 +202,7 @@ for k in range(10): place(T["cta"] + 0.2 + (T["follow"] - T["cta"] - 0.2) * k / 
 place(T["follow"], ding(2093), 0.35); place(T["follow"], pop(750), 0.3)
 place(T["og"], hum(T["decide"] - T["og"]), 0.3)
 place(T["decide"], whoosh(0.5), 0.3)
+place(T["weiter"], ding(1760), 0.3); place(T["stay"], pop(650), 0.35); place(T["go"], pop(800), 0.35); place(T["vote2"], pop(700), 0.45); place(T["vote2"] + 0.2, ding(2093), 0.3)
 k = T["decide"] + 0.3
 while k < T["loop"]: place(k, heartbeat(), 0.5); k += 0.82
 for i in range(6): place(T["loop"] + 0.1 + i * 0.13, beep(2000, 0.08), 0.4)
