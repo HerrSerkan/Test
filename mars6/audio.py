@@ -223,7 +223,7 @@ place(WE[62] + 0.05, cheer(1.2), 0.35)
 place(T["og"] + 0.2, crackleE(T["decide"] - T["og"] - 0.2), 0.12)
 for k in range(5): place(T["og"] + 0.4 + k * 0.45, zap(), 0.12)
 for k in range(3): place(WE[87] + 0.1 + k * 0.2, tick(1600), 0.2)
-place(T["loop"] + 0.05, crackleE(0.7), 0.3)
+
 place(T["tablet"] + 0.35, womp(), 0.5)
 place(T["hatch"], hiss(0.4), 0.4); place(T["hatch"] + 0.1, chatter(T["horizon"] - T["hatch"]), 0.25); place(T["hatch"], wind(T["horizon"] - T["hatch"] + 0.5), 0.3)
 place(T["noam"] + 0.15, buzz(0.3), 0.25)
@@ -240,8 +240,7 @@ place(T["og"], hum(T["decide"] - T["og"]), 0.3)
 place(T["decide"], whoosh(0.5), 0.3)
 place(T["weiter"], ding(1760), 0.3); place(T["stay"] - 0.12, pop(650), 0.25); place(T["go"] - 0.12, pop(800), 0.2); place(WE[87] + 0.05, ding(2093), 0.3)
 k = T["decide"] + 0.3
-while k < T["loop"]: place(k, heartbeat(), 0.28); k += 0.82
-for i in range(6): place(T["loop"] + 0.1 + i * 0.13, beep(2000, 0.08), 0.4)
+while k < EV["duration"] - 0.4: place(k, heartbeat(), 0.28); k += 0.82
 for t in EV["cuts"]:
     if 1.0 < t < T["loop"]: place(t - 0.2, whoosh(0.3), 0.15)
 

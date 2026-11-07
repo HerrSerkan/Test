@@ -9,13 +9,13 @@ const T = {
   cta: wt(55), follow: wt(58), og: wt(63), weiter: wt(69), decide: wt(73), stay: wt(74), go: wt(78), vote2: wt(84), loop: SPEECH_END + 0.1,
 };
 const AV = {};
-const scene = t => t < T.fall ? "cockpit" : t < T.impact ? "fall" : t < T.tablet ? "world" : t < T.hatch ? "cabin" : t < T.decide ? "world" : t < T.loop ? "split" : "world";
+const scene = t => t < T.fall ? "cockpit" : t < T.impact ? "fall" : t < T.tablet ? "world" : t < T.hatch ? "cabin" : t < T.decide ? "world" : "split";
 
 // ------------------------------------------------------------ Untertitel: Wort für Wort, max. 2 Zeilen, in der sicheren Zone
 function captions(t) {
   const C = window.CHUNKS; let c = null;
   for (let i = 0; i < C.length; i++) if (t >= C[i].s - 0.02) c = C[i];
-  if (!c || t >= T.loop || (t > c.e + 0.6 && c === C.at(-1))) return;
+  if (!c || (t > c.e + 0.6 && c === C.at(-1))) return;
   ctx.save(); ctx.font = "40px Comic, 'Noto Color Emoji'"; ctx.letterSpacing = "0.5px";
   const sp = ctx.measureText(" ").width, MAXW = 400;
   const parts = c.w.map(([w, s, col]) => ({ w, s, col, ww: ctx.measureText(w).width }));
@@ -450,16 +450,14 @@ function shakeAt(t) {
   if (t < T.impact) { const a = t < T.fall ? 6 : 4; dx += Math.sin(t * 61) * a; dy += Math.cos(t * 53) * a; }
   for (const t0 of IMPACTS) { const d = t - t0; if (d < 0 || d > 0.5) continue; const big = t0 === T.impact ? 3 : 1.4; const a = 7 * big * Math.exp(-d * 9); dx += Math.sin(d * 90) * a; dy += Math.cos(d * 70) * a * 0.6; }
   if (t >= T.rehook && t < T.rehook + 1.2) { dx += Math.sin(t * 45) * 2.5; dy += Math.cos(t * 39) * 2.5; }
-  if (t >= T.loop) { dx += Math.sin(t * 60) * 3; dy += Math.cos(t * 50) * 3; }
   return [dx, dy];
 }
-const CUTS = [...CAM.slice(1).filter((c, i) => Math.abs(Math.log(c[3] / CAM[i][3])) > 0.2).map(c => c[0] - 0.05), T.fall, T.tablet, T.hatch, T.decide, T.loop];
+const CUTS = [...CAM.slice(1).filter((c, i) => Math.abs(Math.log(c[3] / CAM[i][3])) > 0.2).map(c => c[0] - 0.05), T.fall, T.tablet, T.hatch, T.decide];
 function flash(t) {
   let a = 0, red = 0;
   for (const t0 of CUTS) { const d = t - t0; if (d >= 0 && d < 0.14) a = Math.max(a, 0.25 * (1 - d / 0.14)); }
   { const d = t - T.impact; if (d >= 0 && d < 0.4) a = Math.max(a, 1 - d / 0.4); }
   if (t < 0.2) red = 0.5 * (1 - t / 0.2);
-  if (t > DUR - 0.18) red = Math.max(red, ramp(t, DUR - 0.18, DUR - 0.02) * 0.8);
   if (a > 0) { ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillRect(0, 0, W, H); }
   if (red > 0) { ctx.fillStyle = `rgba(255,30,30,${red})`; ctx.fillRect(0, 0, W, H); }
 }
@@ -512,11 +510,10 @@ window.renderFrame = function (t) {
   }
   if (t >= T.og && t < T.decide) { const a = pop(t, T.og + 0.3, T.decide - 0.08); if (a > 0) { ctx.save(); ctx.translate(SX, 165); ctx.scale(a, a); outlined("⚡ LICHTANTRIEB", 0, 0, 44, CYAN, "#0e1a30", 10); outlined("GEBAUT VON OGNANI", 0, 40, 22, "#fff", "#0e1a30", 6); ctx.restore(); }
     const b = pop(t, T.weiter, T.decide - 0.08); if (b > 0) { ctx.save(); ctx.translate(SX, 262); ctx.rotate(-0.04); ctx.scale(b, b); ctx.fillStyle = "#14223a"; rr(-190, -26, 380, 52, 14); ctx.fill(); ctx.strokeStyle = CYAN; ctx.lineWidth = 4; ctx.stroke(); ctx.fillStyle = "#fff"; ctx.font = "26px Comic, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("= WIR KÖNNEN WEITER 🚀", 0, 3); ctx.restore(); } }
-  if (t >= T.decide && t < T.loop) {
+  if (t >= T.decide) {
     const a = pop(t, T.decide, 99); ctx.save(); ctx.translate(SX, 160); ctx.scale(a, a); outlined("DIE WICHTIGSTE FRAGE:", 0, -48, 22, "#fff", "#0e1a30", 6); outlined("BLEIBEN ODER", 0, -12, 40, "#fff", "#0e1a30", 10); outlined("WEITERFLIEGEN?", 0, 32, 40, "#ffd23a", "#0e1a30", 10); ctx.restore();
     pollCard(t, pop(t, T.vote2, 99));
   }
-  if (t >= T.loop) topLabel("⚠ ÜBERHITZT", pop(t, T.loop + 0.05, DUR) * (1 + 0.08 * Math.max(0, Math.sin(t * 20))), "#fff", 160, 40, RED);
   ctx.save(); ctx.setTransform(S, 0, 0, S, 0, 0); flash(t); ctx.restore();
   captions(t);
 };

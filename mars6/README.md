@@ -8,7 +8,7 @@ Wendung: das Wesen schnuppert und will Tims Döner, Dönerhütte „🥙 DÖNER 
 Schild „🍎 APPLE STORE (BALD)“ (Mehmet), CTA: Fahne „ROTANIEN 2.0“, Zähler, „1 FOLLOW = 1 BEWOHNER“,
 OGnanis Lichtantrieb („Damit können wir weiterfliegen“), „Die wichtigste Frage: Bleiben oder weiterfliegen?“ – Splitscreen
 „🥙 BLEIBEN / auf Pluto“ vs. „🚀 WEITER / besserer Planet“ (wird beim Sprechen hervorgehoben), dann **TikTok-Umfrage** „Bleiben oder weiterfliegen? 🪐“
-(„🥙 Auf Pluto bleiben“ / „🚀 Besseren Planeten suchen“, Mehrheit entscheidet Tag 7), Loop: „⚠ ÜBERHITZT“ + roter Blitz.
+(„🥙 Auf Pluto bleiben“ / „🚀 Besseren Planeten suchen“, Mehrheit entscheidet Tag 7). Ende: Die Umfragekarte bleibt stehen (der Loop „⚠ ÜBERHITZT“ wurde auf Wunsch entfernt).
 Easter Eggs: Elias (Pizza auf dem Helm), keanu (riesiger blauer Astronaut im Hintergrund), Taylor_ (Motorrad), Phillip (orange Katze),
 TickTock Notification (Brille + Rolex), Lolel (Lambo-Aufkleber auf der Rakete).
 Sichere Zone: Text nur links der rechten 15 %, nicht in den unteren 20 % und nicht in den oberen 10 %.
@@ -32,4 +32,4 @@ Musik (alle Kevin MacLeod, incompetech.com, CC BY 4.0 – Nennung in der Beschre
 Ton-Mix: Musik und Effekte werden automatisch leiser, sobald gesprochen wird (Ducking in audio.py: Effekte −65 %, Musik −70 %).
 Geräusche, die auf Wörtern lagen, sitzen in den Sprechpausen. Gesamt −14 LUFS, Spitzen −1,3 dBFS, Stimme im Mittel ~12,5 dB über dem Hintergrund.
 Zusatz-Effekte: Schneefall, Atemwolken, Schockwelle + Eissplitter + Risse beim Aufprall, Schneestaub und „!“ beim Wesen,
-„?“ beim Schnuppern, Herzchen beim Mampfen, „+1“ und Konfetti beim Zähler, Stromblitze am Lichtantrieb, Funken + Rauch beim Überhitzen.
+„?“ beim Schnuppern, Herzchen beim Mampfen, „+1“ und Konfetti beim Zähler, Stromblitze am Lichtantrieb.
