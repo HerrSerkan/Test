@@ -684,8 +684,8 @@ const WISH = { jakob: { x: 255, y: 768, acc: "#9a8f88" }, bz: { x: 590, y: 768, 
 const SX = 245;                       // Mitte für Text (links der rechten 15 %)
 const FOLLOWERS = 824;
 const T = {
-  fall: wt(3), impact: wt(7) - 0.62, vote: wt(7), tablet: wt(11), hatch: wt(17), noam: wt(20), horizon: wt(23), eyes: wt(26),
-  rehook: wt(28), fast: wt(31), delon: wt(33), twist: wt(38), sniff: wt(40), doner: wt(45), hut: wt(47), stamm: wt(51),
+  fall: wt(3), impact: wt(7) - 0.62, vote: wt(7), tablet: wt(11), hatch: wt(17), noam: wt(20), horizon: wt(22), eyes: wt(25),
+  rehook: wt(27), fast: wt(30), delon: wt(32), twist: wt(37), sniff: wt(40), doner: wt(45), hut: wt(47), stamm: wt(51),
   cta: wt(55), follow: wt(58), og: wt(63), weiter: wt(69), decide: wt(73), stay: wt(74), go: wt(78), vote2: wt(84), loop: SPEECH_END + 0.1,
 };
 const AV = {};
@@ -907,6 +907,7 @@ function drawCrewMember(c, i, t) {
   if (hidden) f = "shock";
   if (t >= T.og && t < T.decide) { f = "shock"; o.armL = 0.25; o.armR = -0.25; }
   const sc = hidden ? 0.75 : 0.85;
+  if (t >= T.hatch && t < T.rehook && !hidden) BREATH.push([x, y - 110 * sc, i]);
   if (c.id === "noam" && t >= T.noam && t < T.rehook) o.armR = -2.6;
   if (c.id === "delon" && t >= T.delon && t < T.doner + 0.3) o.armR = -1.4;
   if (c.id === "tim" && (t >= T.twist + 0.3)) o.armR = -2.5;
@@ -952,7 +953,9 @@ function cam(t) {
 const toScreen = (x, y, t) => { const [cx, cy, z] = cam(t); return [W / 2 + (x - cx) * z, H / 2 + (y - cy) * z, z]; };
 const MASS6 = (() => { const r = rng(88), a = [], keys = ["#3fd3f2", "#7bf27a", "#ff4b6e", "#b06bff", "#ffd23a", "#ff8a2a", "#ff79c6"]; for (let i = 0; i < 260; i++) { const y = 610 + Math.pow(r(), 1.3) * 90, x = -700 + r() * 1700; if (y > 650 && x > -360 && x < 640) continue; a.push({ x, y, s: 0.22 + (y - 600) / 110 * 0.32, acc: keys[i % 7], ph: r() * 6 }); } return a.sort((p, q) => p.y - q.y); })();
 
+const BREATH = [];
 function drawWorld(t, z) {
+  BREATH.length = 0;
   plutoSky(t); plutoGround();
   const cr = creaturePos(t);
   // Wesen hinter dem Hügel
@@ -986,6 +989,16 @@ function drawWorld(t, z) {
   if (t >= T.og) { const k = easeOut(ramp(t, T.og, T.og + 1.0)); const mx = lerp(860, 470, k); lightDrive(mx, 790, 1 + (t >= T.weiter && t < T.decide ? 0.06 * Math.max(0, Math.sin((t - T.weiter) * 9)) : 0), t, t >= T.loop); astronaut(mx + 115, 792, 0.85, "happy", { t, acc: "#3fd3f2", armL: 1.6, armR: 1.4 }); tablet(mx + 145, 735, 0.35); }
   ctx = MAIN;
   compositeOutline(clamp(2.2 * S * Math.pow(z, 0.75), 2.5, 8));
+  for (const [bx, by, ph] of BREATH) breath(bx, by, t, ph * 0.37);
+  shock(CRASH.x, CRASH.y, t, T.impact, 320); iceShards(CRASH.x, CRASH.y - 30, t, T.impact);
+  if (t >= T.impact) { ctx.save(); ctx.strokeStyle = "rgba(90,130,175,0.7)"; ctx.lineWidth = 3; const r = rng(4); for (let i = 0; i < 7; i++) { const k = easeOut(ramp(t, T.impact, T.impact + 0.3)); let a = Math.PI * (0.05 + 0.9 * r()), px = CRASH.x, py = CRASH.y + 8; ctx.beginPath(); ctx.moveTo(px, py); for (let j = 0; j < 4; j++) { a += (r() - 0.5) * 0.6; px += Math.cos(a) * 40 * k; py += Math.sin(a) * 8 * k + 4; ctx.lineTo(px, py); } ctx.stroke(); } ctx.restore(); }
+  if (t >= T.rehook && t < T.rehook + 1.5) for (let i = 0; i < 8; i++) { const k = ramp(t, T.rehook + 0.3 + i * 0.05, T.rehook + 1.4); if (k <= 0 || k >= 1) continue; ctx.globalAlpha = 0.7 * (1 - k); circle(560 + i * 45, 520 - k * 60 + (i % 2) * 20, 18 + 40 * k, "#eef5fb"); ctx.globalAlpha = 1; }
+  if (t >= T.rehook + 0.4 && t < T.delon) for (const [i, c] of CREW.entries()) { if (c.id === "delon") continue; exclaim(HIDE.x + (i - 3) * 14, HIDE.y - 120, pop(t, T.rehook + 0.45 + i * 0.04, T.delon - 0.1, 0.2)); }
+  if (cr && t >= T.sniff - 0.3 && t < T.doner) { ctx.save(); ctx.translate(cr.x - 190, cr.y - 470); const s2 = pop(t, T.sniff - 0.2, T.doner - 0.05); ctx.scale(s2, s2); outlined("?", 0, 0, 70, "#fff", "#0e1a30", 10); ctx.restore(); }
+  if (cr && t >= T.hut && t < T.decide) hearts(cr.x - 50, cr.y - 150, t);
+  if (t >= T.og && t < T.decide) { const k = easeOut(ramp(t, T.og, T.og + 1.0)); arcs(lerp(860, 470, k), 670, 70, t); }
+  if (t >= T.loop) { arcs(470, 670, 90, t, "255,120,90"); for (let i = 0; i < 4; i++) sparks(470, 640, t, T.loop + i * 0.2, 12, i % 2 ? "#ffd23a" : "#ff6a3d"); for (let i = 0; i < 3; i++) { const k = ((t * 0.8 + i / 3) % 1); ctx.globalAlpha = 0.5 * (1 - k); circle(470 + Math.sin(t + i) * 15, 600 - k * 160, 15 + 30 * k, "#3a3f4e"); ctx.globalAlpha = 1; } }
+  if (t >= T.cta) for (let i = 0; i < 10; i++) { const t0 = T.cta + 0.2 + (T.follow - T.cta - 0.2) * i / 9, d = t - t0; if (d < 0 || d > 0.8) continue; const r = rng(i + 3); ctx.save(); ctx.globalAlpha = 1 - d / 0.8; ctx.translate(-500 + r() * 1400, 560 - d * 60); outlined("+1", 0, 0, 34, "#7bf27a", "#0e1a30", 7); ctx.restore(); }
   // Aufprall: Eisstaub
   if (t >= T.impact && t < T.hatch) { const d = t - T.impact; glow(CRASH.x, CRASH.y - 40, 260 * Math.min(1, d * 4), "230,240,255", 0.7 * (1 - clamp(d / 1.2)));
     for (const [x0, y0, r, p] of SNOW) { ctx.globalAlpha = 0.8 * (1 - clamp((d - 1.5) / 1)); circle(x0 + Math.sin(t + p) * 10, 380 + y0 * 0.6 + d * 40 - 200 * Math.exp(-d * 3), r, "#f4f9ff"); } ctx.globalAlpha = 1; }
@@ -1098,6 +1111,18 @@ function drawSplit(t) {
   }
 }
 
+// ------------------------------------------------------------ Zusatz-Effekte
+const FLAKES = (() => { const r = rng(33), a = []; for (let i = 0; i < 70; i++) a.push([r() * W, r() * H, 1 + r() * 2.4, 20 + r() * 40, r() * 6]); return a; })();
+function snowfall(t, a = 1) { ctx.save(); for (const [x0, y0, rad, sp, p] of FLAKES) { const y = (y0 + t * sp) % H, x = (x0 + Math.sin(t * 0.8 + p) * 18 + W) % W; ctx.globalAlpha = a * (0.45 + 0.3 * Math.sin(t * 2 + p)); circle(x, y, rad, "#f4f9ff"); } ctx.restore(); }
+function breath(x, y, t, ph) { for (let i = 0; i < 2; i++) { const k = ((t * 0.9 + ph + i * 0.5) % 1); ctx.globalAlpha = 0.45 * (1 - k); circle(x + 10 + k * 22, y - k * 26, 5 + 12 * k, "#ffffff"); } ctx.globalAlpha = 1; }
+function hearts(x, y, t) { ctx.save(); ctx.font = "16px 'Noto Color Emoji'"; ctx.textAlign = "center"; for (let i = 0; i < 3; i++) { const k = ((t * 0.7 + i / 3) % 1); ctx.globalAlpha = 1 - k; ctx.fillText("❤️", x + Math.sin(t * 3 + i * 2) * 14, y - k * 70); } ctx.restore(); }
+function arcs(x, y, r, t, col = "160,240,255") { ctx.save(); const rr_ = rng(Math.floor(t * 24)); ctx.strokeStyle = `rgba(${col},0.9)`; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+  for (let i = 0; i < 3; i++) { let a = rr_() * Math.PI * 2, px = x + Math.cos(a) * r * 0.4, py = y + Math.sin(a) * r * 0.4; ctx.beginPath(); ctx.moveTo(px, py); for (let j = 0; j < 4; j++) { a += (rr_() - 0.5) * 1.4; px += Math.cos(a) * r * 0.3; py += Math.sin(a) * r * 0.3; ctx.lineTo(px, py); } ctx.stroke(); } ctx.restore(); }
+function sparks(x, y, t, t0, n = 14, col = "#ffd23a") { const d = t - t0; if (d < 0 || d > 0.8) return; const r = rng(Math.round(t0 * 100)); for (let i = 0; i < n; i++) { const a = -Math.PI * r(), v = 80 + r() * 160; circle(x + Math.cos(a) * v * d, y + Math.sin(a) * v * d + 160 * d * d, 2.5 * (1 - d), col); } }
+function shock(x, y, t, t0, R = 260) { const d = t - t0; if (d < 0 || d > 0.6) return; ctx.save(); ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - d / 0.6)})`; ctx.lineWidth = 10 * (1 - d / 0.6); ctx.beginPath(); ctx.ellipse(x, y, R * easeOut(d / 0.6), R * 0.3 * easeOut(d / 0.6), 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+const SHARDS6 = (() => { const r = rng(8), a = []; for (let i = 0; i < 26; i++) a.push([(r() - 0.5) * 2, -r(), 6 + r() * 10, r() * 6]); return a; })();
+function iceShards(x, y, t, t0) { const d = t - t0; if (d < 0 || d > 1.2) return; for (const [vx, vy, s, rot] of SHARDS6) { ctx.save(); ctx.translate(x + vx * 300 * d, y + vy * 420 * d + 380 * d * d); ctx.rotate(rot + d * 8); ctx.globalAlpha = 1 - d / 1.2; ctx.fillStyle = "#e6f6ff"; ctx.strokeStyle = "#7fb0dc"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-s, s * 0.5); ctx.lineTo(0, -s); ctx.lineTo(s, s * 0.6); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } }
+function exclaim(x, y, s) { if (s <= 0.01) return; ctx.save(); ctx.translate(x, y); ctx.scale(s, s); outlined("!", 0, 0, 52, RED, "#0e1a30", 9); ctx.restore(); }
 // ------------------------------------------------------------ Effekte
 const IMPACTS = [0, T.impact, T.rehook + 0.7, T.og + 1.0];
 function shakeAt(t) {
@@ -1136,11 +1161,14 @@ window.renderFrame = function (t) {
     drawWorld(t, z);
     ctx.restore();
     if (t >= T.horizon && t < T.twist) { ctx.fillStyle = "rgba(10,10,40,0.35)"; ctx.fillRect(0, 0, W, H); }       // unheimlich dunkel
+    snowfall(t, t >= T.impact && t < T.hatch ? 0.4 : 0.8);
     if (t >= T.loop) { const p = 0.5 + 0.5 * Math.sin(t * 20); ctx.fillStyle = `rgba(255,20,20,${0.15 + 0.2 * p})`; ctx.fillRect(0, 0, W, H); }
   }
   const vg = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.3, W / 2, H * 0.5, H * 0.8);
   vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(10,10,25,0.5)"); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   if (sc === "fall") speedLines(t, 1);
+  if (sc === "world" && t >= T.rehook && t < T.rehook + 0.9) speedLines(t, 1);
+  if (sc === "split" && t >= T.vote2) confetti(t, T.vote2 + 0.05);
 
   // ---- Einblendungen (sichere Zone)
   tag6Badge();
@@ -1155,6 +1183,7 @@ window.renderFrame = function (t) {
   if (t >= T.twist && t < T.hut) { const [sx, sy] = toScreen(640, 360, t); if (t >= T.sniff && t < T.doner) topLabel("👃 SCHNUPPER …", pop(t, T.sniff, T.doner - 0.05), "#fff", 160, 36); if (t >= T.doner) topLabel("🥙 ?!", pop(t, T.doner, T.hut - 0.08), "#ffd23a", 160, 60); }
   if (t >= T.hut && t < T.cta) { topLabel("🥙 STAMMKUNDE", pop(t, T.stamm, T.cta - 0.08), "#ffd23a", 160, 40); const [jx, jy] = toScreen(-385, 645, t); pill("Janic", Math.max(60, Math.min(jx, 430)), jy, pop(t, T.hut + 0.2, T.cta - 0.1), "#fff", "#14223a"); }
   if (t >= T.cta && t < T.og) {
+    confetti(t, T.follow - 0.05);
     const n = Math.round(FOLLOWERS * easeOut(ramp(t, T.cta + 0.2, T.follow)));
     topLabel("👥 BEWOHNER: " + n, pop(t, T.cta + 0.1, T.og - 0.08), "#fff", 150, 38, "#14223a");
     const a = pop(t, T.follow - 0.05, T.og - 0.08) * (1 + 0.04 * Math.sin(t * 8));

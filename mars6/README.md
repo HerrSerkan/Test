@@ -1,6 +1,6 @@
 # Rotanien – Tag 6 „Absturz auf Pluto“ (eigene Folge nach BRIEFING_TAG6.md, Stil wie Tag 5)
 
-Animation mit Sprecher, 31,8 s, 1080×1920, 60 fps. Stand 07.11.2026: 824 Follower, 4.256 Likes → „👥 BEWOHNER: 824“.
+Animation mit Sprecher, 30,9 s, 1080×1920, 60 fps. Stand 07.11.2026: 824 Follower, 4.256 Likes → „👥 BEWOHNER: 824“.
 Ablauf: Cockpit mit ⛽ 1 % → 0 %, Absturz auf Pluto (helles Herz), Aufprall + 0,4 s Stille („🗳 EURE WAHL“),
 OGnanis Tablet „PLUTO = ZWERGPLANET ❌“, −230 °C + Noams iPhone „KEIN EMPFANG“, Schatten mit zwei Augen,
 Rehook: das Pluto-Wesen (Alex' Alien-Freund) – alle verstecken sich hinter der Rakete, nur Delon nicht (Laserpistole lädt),
@@ -18,8 +18,8 @@ Aufbau: base.js + helpers3.js + lib4.js + lib5.js + tag6.js -> scene.js
     cat mars6/base.js mars6/helpers3.js mars6/lib4.js mars6/lib5.js mars6/tag6.js > mars6/scene.js
     # Stimme: ElevenLabs „Liam“, Text in script.txt -> build/voice_raw.mp3
     python3 mars6/voice_prep.py mars6/build/voice_raw.mp3 mars6/build/voice.wav 1.2 0.3
-    # Schluss ab „Damit können wir weiterfliegen“ separat erzeugt (previous_text) und angehängt; Pausen eingefügt (Aufprall 0,6 s, vor „Und wir sind nicht allein“, vor der Wendung, „Es will … einen Döner“, vor CTA und Entscheidung)
-    python3 mars6/words.py   # danach Whisper-Halluzination am Ende abschneiden (89 Wörter)
+    # Stimme in einem Stück erzeugt (keine Schnitte in der Aufnahme); nur Pausen eingefügt: # Aufprall 0,6 s, vor „Und wir sind nicht allein“ 0,35, vor „Aber das Wesen“ 0,3, „Es will … einen Döner“ 0,3, vor „Rotanien“ und „Also“ je 0,15
+    python3 mars6/words.py   # danach Whisper-Halluzination am Ende abschneiden, falls vorhanden (88 Wörter)
     python3 mars6/make_lines.py
     node tools/canvas_render.js mars6 --events
     python3 mars6/audio.py   # Musik in build/music_cand/ (Link auf mars5/build/music_cand)
@@ -28,3 +28,8 @@ Aufbau: base.js + helpers3.js + lib4.js + lib5.js + tag6.js -> scene.js
 
 Musik (alle Kevin MacLeod, incompetech.com, CC BY 4.0 – Nennung in der Beschreibung):
 „Volatile Reaction“ (Alarm), Stille, „Ossuary 6 – Air“ (unheimlich), „Fluffing a Duck“ (Wendung), „Hitman“ (Entscheidung).
+
+Ton-Mix: Musik und Effekte werden automatisch leiser, sobald gesprochen wird (Ducking in audio.py: Effekte −65 %, Musik −70 %).
+Geräusche, die auf Wörtern lagen, sitzen in den Sprechpausen. Gesamt −14 LUFS, Spitzen −1,3 dBFS, Stimme im Mittel ~12,5 dB über dem Hintergrund.
+Zusatz-Effekte: Schneefall, Atemwolken, Schockwelle + Eissplitter + Risse beim Aufprall, Schneestaub und „!“ beim Wesen,
+„?“ beim Schnuppern, Herzchen beim Mampfen, „+1“ und Konfetti beim Zähler, Stromblitze am Lichtantrieb, Funken + Rauch beim Überhitzen.
