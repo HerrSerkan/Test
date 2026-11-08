@@ -222,17 +222,19 @@ def riser(L):
 
 
 # ------------------------------------------------------------ Effekte platzieren
-place(0, creak(0.7), 0.5); place(0.02, munch(T["warp"]), 0.5); place(0.05, boing(), 0.4); place(0.1, pop(900), 0.3)
+place(0, creak(0.7), 0.5); place(0.02, munch(T["warp"]), 0.5); place(0.05, boing(), 0.4); place(0.1, pop(900), 0.3); place(0.4, thud(), 0.3)   # Landung nach dem Zurückspringen
 place(T["warp"] - 0.3, riser(0.4), 0.3); place(T["warp"], whoosh(0.8), 0.5); place(T["warp"], roar(T["eat"] - T["warp"]), 0.25)
 place(T["warp"] + 0.05, pop(700), 0.3)
 place(T["weiter"] - 0.05, boom(), 0.55); place(T["weiter"], whoosh(0.6), 0.4); place(T["weiter"] + 0.1, ding(2093), 0.3)
 place(T["eat"], munch(T["mascot"] - T["eat"]), 0.45)
-for k in range(9): place(T["eat"] + 0.2 + (T["jens"] - T["eat"] - 0.3) * k / 8, tick(1400 - 60 * k), 0.3)
+for k in range(9):
+    b = T["eat"] + 0.2 + (T["jens"] - T["eat"] - 0.3) * k / 8; place(b, whoosh(0.25), 0.15); place(b + 0.3, plop(), 0.35); place(b + 0.32, tick(1400 - 60 * k), 0.2)   # Döner fliegt ins Maul
 place(T["jens"] + 0.05, pop(650), 0.3)
-place(T["mascot"], bell(), 0.45); place(T["mascot"] + 0.25, bell(), 0.3); place(T["lohn"] + 0.05, pop(800), 0.3)
+place(T["mascot"] - 0.05, clank(), 0.25); place(T["mascot"], bell(), 0.45); place(T["mascot"] + 0.25, bell(), 0.3); place(T["lohn"] + 0.05, pop(800), 0.3)
 place(T["alarm"], siren(T["drive"] - T["alarm"] + 0.3), 0.3); place(T["alarm"], boom(), 0.5)
 place(T["aster"], roar(1.5), 0.4); place(T["aster"] + 0.05, pop(600), 0.25)
 place(T["drive"], hum(T["crowd"] - T["drive"]), 0.25)
+for k in range(6): place(T["drive"] + 0.1 + k * 0.3, blip(1300 + 90 * k), 0.12)   # OGnani tippt
 for k in range(4): place(T["jump"] + k * 0.18, beep(1900, 0.1), 0.3)
 for k in range(10): place(T["crowd"] + 0.1 + (T["follow"] - T["crowd"]) * k / 9, ding(1568 + 60 * k), 0.12)
 place(WE[48] + 0.05, cheer(1.0), 0.3); place(T["follow"] - 0.08, pop(750), 0.25)

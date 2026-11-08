@@ -27,3 +27,10 @@ Aufbau: base.js + helpers3.js + lib4.js + lib5.js + lib6.js (Monster/Döner/Antr
 
 Musik (Kevin MacLeod, incompetech.com, CC BY 4.0): „Monkeys Spinning Monkeys“, „Volatile Reaction“, „Hitman“.
 Ton: −14 LUFS, Stimme im Mittel ~11 dB über dem Hintergrund (Ducking).
+
+Überarbeitung (glaubwürdigere Animation): Monster hält sich mit den Krallen am Kistenrand fest, Astronauten springen erschrocken zurück
+(„!“, Schweißtropfen, Landung); Lichtsprung: Sterne rasen nach unten vorbei, Pluto bleibt zurück, langer Feuerstrahl;
+bei jedem Zähler-Tick fliegt ein Döner vom Stapel ins Maul („GULP“), Stapel und Zähler schrumpfen gemeinsam;
+Jens läuft zum Monster und legt ihm das Halsband um, dann Plakat; Alarm: Crew läuft panisch hin und her, kreisende Warnlichter;
+Cockpit: jaroslav dreht am Steuer, OGnani tippt, Anzeige flackert; Monster im Splitscreen sitzt in einem Bullauge;
+überall leichtes Rumpeln der Rakete + langsame Kamerafahrt, Staub im Licht, Spiegelungen im Glas.

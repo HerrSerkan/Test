@@ -860,6 +860,15 @@ function collar(x, y, s, k, t) { // y = Füße des Monsters (sitzend)
 function plakat(x, y, s, txt) { ctx.save(); ctx.translate(x, y); ctx.rotate(-0.06); ctx.scale(s, s); ctx.fillStyle = "#6b4a2a"; ctx.fillRect(-3, 0, 6, 70); ctx.fillStyle = "#1b1424"; rr(-74, -50, 148, 60, 8); ctx.fill(); ctx.fillStyle = "#fffdf4"; rr(-70, -46, 140, 52, 6); ctx.fill(); ctx.fillStyle = "#e5262b"; ctx.font = "18px Comic"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt[0], 0, -30); ctx.fillStyle = "#1b1424"; ctx.fillText(txt[1], 0, -8); ctx.restore(); }
 function chefBand(x, y, s) { const hy = y - 104 * s; chefHat(x, hy, s); ctx.save(); ctx.fillStyle = "#e5262b"; ctx.fillRect(x - 17 * s, hy - 37 * s, 34 * s, 8 * s); ctx.fillStyle = "#fff"; ctx.font = `${5.2 * s}px Comic`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("DÖNER-CHEF", x, hy - 32.5 * s); ctx.restore(); }
 
+// Hilfen für glaubwürdigere Bewegung
+const walkY = (t, on) => on ? -Math.abs(Math.sin(t * 11)) * 5 : 0;            // Gehen: kleines Auf und Ab
+function sweat(x, y, t, ph = 0) { const k = ((t * 1.4 + ph) % 1); ctx.globalAlpha = 1 - k; ctx.fillStyle = "#7fd0ff"; ctx.beginPath(); ctx.moveTo(x, y + k * 20 - 7); ctx.quadraticCurveTo(x + 5, y + k * 20, x, y + k * 20 + 5); ctx.quadraticCurveTo(x - 5, y + k * 20, x, y + k * 20 - 7); ctx.fill(); ctx.globalAlpha = 1; }
+function leanAstro(x, y, s, lean, face, o) { ctx.save(); ctx.translate(x, y); ctx.rotate(lean); ctx.translate(-x, -y); astronaut(x, y, s, face, o); ctx.restore(); }
+function beacons(t) { // kreisende Warnlichter
+  for (const lx of [60, 516]) { const a = t * 6 + (lx > 300 ? Math.PI : 0); ctx.save(); ctx.translate(lx, 150); ctx.rotate(a); const g = ctx.createLinearGradient(0, 0, 320, 0); g.addColorStop(0, "rgba(255,40,40,0.45)"); g.addColorStop(1, "rgba(255,40,40,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(320, -60); ctx.lineTo(320, 60); ctx.fill(); ctx.restore(); circle(lx, 150, 16, "#1b1424"); circle(lx, 150, 13, "#ff3b3b"); glow(lx, 150, 50, "255,60,60", 0.8); }
+}
+function motes(t, a = 1) { for (let i = 0; i < 22; i++) { const r = rng(i * 7 + 1); const x = (r() * W + Math.sin(t * 0.5 + i) * 12) % W, y = 160 + ((r() * 460 + t * (6 + r() * 8)) % 460); ctx.globalAlpha = a * (0.25 + 0.25 * Math.sin(t * 2 + i)); circle(x, y, 1 + r() * 1.5, "#fffbe6"); } ctx.globalAlpha = 1; }
+
 // ------------------------------------------------------------ Szenen
 function drawCrate(t) {
   const loop = t >= T.loop; const lk = loop ? ramp(t, T.loop, DUR - 0.05) : 0;
@@ -867,88 +876,121 @@ function drawCrate(t) {
   // großes Fenster hinter der Kiste (im Loop fliegt ein Asteroid heran)
   circle(288, 300, 150, "#8e86b8"); circle(288, 300, 134, "#06070f"); ctx.save(); ctx.beginPath(); ctx.arc(288, 300, 134, 0, Math.PI * 2); ctx.clip(); spaceView(154, 166, 268, 268, t, 0);
   if (loop) asteroid(288, 300, 30 + 230 * lk * lk, t * 0.8, 9); ctx.restore(); circle(238, 250, 22, "rgba(255,255,255,0.22)");
-  const pk = 1 - 0.04 * Math.abs(Math.sin(t * 9));   // ab Frame 1 voll sichtbar, wippt beim Kauen
+  motes(t);
+  const chew = Math.abs(Math.sin(t * 9));
   OL(() => {
-    creature(288, 720 - 95 * pk, 0.78, t, { cheeks: !loop || lk < 0.6, munch: !loop, roar: loop && lk >= 0.6, eyes: 1, look: loop ? 0 : -0.5 });
-    crate(288, 700, 1.25, t);
-    for (const [i, [x, d]] of [[56, -1], [500, 1], [556, 1]].entries()) {
-      const hop = loop ? 0 : Math.max(0, Math.sin(Math.min(Math.PI, (t + i * 0.08) * 7))) * 34;
-      astronaut(x + d * 22 * easeOut(ramp(t, 0, 0.4)), 712 - hop, 1.1, "shock", { t: t + i, acc: ["#ff79c6", "#3fd3f2", "#7bf27a"][i], armL: 2.6, armR: -2.6 });
+    creature(288, 578 - 4 * chew, 0.68, t, { cheeks: !loop || lk < 0.6, munch: !loop, roar: loop && lk >= 0.6, eyes: 1, look: loop ? 0 : -0.5 });
+    crate(288, 704, 1.42, t);
+    // Krallen halten sich am Kistenrand fest
+    for (const d of [-1, 1]) for (let k = -1; k <= 1; k++) { const cx = 288 + d * 118 + k * 13; ctx.fillStyle = "#5a4bc4"; rr(cx - 7, 466, 14, 16, 6); ctx.fill(); ctx.fillStyle = "#f2f6ff"; ctx.beginPath(); ctx.moveTo(cx - 5, 478); ctx.lineTo(cx, 494); ctx.lineTo(cx + 5, 478); ctx.fill(); }
+    // drei Astronauten zucken zurück: Sprung nach hinten, Landung, dann erschrocken stehen
+    for (const [i, [x, d]] of [[70, -1], [492, 1], [552, 1]].entries()) {
+      const k = loop ? 1 : easeOut(ramp(t, 0.02 + i * 0.06, 0.42 + i * 0.06));
+      const hop = loop ? 0 : Math.sin(Math.PI * k) * 26;
+      const lean = loop ? 0 : -d * 0.22 * Math.sin(Math.PI * Math.min(1, k * 1.2));
+      leanAstro(x + d * 26 * k, 712 - hop, 1.1, lean, "shock", { t: t + i, acc: ["#ff79c6", "#3fd3f2", "#7bf27a"][i], armL: 2.6 - 0.5 * k, armR: -2.6 + 0.5 * k });
     }
-    doner(110, 712, 1.6); doner(450, 715, 1.4);
+    doner(130, 714, 1.6); doner(440, 716, 1.4);
   });
-  if (!loop) for (let i = 0; i < 6; i++) { const k = ((t * 1.6 + i / 6) % 1); circle(288 + Math.sin(i * 2.3) * 70 * k, 470 - k * 120, 6 * (1 - k), "#e8c07a"); }   // Krümel
+  if (!loop) { for (const [i, x] of [70, 492, 552].entries()) { sweat(x + 26 * (i ? 1 : -1) + 22, 560, t, i * 0.3); exclaim(x + 26 * (i ? 1 : -1), 540, pop(t, 0.03 + i * 0.05, T.warp - 0.1, 0.18)); } }
+  if (!loop) for (let i = 0; i < 6; i++) { const k = ((t * 1.6 + i / 6) % 1); circle(288 + Math.sin(i * 2.3) * 70 * k, 470 - k * 120 + 140 * k * k, 6 * (1 - k), "#e8c07a"); }   // Krümel fallen
   if (loop && lk > 0.6) { const a = back(ramp(t, T.loop + 0.75, T.loop + 0.95)); ctx.save(); ctx.translate(SX, 220); ctx.rotate(-0.08); ctx.scale(a, a); outlined("BÖÖRP!", 0, 0, 70, "#7bf27a", "#0e1a30", 12); ctx.restore(); }
   if (loop && Math.sin(t * 40) > 0.2 && lk > 0.5) { ctx.fillStyle = "rgba(0,0,10,0.5)"; ctx.fillRect(0, 0, W, H); }
 }
-const STREAKS = (() => { const r = rng(81), a = []; for (let i = 0; i < 90; i++) a.push([r() * Math.PI * 2, r(), r()]); return a; })();
-function drawWarp(t) {
+const STREAKS = (() => { const r = rng(81), a = []; for (let i = 0; i < 110; i++) a.push([r() * W, r(), r()]); return a; })();
+function drawWarp(t) { // Rakete fliegt nach oben: Sterne rasen nach unten vorbei, Pluto bleibt zurück
   ctx.fillStyle = "#0a0f2a"; ctx.fillRect(0, 0, W, H);
-  const k = ramp(t, T.warp, T.weiter), hy = T.weiter <= t ? 1 : 0, sp = 0.4 + 1.6 * k + 2 * hy;
+  const k = ramp(t, T.warp, T.weiter), hy = T.weiter <= t ? 1 : 0, sp = 0.5 + 1.5 * k + 2.5 * hy;
+  const pk = easeIO(ramp(t, T.warp, T.eat)); plutoPlanet(360, lerp(840, 1240, pk), lerp(150, 40, pk), t);
   ctx.save(); ctx.lineCap = "round";
-  for (const [a, ph, w] of STREAKS) { const d = ((t * sp + ph) % 1); const r0 = 40 + d * 700, r1 = r0 + 30 + 260 * d * (0.3 + k + hy); ctx.strokeStyle = `rgba(${200 + 55 * w},${220 + 35 * w},255,${0.3 + 0.7 * d})`; ctx.lineWidth = 1 + 3 * d; ctx.beginPath(); ctx.moveTo(288 + Math.cos(a) * r0, 560 + Math.sin(a) * r0); ctx.lineTo(288 + Math.cos(a) * r1, 560 + Math.sin(a) * r1); ctx.stroke(); }
+  for (const [x, ph, w] of STREAKS) { const d = ((t * sp * (0.6 + 0.6 * w) + ph) % 1); const y = -60 + d * (H + 120), len = 8 + (30 + 260 * w) * (0.2 + k + hy); ctx.strokeStyle = `rgba(${200 + 55 * w},${225 + 30 * w},255,${0.35 + 0.6 * w})`; ctx.lineWidth = 1 + 2.5 * w; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - len); ctx.stroke(); }
   ctx.restore();
-  glow(288, 560, 220, "120,200,255", 0.35 + 0.3 * hy);
-  const pr = lerp(130, 8, easeIO(ramp(t, T.warp, T.eat - 0.2))); plutoPlanet(330, lerp(900, 640, easeIO(ramp(t, T.warp, T.eat))), pr, t);
-  ctx.save(); ctx.translate(288 + Math.sin(t * 40) * 2, 640); ctx.rotate(0); rocket(0, 0, 0.9, 1.5 + hy); ctx.restore();
-  if (hy) { const d = t - T.weiter; if (d < 0.3) { ctx.fillStyle = `rgba(255,255,255,${0.4 * (1 - d / 0.3)})`; ctx.fillRect(0, 0, W, H); } }
+  const wob = Math.sin(t * 7) * 0.03, rx = 288 + Math.sin(t * 3) * 6, ry = 600 + Math.sin(t * 5) * 4;
+  glow(rx, ry - 80, 200, "120,200,255", 0.25 + 0.35 * hy);
+  // langer Feuerstrahl
+  for (const [c, w, l] of [["rgba(255,90,30,0.75)", 22, 260], ["rgba(255,180,40,0.9)", 14, 190], ["rgba(255,245,200,0.95)", 7, 110]]) { const f = l * (0.8 + 0.4 * k + 0.6 * hy) * (1 + 0.12 * Math.sin(t * 50)); ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(rx - w, ry - 4); ctx.quadraticCurveTo(rx, ry + f, rx + w, ry - 4); ctx.fill(); }
+  ctx.save(); ctx.translate(rx, ry); ctx.rotate(wob); rocket(0, 0, 0.95, 0); ctx.restore();
+  if (hy) { const d = t - T.weiter; if (d < 0.3) { ctx.fillStyle = `rgba(255,255,255,${0.35 * (1 - d / 0.3)})`; ctx.fillRect(0, 0, W, H); } }
 }
-function drawDeck(t) { // Döner-Klau + Maskottchen
-  interior(t, 40, 0);
-  const n = Math.round(lerp(12, 3, easeIO(ramp(t, T.eat + 0.2, T.jens - 0.1))));
-  const masc = ramp(t, T.mascot, T.mascot + 0.3);
+// Döner-Klau: bei jedem Zähler-Tick fliegt ein Döner vom Stapel ins Maul
+const BITES = Array.from({ length: 9 }, (_, k) => T.eat + 0.2 + (T.jens - T.eat - 0.3) * k / 8);
+function donerLeft(t) { return 12 - BITES.filter(b => t >= b + 0.3).length; }
+function drawDeck(t) {
+  interior(t, 40, 0); motes(t, 0.8);
+  const n = donerLeft(t), mouth = [230, 598];
+  const JX0 = 640, JX1 = 352;                                   // Jens läuft zum Monster
+  const jWalk = ramp(t, T.jens, T.mascot - 0.15), jx = lerp(JX0, JX1, easeIO(jWalk));
+  const putOn = ramp(t, T.mascot - 0.3, T.mascot), masc = ramp(t, T.mascot, T.mascot + 0.3);
+  const back2 = ramp(t, T.lohn - 0.2, T.lohn + 0.2), jxx = lerp(jx, 400, easeIO(back2));
   OL(() => {
-    creature(230, 700, 0.72, t, { sit: true, munch: t < T.mascot, happy: true, cheeks: t < T.jens });
+    creature(230, 700, 0.72, t, { sit: true, munch: t < T.jens + 0.3, happy: true, cheeks: t < T.jens, look: t >= T.jens ? 1 : -0.6 });
     collar(230, 700, 0.72, masc, t);
-    for (let i = 0; i < Math.min(5, n); i++) doner(90 + (i % 3) * 26, 690 - Math.floor(i / 3) * 20, 1.5);
-    // Tim rauft sich die Haare
-    const timShake = t < T.jens ? Math.sin(t * 30) * 2 : 0;
-    astronaut(470 + timShake, 700, 1.2, t < T.jens ? "shock" : "smile", { t, acc: "#7bf27a", armL: t < T.jens ? 2.9 : 0.25, armR: t < T.jens ? -2.9 : -0.25 });
-    chefBand(470 + timShake, 700, 1.2);
-    // Jens mit Plakat
-    if (t >= T.jens) { const k = easeOut(ramp(t, T.jens, T.jens + 0.3)); const jx = lerp(640, 400, k); astronaut(jx, 705, 1.1, "happy", { t, acc: "#ffd23a", armR: -2.4 }); if (t >= T.lohn) plakat(jx + 34, 548, back(ramp(t, T.lohn, T.lohn + 0.25)), ["1 DÖNER", "PRO TAG"]); }
+    for (let i = 0; i < Math.min(6, n - 6 + 0) + 0; i++) {}
+    const pile = Math.max(0, n - 3);                                         // Stapel schrumpft sichtbar
+    for (let i = 0; i < Math.min(9, pile + 3); i++) doner(70 + (i % 3) * 26, 694 - Math.floor(i / 3) * 18, 1.5);
+    // Tim rauft sich die Haare, solange gefressen wird
+    const eating = t < T.jens; const timShake = eating ? Math.sin(t * 30) * 2 : 0;
+    astronaut(500 + timShake, 700, 1.2, eating ? "shock" : "smile", { t, acc: "#7bf27a", armL: eating ? 2.9 + Math.sin(t * 14) * 0.15 : 0.25, armR: eating ? -2.9 - Math.sin(t * 14) * 0.15 : -0.25 });
+    chefBand(500 + timShake, 700, 1.2);
+    // Jens: läuft hin, hält das Halsband hoch, legt es um, tritt zurück und zeigt das Plakat
+    if (t >= T.jens) {
+      const walking = jWalk > 0 && jWalk < 1;
+      const arms = t < T.mascot ? (putOn > 0 ? 2.6 : 0.6) : t < T.lohn ? 0.25 : -2.4;
+      astronaut(jxx, 705 + walkY(t, walking), 1.1, "happy", { t, acc: "#ffd23a", armL: t < T.mascot && putOn > 0 ? 2.6 : 0.25, armR: t < T.lohn ? -arms : -2.4 });
+      if (t < T.mascot) { const hx = jxx, hy = 705 - 150 + walkY(t, walking) - 30 * putOn; ctx.strokeStyle = "#e5262b"; ctx.lineWidth = 8; ctx.beginPath(); ctx.ellipse(hx - 60 * putOn, hy + 40 * putOn, 34, 10, 0, 0, Math.PI * 2); ctx.stroke(); }
+      if (t >= T.lohn) plakat(jxx + 34, 548, back(ramp(t, T.lohn, T.lohn + 0.25)), ["1 DÖNER", "PRO TAG"]);
+    }
   });
-  if (t >= T.mascot && t < T.mascot + 0.7) sparkleBurst(230, 560, t, T.mascot);
-  if (t < T.jens) hearts(180, 420, t);
+  // fliegende Döner + „Gulp“
+  for (const b of BITES) { const d = (t - b) / 0.3; if (d < 0 || d > 1) continue; const x = lerp(110, mouth[0], d), y = lerp(670, mouth[1], d) - Math.sin(Math.PI * d) * 70; ctx.save(); ctx.translate(x, y); ctx.rotate(d * 6); doner(0, 0, 1.6); ctx.restore(); }
+  for (const b of BITES) { const d = t - b - 0.3; if (d >= 0 && d < 0.35) { ctx.save(); ctx.globalAlpha = 1 - d / 0.35; ctx.translate(mouth[0] + 120, mouth[1] - 95 - d * 50); outlined("GULP", 0, 0, 18, "#fff", "#0e1a30", 5); ctx.restore(); } }
+  if (t >= T.mascot && t < T.mascot + 0.7) sparkleBurst(230, 590, t, T.mascot);
+  if (t >= T.jens && t < T.alarm) hearts(170, 440, t);
 }
 function drawAlarm(t) {
   interior(t, 80, 1, false);
   ctx.fillStyle = "#8e86b8"; rr(40, 150, 496, 400, 40); ctx.fill(); spaceView(56, 166, 464, 368, t, 1, ramp(t, T.alarm, T.drive));
-  OL(() => { for (const [i, x] of [90, 288, 486].entries()) astronaut(x, 720, 1.1, "shock", { t: t + i, acc: ["#ff79c6", "#3fd3f2", "#7bf27a"][i], armL: 2.5, armR: -2.5 }); });
-  for (const lx of [60, 516]) { const a = t * 8; glow(lx, 150, 70, "255,40,40", 0.6 + 0.4 * Math.sin(a)); circle(lx, 150, 14, "#ff3b3b"); }
+  ctx.fillStyle = "rgba(255,255,255,0.12)"; ctx.beginPath(); ctx.moveTo(70, 170); ctx.lineTo(200, 170); ctx.lineTo(90, 520); ctx.lineTo(60, 520); ctx.fill();   // Spiegelung im Glas
+  OL(() => { for (const [i, x0] of [90, 288, 486].entries()) { const run = Math.sin(t * 4 + i * 2) * 40, x = Math.max(50, Math.min(526, x0 + run)); astronaut(x, 720 + walkY(t + i, true), 1.1, "shock", { t: t + i, acc: ["#ff79c6", "#3fd3f2", "#7bf27a"][i], armL: 2.4 + Math.sin(t * 18 + i) * 0.5, armR: -2.4 + Math.sin(t * 18 + i + 1) * 0.5 }); } });
+  for (const [i, x0] of [90, 288, 486].entries()) sweat(Math.max(50, Math.min(526, x0 + Math.sin(t * 4 + i * 2) * 40)) + 26, 575, t, i * 0.33);
+  beacons(t);
 }
 function drawCockpit(t) {
   interior(t, 140, 1, false);
   ctx.fillStyle = "#8e86b8"; rr(30, 140, 516, 250, 40); ctx.fill(); spaceView(44, 154, 488, 222, t, 1, 0.6);
-  // Konsole + Anzeige
+  ctx.fillStyle = "rgba(255,255,255,0.1)"; ctx.beginPath(); ctx.moveTo(60, 156); ctx.lineTo(170, 156); ctx.lineTo(80, 374); ctx.lineTo(54, 374); ctx.fill();
+  // Konsole + Anzeige (flackert)
   ctx.fillStyle = "#5a5480"; rr(20, 395, 536, 110, 18); ctx.fill();
-  const blink = t >= T.jump && Math.sin(t * 16) > 0;
+  for (let i = 0; i < 10; i++) circle(400 + (i % 5) * 18, 418 + Math.floor(i / 5) * 18, 5, (Math.floor(t * 6) + i) % 3 ? "#3fd3f2" : "#ff5a5a");
+  const blink = t >= T.jump && Math.sin(t * 16) > 0, flick = Math.sin(t * 37) > 0.92 ? 0.5 : 1;
   ctx.fillStyle = "#0e1220"; rr(140, 410, 230, 70, 10); ctx.fill(); ctx.strokeStyle = blink ? "#ff4040" : "#3fd3f2"; ctx.lineWidth = 3; ctx.stroke();
-  ctx.fillStyle = t >= T.jump ? (blink ? "#ff5050" : "#ffd23a") : "#3fd3f2"; ctx.font = "19px Comic, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText(t >= T.jump ? "⚡ NUR NOCH 1 SPRUNG" : "⚡ ANTRIEB: 12 %", 255, 445);
-  // Mehmets Aufkleber
-  ctx.save(); ctx.translate(470, 450); ctx.rotate(0.08); ctx.fillStyle = "#fff"; rr(-56, -18, 112, 36, 10); ctx.fill(); ctx.fillStyle = "#1b1424"; ctx.font = "10.5px Comic, 'Noto Color Emoji'"; ctx.fillText("🍎 APPLE STORE", 0, -4); ctx.fillText("KOMMT", 0, 9); ctx.restore();
+  ctx.globalAlpha = flick; ctx.fillStyle = t >= T.jump ? (blink ? "#ff5050" : "#ffd23a") : "#3fd3f2"; ctx.font = "19px Comic, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(t >= T.jump ? "⚡ NUR NOCH 1 SPRUNG" : "⚡ ANTRIEB: " + Math.max(1, Math.round(lerp(40, 12, ramp(t, T.drive, T.jump)))) + " %", 255, 445); ctx.globalAlpha = 1;
+  // Mehmets Aufkleber an der Wand
+  ctx.save(); ctx.translate(500, 560); ctx.rotate(0.08); ctx.fillStyle = "#fff"; rr(-52, -18, 104, 36, 10); ctx.fill(); ctx.fillStyle = "#1b1424"; ctx.font = "10px Comic, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("🍎 APPLE STORE", 0, -4); ctx.fillText("KOMMT", 0, 9); ctx.restore();
   OL(() => {
     lightDrive(75, 560, 0.5, t, t >= T.jump);
-    // jaroslav am Steuer
-    ctx.strokeStyle = "#2a2c34"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(330, 520, 26, 0, Math.PI * 2); ctx.stroke();
-    astronaut(330, 600, 0.75, "smirk", { t, acc: "#1c2f6b", armL: -1.3, armR: 1.3 }); policeCap(330, 600, 0.75);
-    astronaut(190, 605, 0.75, t >= T.jump ? "shock" : "talk", { t: t + 1, acc: "#3fd3f2", armR: -1.6 });   // OGnani
-    // Fans im Hintergrund
+    // jaroslav am Steuer (Rad dreht hin und her)
+    const wheel = Math.sin(t * 3) * 0.6;
+    ctx.save(); ctx.translate(330, 520); ctx.rotate(wheel); ctx.strokeStyle = "#2a2c34"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 4; for (let i = 0; i < 3; i++) { const a = i * 2.09; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * 26, Math.sin(a) * 26); ctx.stroke(); } ctx.restore();
+    astronaut(330, 600, 0.78, "smirk", { t, acc: "#1c2f6b", armL: -1.3 + wheel * 0.4, armR: 1.3 + wheel * 0.4 }); policeCap(330, 600, 0.78);
+    // OGnani tippt auf die Konsole
+    astronaut(190, 605, 0.8, t >= T.jump ? "shock" : "talk", { t: t + 1, acc: "#3fd3f2", armR: t >= T.jump ? -2.6 : -1.4 + Math.abs(Math.sin(t * 10)) * 0.4 });
+    // Fans
     const row = [["tick", 38], ["balerz", 112], ["michel", 186], ["leonard", 262], ["noam", 338], ["apfel", 408], ["worm", 470]];
     for (const [id, x] of row) {
       const y = 720, s = id === "apfel" ? 0.62 : 0.8;
       if (id === "worm") { worm(x, y - 2, 1.1, t); continue; }
       const o = { t: t + x, acc: { tick: "#ff7a2a", balerz: "#a50044", michel: "#7bf27a", leonard: "#b06bff", noam: "#ff79c6", apfel: "#ffd23a" }[id] };
       if (id === "leonard") o.wave = true; if (id === "noam") o.armR = -2.6;
-      astronaut(x, y, s, id === "leonard" ? "happy" : "smile", o);
+      astronaut(x, y - (id === "leonard" ? 0 : Math.abs(Math.sin(t * 2 + x)) * 2), s, id === "leonard" ? "happy" : t >= T.jump ? "shock" : "smile", o);
       if (id === "tick") winterJacket(x, y, s); if (id === "balerz") barca(x, y, s); if (id === "michel") eggItem("cleats", x, y, s, t);
       if (id === "noam") phone1(x + 26 * s, y - 150 * s, s * 1.1); if (id === "apfel") hamster(x + 18, y - 40, 1, t);
     }
   });
   const [lx, ly] = [262, 585]; pill("Bin noch drin!", lx, ly, pop(t, T.drive + 0.3, T.crowd - 0.05), "#fff", "#14223a", "👋 ");
-  pill("Leonard", lx, ly - 34, 0, "#fff", "#14223a");
   if (t >= T.jump) arcs(75, 500, 60, t, "255,120,90");
+  beacons(t);
 }
 const SEATS = (() => { const r = rng(15), a = [], keys = ["#3fd3f2", "#7bf27a", "#ff4b6e", "#b06bff", "#ffd23a", "#ff8a2a", "#ff79c6"]; for (let row = 0; row < 4; row++) for (let i = 0; i < 26; i++) a.push({ x: i * 70 + (row % 2) * 35 + (r() - 0.5) * 10, y: 450 + row * 80, s: 0.3 + row * 0.13, acc: keys[(i + row) % 7], ph: r() * 6 }); return a; })();
 function drawCrowd(t) {
@@ -992,7 +1034,7 @@ function drawSplit(t) {
   if (t >= T.danger && t < T.poll) { const d = t - T.danger; if (d < 0.8) { glow(144, 500, 160 * Math.min(1, d * 5), "255,150,40", 0.9 * (1 - d / 0.8)); const a = back(ramp(t, T.danger, T.danger + 0.2)) * (1 - ramp(t, T.danger + 0.6, T.danger + 0.8)); ctx.save(); ctx.translate(144, 500); ctx.scale(a, a); ctx.font = "60px 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("💥", 0, 0); ctx.restore(); } }
   // rechts: Döner geht aus, Monster grummelt
   if (t >= T.noDoner - 0.3 && t < T.poll) { const k = ramp(t, T.noDoner - 0.3, T.noDoner + 0.5), n = Math.round(lerp(3, 0, k)); const a = pop(t, T.noDoner - 0.3, T.poll - 0.05);
-    ctx.save(); ctx.translate(430, 520); ctx.scale(a, a); creature(0, 70, 0.22, t, { roar: n === 0, eyes: 1 }); ctx.fillStyle = "#14223a"; rr(-56, 84, 112, 34, 10); ctx.fill(); ctx.strokeStyle = n === 0 ? RED : "#fff"; ctx.lineWidth = 3; ctx.stroke();
+    ctx.save(); ctx.translate(430, 520); ctx.scale(a, a); circle(0, 30, 60, "#8e86b8"); circle(0, 30, 52, "#e6e0f5"); ctx.save(); ctx.beginPath(); ctx.arc(0, 30, 52, 0, Math.PI * 2); ctx.clip(); creature(0, 92, 0.24, t, { roar: n === 0, eyes: 1, sit: true }); ctx.restore(); ctx.fillStyle = "#14223a"; rr(-56, 84, 112, 34, 10); ctx.fill(); ctx.strokeStyle = n === 0 ? RED : "#fff"; ctx.lineWidth = 3; ctx.stroke();
     ctx.fillStyle = n === 0 ? RED : "#fff"; ctx.font = "20px Comic, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("🥙 " + n, 0, 102); ctx.restore(); }
   if (t >= T.poll) { ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.fillRect(0, 0, W, H); }
 }
@@ -1035,8 +1077,12 @@ window.renderFrame = function (t) {
   ctx.setTransform(S, 0, 0, S, 0, 0);
   const [shx, shy] = shakeAt(t); ctx.translate(shx, shy);
   const sc = scene(t);
+  const t0 = [0, T.warp, T.eat, T.alarm, T.drive, T.crowd, T.decide, T.loop].filter(v => v <= t).pop(), push = 1 + 0.035 * easeIO(ramp(t, t0, t0 + 2.5));
+  const rumble = sc !== "warp" && sc !== "split" ? [Math.sin(t * 23) * 0.6, Math.cos(t * 19) * 0.5] : [0, 0];
+  ctx.save(); ctx.translate(W / 2 + rumble[0], H * 0.45 + rumble[1]); ctx.scale(push, push); ctx.translate(-W / 2, -H * 0.45);
   if (sc === "crate") drawCrate(t); else if (sc === "warp") drawWarp(t); else if (sc === "deck") drawDeck(t);
   else if (sc === "alarm") drawAlarm(t); else if (sc === "cockpit") drawCockpit(t); else if (sc === "crowd") drawCrowd(t); else drawSplit(t);
+  ctx.restore();
   const vg = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.35, W / 2, H * 0.5, H * 0.85);
   vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(20,10,40,0.35)"); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
@@ -1047,7 +1093,7 @@ window.renderFrame = function (t) {
     if (a > 0 && AV.poll) { ctx.save(); ctx.translate(SX, 290); ctx.scale(a, a); const w = 430, h = w * AV.poll.height / AV.poll.width; ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 14; ctx.fillStyle = "#1f1f22"; rr(-w / 2 - 6, -h / 2 - 6, w + 12, h + 12, 16); ctx.fill(); ctx.shadowColor = "transparent"; ctx.drawImage(AV.poll, -w / 2, -h / 2, w, h); ctx.restore(); }
     topLabel("🚀 72 % – WEITER!", pop(t, T.weiter, T.eat - 0.05), "#fff", 165, 40, "#2fa84f");
   }
-  if (t >= T.eat && t < T.jens) { const n = Math.round(lerp(12, 3, easeIO(ramp(t, T.eat + 0.2, T.jens - 0.1)))); topLabel("🥙 DÖNER: " + n, pop(t, T.eat + 0.1, T.jens - 0.05), n <= 4 ? RED : "#14223a", 160, 38, "#fff"); const [tx] = [470]; pill("Tim", tx, 500, pop(t, T.eat + 0.3, T.jens - 0.05), "#fff", "#14223a"); }
+  if (t >= T.eat && t < T.jens + 0.3) { const n = donerLeft(t); topLabel("🥙 DÖNER: " + n, pop(t, T.eat + 0.1, T.jens + 0.25), n <= 4 ? RED : "#14223a", 160, 38, "#fff"); const [tx] = [470]; pill("Tim", tx, 500, pop(t, T.eat + 0.3, T.jens - 0.05), "#fff", "#14223a"); }
   if (t >= T.jens && t < T.alarm) { pill("Jens", 400, 470, pop(t, T.jens + 0.25, T.alarm - 0.05), "#fff", "#14223a"); topLabel("🔔 MASKOTTCHEN", pop(t, T.mascot, T.alarm - 0.05), "#14223a", 160, 38, "#ffd23a"); }
   if (t >= T.alarm && t < T.drive) { const a = pop(t, T.alarm, T.drive - 0.05) * (1 + 0.06 * Math.max(0, Math.sin(t * 14))); topLabel("🚨 ALARM", a, "#fff", 140, 46, RED); topLabel("⚠ ASTEROIDEN", pop(t, T.aster, T.drive - 0.05), "#fff", 215, 36, "#14223a"); }
   if (t >= T.crowd && t < T.decide) {
