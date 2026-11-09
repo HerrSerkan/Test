@@ -831,11 +831,17 @@ const walkY = (t, on) => on ? -Math.abs(Math.sin(t * 11)) * 5 : 0;
 // ============================================================ Tag 8 „Neuer Planet, neues Land“ (base.js + helpers3.js + lib4.js + lib5.js + lib6.js + lib7.js + tag8.js -> scene.js)
 // Aufbau wie Tag 2. Echte Umfrage Tag 7: 67 % „Mitten durch“ (27 Stimmen). 829 Follower (−1 → kein „+NEU“-Badge).
 const FOLLOWERS = 829, LIKES = "4.352", FOLLOWING = "7";
+// Zeitpunkte über die Wörter selbst suchen (robust, falls Whisper anders trennt)
+const WL = window.WORDS.map(w => w[0].toLowerCase().replace(/[.,!?„“:\-]/g, ""));
+const wf = (w, from = 0) => { for (let i = from; i < WL.length; i++) if (WL[i].startsWith(w)) return i; throw new Error("Wort fehlt: " + w); };
+const iM = wf("mehmet"), iJ = wf("jeder");
 const T = {
-  monster: wt(6), crash: wt(9), card: wt(14), neu: wt(16), jens: wt(20), build: wt(27), mehmet: wt(29), apple: wt(39),
-  roader: wt(40), worm: wt(46), nico: wt(51), wish: wt(56), cliff: wt(59), eyes: wt(64), follow: wt(66), like: wt(73),
-  law: wt(79), top: wt(87), loop: SPEECH_END + 0.1,
+  monster: wt(wf("monster")), fall: wt(wf("bruchlandung")), card: wt(wf("829")), neu: wt(wf("wir", wf("829"))), jens: wt(wf("jens")), build: wt(wf("gesagt")),
+  mehmet: wt(iM), apple: wt(wf("bitte", iM)), roader: wt(wf("roder") - 1), worm: wt(wf("hier")), nico: wt(wf("sogar")), wish: wt(iJ),
+  cliff: wt(wf("aber", iJ)), eyes: wt(wf("ersten")), follow: wt(wf("follow") - 1), like: wt(wf("like") - 1), law: wt(wf("gesetz") - 1), top: wt(wf("top") - 1),
+  loop: SPEECH_END + 0.1,
 };
+T.crash = T.card - 0.75;          // Aufprall (in der Pause nach „Planeten“)
 const AV = {};
 
 // ------------------------------------------------------------ Neuer Planet: pinker Sand, türkiser Ringplanet
@@ -922,7 +928,7 @@ const CREW8 = [[300, 0], [250, 1], [360, 2], [410, 3]];   // Astronauten, die au
 
 // ------------------------------------------------------------ Kamera
 const CAM = [
-  [0, WIN.x - 10, WIN.y + 70, 2.6], [T.monster, WIN.x - 10, WIN.y + 75, 2.75], [T.crash - 0.1, WIN.x - 10, WIN.y + 80, 2.8], [T.crash + 0.25, 330, 600, 1.15],
+  [0, 330, 640, 1.45], [T.crash, 330, 640, 1.45], [T.crash + 0.6, 330, 600, 1.15],
   [T.card - 0.1, 330, 600, 1.15], [T.card + 0.2, 330, 560, 0.85], [T.neu - 0.1, 330, 560, 0.85], [T.neu + 0.3, 400, 590, 0.8], [T.jens - 0.1, 400, 590, 0.82],
   [T.jens + 0.2, STAND.x + 60, 640, 1.35], [T.mehmet - 0.1, STAND.x + 60, 640, 1.4], [T.mehmet + 0.2, HUT.x + 40, 640, 1.4], [T.roader - 0.1, HUT.x + 40, 640, 1.45],
   [T.roader + 0.2, 760, 650, 1.35], [T.nico - 0.1, 760, 650, 1.4], [T.nico + 0.2, 380, 640, 0.95], [T.cliff - 0.1, 380, 640, 0.95],
@@ -961,7 +967,8 @@ function drawWorld(t, z) {
   // Fahne
   if (t >= T.neu && !inLoop) flag2(FLAG.x, FLAG.y, ramp(t, T.neu + 0.3, T.neu + 0.9), t);
   // Rakete schief im Sand + Monster am Steuer
-  ctx.save(); ctx.translate(ROCKET.x, ROCKET.y); ctx.rotate(ROCKET.rot); rocket(0, 0, ROCKET.s, 0);
+  const bounce = t >= T.crash && t < T.crash + 0.6 ? Math.sin((t - T.crash) * 18) * 14 * Math.exp(-(t - T.crash) * 6) : 0;
+  ctx.save(); ctx.translate(ROCKET.x, ROCKET.y - bounce); ctx.rotate(ROCKET.rot + bounce * 0.004); rocket(0, 0, ROCKET.s, 0);
   ctx.fillStyle = "#2a2230"; rr(-16, -66, 32, 54, 6); ctx.fill();                  // offene Luke
   const wr = ROCKET.s; circle(0, -100 * wr, 32 * wr, "#1b1424"); circle(0, -100 * wr, 29 * wr, "#9aa3ab"); circle(0, -100 * wr, 25 * wr, "#cfeaf7");   // großes Cockpitfenster
   ctx.restore();
@@ -981,8 +988,12 @@ function drawWorld(t, z) {
   ctx = MAIN;
   compositeOutline(clamp(2.2 * S * Math.pow(z, 0.75), 2.5, 8));
   // Effekte in der Welt
-  if (lt < T.crash + 0.6 || inLoop) for (let i = 0; i < 4; i++) { const k = ((t * 0.5 + i / 4) % 1); ctx.globalAlpha = 0.5 * (1 - k); circle(ROCKET.x + 60 + Math.sin(t + i) * 14, ROCKET.y - 240 - k * 180, 16 + 36 * k, "#cfc4d8"); ctx.globalAlpha = 1; }
+  if ((t >= T.crash && t < T.neu + 1) || inLoop) for (let i = 0; i < 4; i++) { const k = ((t * 0.5 + i / 4) % 1); ctx.globalAlpha = 0.5 * (1 - k); circle(ROCKET.x + 60 + Math.sin(t + i) * 14, ROCKET.y - 240 - k * 180, 16 + 36 * k, "#cfc4d8"); ctx.globalAlpha = 1; }
   if (t >= T.crash && t < T.neu) for (const [x, i] of CREW8) { const k = easeOut(ramp(t, T.crash + i * 0.12, T.crash + 0.7 + i * 0.12)), xx = lerp(ROCKET.x - 10, x - 140 + i * 30, k); for (let j = 0; j < 3; j++) { const a = t * 4 + j * 2.1; ctx.save(); ctx.font = "14px 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.fillText("⭐", xx + Math.cos(a) * 26, 776 + i * 4 - 128 + Math.sin(a) * 8); ctx.restore(); } }
+  if (t >= T.crash && t < T.crash + 1.4) { const d = t - T.crash; glow(ROCKET.x, ROCKET.y - 40, 300 * Math.min(1, d * 5), "255,200,220", 0.8 * (1 - d / 1.4));
+    ctx.save(); ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - clamp(d / 0.6))})`; ctx.lineWidth = 10 * (1 - clamp(d / 0.6)); ctx.beginPath(); ctx.ellipse(ROCKET.x, ROCKET.y + 4, 420 * easeOut(clamp(d / 0.6)), 90 * easeOut(clamp(d / 0.6)), 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    for (let i = 0; i < 16; i++) { const a = Math.PI + (i / 15) * Math.PI, v = 160 + (i % 4) * 70, k = easeOut(clamp(d / 1.2)); ctx.globalAlpha = 0.85 * (1 - d / 1.4); circle(ROCKET.x + Math.cos(a) * v * k, ROCKET.y + Math.sin(a) * v * 0.55 * k - 30 * k, 26 + 40 * k, i % 2 ? "#f8bcd6" : "#e88ab6"); ctx.globalAlpha = 1; }
+    for (let i = 0; i < 14; i++) { const a = -Math.PI * (0.1 + 0.8 * (i / 13)), v = 260 + (i % 3) * 90; circle(ROCKET.x + Math.cos(a) * v * d, ROCKET.y - 60 + Math.sin(a) * v * d + 420 * d * d, 5, "#8e4fb0"); } }
   if (t >= T.build && t < T.build + 1.0) puffs(STAND.x, STAND.y, t, T.build, 8);
   if (t >= T.apple && t < T.apple + 0.8) sparkleBurst(HUT.x, HUT.y - 80, t, T.apple);
   if (t >= T.worm + 0.6 && t < T.worm + 1.4) sparkleBurst(700, 700, t, T.worm + 0.6);
@@ -1043,11 +1054,46 @@ function likeButton(t, s) { // TikTok-Herz wird angetippt, ein Döner fliegt zum
   ctx.save(); ctx.translate(SX, 380); ctx.scale(s, s); outlined("❤️ = 🥙", 0, 0, 36, "#fff", "#0e1a30", 8); ctx.restore();
 }
 
+// ------------------------------------------------------------ Flug durchs Asteroidenfeld + Absturz (Bildschirm-Koordinaten)
+const ROCKS8 = (() => { const r = rng(77), a = []; for (let i = 0; i < 26; i++) a.push({ a: r() * Math.PI * 2, ph: r(), s: 0.5 + r() * 1.1, rot: r() * 6, sp: (r() - 0.5) * 3 }); return a; })();
+const RADIAL = (() => { const r = rng(12), a = []; for (let i = 0; i < 80; i++) a.push([r() * Math.PI * 2, r(), r()]); return a; })();
+let FWIN = [288, 400];
+function rocketMonster(x, y, s, rot, t, fire, honk, steer) { // Rakete mit Monster am Lenkrad im Cockpitfenster
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+  if (fire > 0) for (const [c, w, l] of [["rgba(255,90,30,0.8)", 16, 120], ["rgba(255,180,40,0.9)", 10, 85], ["rgba(255,245,200,0.95)", 5, 50]]) { const f = l * fire * (1 + 0.15 * Math.sin(t * 45)); ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(-w * s, -4 * s); ctx.quadraticCurveTo(0, f * s, w * s, -4 * s); ctx.fill(); }
+  rocket(0, 0, s, 0);
+  circle(0, -100 * s, 32 * s, "#1b1424"); circle(0, -100 * s, 29 * s, "#9aa3ab"); circle(0, -100 * s, 25 * s, "#cfeaf7");
+  ctx.save(); ctx.beginPath(); ctx.arc(0, -100 * s, 25 * s, 0, Math.PI * 2); ctx.clip(); creature(0, -100 * s + 78 * s / 1.6, 0.3 * s / 1.6, t, { happy: true, eyes: 1, look: Math.sin(t * 3) }); ctx.restore();
+  ctx.save(); ctx.translate(0, -100 * s + 42 * s / 1.6); ctx.rotate(steer); ctx.scale(0.75 * s / 1.6 * (honk ? 1.08 : 1), 0.75 * s / 1.6 * (honk ? 1.08 : 1)); ctx.strokeStyle = "#2a2c34"; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 5; for (let i = 0; i < 3; i++) { const a = i * 2.09 + 0.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * 30, Math.sin(a) * 30); ctx.stroke(); } circle(0, 0, 9, "#e5262b"); ctx.restore();
+  const m = ctx.getTransform(); FWIN = [(m.e + m.c * (-100 * s)) / S, (m.f + m.d * (-100 * s)) / S];
+  ctx.restore();
+}
+function drawFlight(t) {
+  const fall = ramp(t, T.fall, T.crash), F = easeIO(fall);
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0b0820"); g.addColorStop(1, lerp(0, 1, F) > 0.5 ? "#4a1f50" : "#1a1240"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // Sterne rasen vorbei (Flug nach vorn)
+  ctx.save(); ctx.lineCap = "round"; for (const [a, ph, w] of RADIAL) { const d = ((t * (0.9 + w) + ph) % 1), r0 = 30 + d * 650, r1 = r0 + 20 + 120 * d; ctx.strokeStyle = `rgba(220,230,255,${0.25 + 0.6 * d})`; ctx.lineWidth = 1 + 2 * d; ctx.beginPath(); ctx.moveTo(288 + Math.cos(a) * r0, 470 + Math.sin(a) * r0); ctx.lineTo(288 + Math.cos(a) * r1, 470 + Math.sin(a) * r1); ctx.stroke(); } ctx.restore();
+  // Asteroiden fliegen auf die Kamera zu (verschwinden beim Absturz)
+  for (const [i, r] of ROCKS8.entries()) { const d = ((t * 0.45 + r.ph) % 1), sc = (0.15 + d * d * 2.4) * r.s; ctx.globalAlpha = 1 - F; asteroid(288 + Math.cos(r.a) * (40 + d * 420), 470 + Math.sin(r.a) * (40 + d * 520), 34 * sc, r.rot + t * r.sp, i + 2); ctx.globalAlpha = 1; }
+  // Planet kommt beim Absturz von unten
+  if (fall > 0) { const hy = lerp(1250, 640, F); ctx.fillStyle = "#c86a9a"; ctx.beginPath(); ctx.ellipse(288, hy + 900, 1200, 900, 0, Math.PI, 0); ctx.fill(); ctx.fillStyle = "#f3a2c6"; ctx.beginPath(); ctx.ellipse(288, hy + 920, 1180, 880, 0, Math.PI, 0); ctx.fill(); glow(288, hy, 400, "255,160,200", 0.35 * F); }
+  // Rakete: weicht aus, dann Sturzflug
+  const swerve = Math.sin(t * 2.6), zoomIn = ramp(t, T.monster - 0.4, T.monster + 0.2) * (1 - ramp(t, T.fall - 0.4, T.fall));
+  let x = 288 + swerve * 85 * (1 - F), y = lerp(610, 570, zoomIn), s = 1.3 + 0.4 * zoomIn, rot = Math.cos(t * 2.6) * 0.42 * (1 - F);
+  if (fall > 0) { x = lerp(x, 300, F); y = lerp(570, 640, Math.pow(fall, 1.6)); rot = lerp(rot, 2.5, F); s = lerp(1.3, 1.0, F); }
+  if (fall > 0) for (let i = 1; i < 9; i++) { const k = Math.max(0, fall - i * 0.05); if (k <= 0) continue; const px = lerp(288, 300, easeIO(k)), py = lerp(570, 640, Math.pow(k, 1.6)); ctx.globalAlpha = 0.5 - i * 0.05; circle(px - 30 + i * 2, py - 60, 18 + i * 4, "#4a3a55"); ctx.globalAlpha = 1; }
+  const honk = (t > T.monster - 0.05 && t < T.monster + 0.4) || t < 0.5;
+  rocketMonster(x, y, s, rot, t, 1.1 + fall, honk, -Math.cos(t * 2.6) * 0.9 * (1 - F) + (fall > 0 ? Math.sin(t * 25) * 0.6 : 0));
+  // Streifschuss mit Funken
+  for (const t0 of [1.25, 2.55]) if (t >= t0 && t < t0 + 0.6) { const d = t - t0; for (let i = 0; i < 12; i++) { const a = -0.5 - i * 0.25; circle(x + 40 + Math.cos(a) * 200 * d, y - 120 + Math.sin(a) * 160 * d + 200 * d * d, 3 * (1 - d / 0.6), i % 2 ? "#ffd23a" : "#ff8a1e"); } }
+  if (fall > 0) { const p = 0.5 + 0.5 * Math.sin(t * 14); ctx.fillStyle = `rgba(255,30,30,${0.12 + 0.15 * p})`; ctx.fillRect(0, 0, W, H); speedLines(t, 1); }
+}
+
 // ------------------------------------------------------------ Effekte
-const IMPACTS = [T.monster, T.crash, T.build, T.apple, T.eyes, T.loop + 0.15];
-function shakeAt(t) { let dx = 0, dy = 0; for (const t0 of IMPACTS) { const d = t - t0; if (d < 0 || d > 0.4) continue; const a = 6 * Math.exp(-d * 10); dx += Math.sin(d * 90) * a; dy += Math.cos(d * 70) * a * 0.6; } return [dx, dy]; }
+const IMPACTS = [T.monster, 1.25, 2.55, T.crash, T.build, T.apple, T.eyes, T.loop + 0.15];
+function shakeAt(t) { let dx = 0, dy = 0; if (t < T.crash) { const a = t >= T.fall ? 4 : 1.5; dx += Math.sin(t * 50) * a; dy += Math.cos(t * 43) * a; } for (const t0 of IMPACTS) { const d = t - t0; if (d < 0 || d > 0.5) continue; const a = (t0 === T.crash ? 16 : 6) * Math.exp(-d * 9); dx += Math.sin(d * 90) * a; dy += Math.cos(d * 70) * a * 0.6; } return [dx, dy]; }
 const CUTS = CAM.slice(1).filter((c, i) => Math.abs(Math.log(c[3] / CAM[i][3])) > 0.2).map(c => c[0] - 0.05);
-function flash(t) { let a = 0; for (const t0 of CUTS) { const d = t - t0; if (d >= 0 && d < 0.14) a = Math.max(a, 0.25 * (1 - d / 0.14)); } if (a > 0) { ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillRect(0, 0, W, H); } }
+function flash(t) { let a = 0; { const d = t - T.crash; if (d >= 0 && d < 0.35) a = Math.max(a, 0.9 * (1 - d / 0.35)); } for (const t0 of CUTS) { const d = t - t0; if (d >= 0 && d < 0.14) a = Math.max(a, 0.25 * (1 - d / 0.14)); } if (a > 0) { ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillRect(0, 0, W, H); } }
 
 // ------------------------------------------------------------ Bild
 window.renderFrame = function (t) {
@@ -1055,15 +1101,17 @@ window.renderFrame = function (t) {
   ctx.setTransform(S, 0, 0, S, 0, 0);
   const [shx, shy] = shakeAt(t); ctx.translate(shx, shy);
   let [cx, cy, z] = cam(t); cx += Math.sin(t * 0.9) * 3 / z; cy += Math.cos(t * 0.7) * 2 / z;
-  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-cx, -cy); drawWorld(t, z); ctx.restore();
-  dust(t);
+  if (t < T.crash || t >= T.loop) drawFlight(t >= T.loop ? t - T.loop : t);
+  else { ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-cx, -cy); drawWorld(t, z); ctx.restore(); dust(t); }
   if (t >= T.cliff && t < T.follow) { ctx.fillStyle = "rgba(20,5,30,0.35)"; ctx.fillRect(0, 0, W, H); }
   const vg = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.3, W / 2, H * 0.5, H * 0.8); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(30,5,30,0.4)"); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
   // ---- Einblendungen (sichere Zone)
   const lt = looped(t);
-  if (lt < T.crash || t >= T.loop) { const a = t >= T.loop ? 1 : 1 - ramp(t, T.crash - 0.1, T.crash + 0.05); ctx.save(); ctx.translate(SX, 175); ctx.scale(a, a); outlined("TAG 8", 0, 0, 86, CYAN, "#0e1a30", 13); ctx.restore(); }
-  if (t >= T.monster - 0.05 && t < T.crash || (t >= T.loop + 0.15)) { const d = t >= T.loop ? t - T.loop - 0.15 : t - T.monster + 0.05; const a = back(clamp(d / 0.15)) * (t >= T.loop ? 1 : 1 - ramp(t, T.monster + 0.45, T.monster + 0.6)); const [sx, sy] = toScreen(WIN.x + 70, WIN.y - 40, t); ctx.save(); ctx.translate(Math.min(sx, 420), sy); ctx.rotate(-0.15); ctx.scale(a, a); outlined("HUP! HUP!", 0, 0, 34, "#ffd23a", "#0e1a30", 8); ctx.restore(); }
+  if (lt < T.monster || t >= T.loop) { const a = t >= T.loop ? 1 : 1 - ramp(t, T.monster - 0.05, T.monster + 0.1); ctx.save(); ctx.translate(SX, 175); ctx.scale(a, a); outlined("TAG 8", 0, 0, 86, CYAN, "#0e1a30", 13); ctx.restore(); }
+  if (t < 0.45 || (t >= T.monster - 0.05 && t < T.fall) || (t >= T.loop + 0.15)) { const d = t >= T.loop ? t - T.loop - 0.15 : t < 0.45 ? 1 : t - T.monster + 0.05; const a = t < 0.45 ? 1 - ramp(t, 0.3, 0.45) : back(clamp(d / 0.15)) * (t >= T.loop ? 1 : 1 - ramp(t, T.monster + 0.45, T.monster + 0.6)); const [sx, sy] = t < T.crash || t >= T.loop ? [FWIN[0] + 80, FWIN[1] - 50] : toScreen(WIN.x + 70, WIN.y - 40, t); ctx.save(); ctx.translate(Math.min(sx, 420), Math.max(130, sy)); ctx.rotate(-0.15); ctx.scale(a, a); outlined("HUP! HUP!", 0, 0, 34, "#ffd23a", "#0e1a30", 8); ctx.restore(); }
+  if (t >= T.fall && t < T.crash) topLabel("⚠ ABSTURZ!", pop(t, T.fall + 0.05, T.crash) * (1 + 0.06 * Math.max(0, Math.sin(t * 14))), "#fff", 160, 42, RED);
+  if (t >= T.monster && t < T.fall) topLabel("🕹 MONSTER AM STEUER", pop(t, T.monster + 0.1, T.fall - 0.05), "#14223a", 160, 30, "#ffd23a");
   if (t >= T.crash && t < T.card) topLabel("💥 BRUCHLANDUNG", pop(t, T.crash + 0.05, T.card - 0.05), "#fff", 160, 40, RED);
   if (t >= T.card && t < T.neu + 0.2) { profileCard8(t, pop(t, T.card, T.neu + 0.1)); confetti(t, T.card + 0.2); }
   if (t >= T.neu + 0.2 && t < T.jens) topLabel("🚩 ROTANIEN 2.0", pop(t, T.neu + 0.3, T.jens - 0.05), "#fff", 160, 40, "#4a2b9a");

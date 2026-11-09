@@ -235,8 +235,15 @@ def slither(L):
 # ------------------------------------------------------------ Effekte platzieren
 place(0.02, horn(), 0.35); place(0.3, horn(), 0.3)
 place(T["monster"] - 0.05, horn(), 0.5); place(T["monster"] + 0.2, horn(), 0.45)
-place(T["crash"] - 0.05, boom(), 0.5); place(T["crash"] + 0.1, steps(1.2, 5), 0.25)
-for k in range(3): place(T["crash"] + 0.3 + k * 0.25, ding(2400 + 200 * k), 0.08)      # Sternchen über den Köpfen
+# Flug durchs Asteroidenfeld
+place(0, roar(T["crash"] + 0.2), 0.3)
+for k in range(9): place(0.15 + k * 0.4, whoosh(0.35), 0.25)                       # Asteroiden rauschen vorbei
+for t0 in (1.25, 2.55): place(t0, clank(), 0.45); place(t0, zap(), 0.25); place(t0 + 0.02, crackleE(0.5), 0.3)   # Streifschuss
+# Absturz + Einschlag
+place(T["fall"], siren(T["crash"] - T["fall"] + 0.2), 0.3); place(T["fall"], riser(T["crash"] - T["fall"]), 0.35)
+place(T["crash"] - 0.02, boom(), 1.0); place(T["crash"], crack(), 0.7); place(T["crash"] + 0.05, glass(0.8), 0.25)
+place(T["crash"] + 0.5, steps(1.2, 5), 0.25)
+for k in range(3): place(T["crash"] + 0.6 + k * 0.25, ding(2400 + 200 * k), 0.08)      # Sternchen über den Köpfen
 place(T["card"], pop(650), 0.4); place(T["card"] + 0.3, cheer(1.4), 0.35)
 for k in range(8): place(T["card"] + 0.1 + k * 0.09, tick(1500 + 40 * k), 0.15)
 place(T["neu"], whoosh(0.6), 0.3); place(T["neu"] + 0.1, steps(1.2, 14), 0.3); place(T["neu"] + 0.6, flapping(1.0), 0.2); place(T["neu"] + 0.4, thud(), 0.3)
@@ -279,9 +286,10 @@ def read(p):
 def norm(x): return x / (np.sqrt((x ** 2).mean()) + 1e-9) * 0.12
 MC = os.path.join(HERE, "build", "music_cand")
 parts = [
-    ("Carefree.mp3", 0.0, 0.0, T["cliff"], 0.9),                          # hell und fröhlich wie Tag 2
-    ("Ossuary_6_-_Air.mp3", 30.0, T["cliff"], T["follow"], 0.7),         # Höhle: unheimlich
-    ("Carefree.mp3", T["follow"] - 0.0, T["follow"], EV["duration"], 0.9),   # weiter fröhlich (CTA)
+    ("Volatile_Reaction.mp3", 28.0, 0.0, T["crash"] + 0.05, 1.0),          # Flug durchs Asteroidenfeld + Absturz
+    ("Five_Armies.mp3", 20.0, T["crash"] + 0.7, T["cliff"], 0.85),         # episch: neuer Planet, Wünsche
+    ("Ossuary_6_-_Air.mp3", 30.0, T["cliff"], T["follow"], 0.75),         # Höhle: unheimlich
+    ("Hitman.mp3", 12.0, T["follow"], EV["duration"], 0.8),               # spannend bis zum Schluss (CTA)
 ]
 m = np.zeros((N, 2), np.float32); xf = int(0.15 * SR)
 for f, off, a, b, g in parts:
