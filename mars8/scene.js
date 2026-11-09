@@ -837,8 +837,8 @@ const wf = (w, from = 0) => { for (let i = from; i < WL.length; i++) if (WL[i].s
 const iM = wf("mehmet"), iJ = wf("jeder");
 const T = {
   monster: wt(wf("monster")), fall: wt(wf("bruchlandung")), card: wt(wf("829")), neu: wt(wf("wir", wf("829"))), jens: wt(wf("jens")), build: wt(wf("gesagt")),
-  mehmet: wt(iM), apple: wt(wf("bitte", iM)), roader: wt(wf("roder") - 1), worm: wt(wf("hier")), nico: wt(wf("sogar")), wish: wt(iJ),
-  cliff: wt(wf("aber", iJ)), eyes: wt(wf("ersten")), follow: wt(wf("follow") - 1), like: wt(wf("like") - 1), law: wt(wf("gesetz") - 1), top: wt(wf("top") - 1),
+  mehmet: wt(iM), apple: wt(wf("bitte", iM)), roader: wt(wf("und", wf("bitte", iM))), worm: wt(wf("hier")), nico: wt(wf("sogar")), wish: wt(iJ),
+  cliff: wt(wf("aber", iJ)), eyes: wt(wf("ersten")), follow: wt(wf("neue", wf("829"))), like: wt(wf("jedes") - 1), law: wt(wf("und", wf("ersten"))), top: wt(wf("top") - 1),
   loop: SPEECH_END + 0.1,
 };
 T.crash = T.card - 0.75;          // Aufprall (in der Pause nach „Planeten“)
@@ -912,7 +912,7 @@ function egg8(e, t, y = 770) {
   const s = 0.82, o = { t: t + e.x, acc: e.acc };
   if (e.id === "elster") Object.assign(o, { suit: "#ff9fd2", suit2: "#ffb6dc", suit3: "#e77fb8" });
   if (e.id === "phillip") Object.assign(o, { armL: -0.9, armR: 0.9 });
-  astronaut(e.x, y, s, t >= T.cliff && t < T.follow ? "shock" : "happy", o);
+  astronaut(e.x, y, s, t >= T.cliff && t < T.law ? "shock" : "happy", o);
   const hy = y - 104 * s;
   if (e.id === "nico") eggItem("gamer", e.x, y, s, t);
   if (e.id === "elster") dogEars(e.x, hy, s);
@@ -932,8 +932,8 @@ const CAM = [
   [T.card - 0.1, 330, 600, 1.15], [T.card + 0.2, 330, 560, 0.85], [T.neu - 0.1, 330, 560, 0.85], [T.neu + 0.3, 400, 590, 0.8], [T.jens - 0.1, 400, 590, 0.82],
   [T.jens + 0.2, STAND.x + 60, 640, 1.35], [T.mehmet - 0.1, STAND.x + 60, 640, 1.4], [T.mehmet + 0.2, HUT.x + 40, 640, 1.4], [T.roader - 0.1, HUT.x + 40, 640, 1.45],
   [T.roader + 0.2, 760, 650, 1.35], [T.nico - 0.1, 760, 650, 1.4], [T.nico + 0.2, 380, 640, 0.95], [T.cliff - 0.1, 380, 640, 0.95],
-  [T.cliff + 0.25, CAVE.x - 220, 600, 1.05], [T.follow - 0.1, CAVE.x - 180, 590, 1.25], [T.follow + 0.2, 330, 600, 0.9], [T.like - 0.1, 330, 600, 0.92],
-  [T.like + 0.2, STAND.x + 120, 640, 1.2], [T.law - 0.1, STAND.x + 120, 640, 1.25], [T.law + 0.2, 300, 610, 0.95], [T.loop - 0.02, 300, 610, 1.0],
+  [T.cliff + 0.25, CAVE.x - 220, 600, 1.05], [T.law - 0.1, CAVE.x - 180, 590, 1.25], [T.law + 0.2, 150, 705, 2.1], [T.like - 0.1, 150, 705, 2.25],
+  [T.like + 0.2, STAND.x + 120, 640, 1.2], [T.loop - 0.02, STAND.x + 120, 640, 1.25],
   [T.loop, WIN.x - 10, WIN.y + 70, 2.6], [DUR, WIN.x - 10, WIN.y + 70, 2.6],
 ];
 function cam(t) {
@@ -979,12 +979,13 @@ function drawWorld(t, z) {
   hornWheel(WIN.x - 2, WIN.y + 42, 0.75 * (honk ? 1.08 : 1), t);
   ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(WIN.x - 8, WIN.y - 6, 30, 3.6, 4.4); ctx.stroke();
   // Astronauten taumeln aus der Luke (benommen)
-  if (t >= T.crash && !inLoop) for (const [x, i] of CREW8) { const k = easeOut(ramp(t, T.crash + i * 0.12, T.crash + 0.7 + i * 0.12)); const xx = lerp(ROCKET.x - 10, x - 140 + i * 30, k); const wob = Math.sin(t * 5 + i) * 0.12 * (t < T.neu ? 1 : 0.2); leanAstro(xx, 776 + i * 4, 0.85, wob, t < T.neu ? "shock" : "happy", { t: t + i, acc: ["#3fd3f2", "#ff79c6", "#7bf27a", "#ffd23a"][i], armL: 0.6, armR: -0.6 }); }
+  if (t >= T.crash && !inLoop && !(t >= T.law && t < T.like)) for (const [x, i] of CREW8) { const k = easeOut(ramp(t, T.crash + i * 0.12, T.crash + 0.7 + i * 0.12)); const xx = lerp(ROCKET.x - 10, x - 140 + i * 30, k); const wob = Math.sin(t * 5 + i) * 0.12 * (t < T.neu ? 1 : 0.2); leanAstro(xx, 776 + i * 4, 0.85, wob, t < T.neu ? "shock" : "happy", { t: t + i, acc: ["#3fd3f2", "#ff79c6", "#7bf27a", "#ffd23a"][i], armL: 0.6, armR: -0.6 }); }
   // Wurm, Fans, Monster draußen
   if (t >= T.worm && !inLoop) bigWorm(lerp(980, 700, easeOut(ramp(t, T.worm, T.worm + 0.8))), 790, 3.0, t);
-  if (t >= T.nico && !inLoop) for (const e of EGGS8) egg8(e, t, 772);
-  if (t >= T.cliff && t < T.follow) { const sx = lerp(CAVE.x - 600, CAVE.x - 330, easeIO(ramp(t, T.cliff, T.eyes))); creature(sx, 740, 0.38, t, { sniff: true, eyes: 1, look: 1 }); }
+  if (t >= T.nico && !inLoop && !(t >= T.law && t < T.like)) for (const e of EGGS8) egg8(e, t, 772);
+  if (t >= T.cliff && t < T.law) { const sx = lerp(CAVE.x - 600, CAVE.x - 330, easeIO(ramp(t, T.cliff, T.eyes))); creature(sx, 740, 0.38, t, { sniff: true, eyes: 1, look: 1 }); }
   if (t >= T.like && t < T.loop) creature(STAND.x + 230, 770, 0.42, t, { sit: true, munch: t >= T.like + 0.6, happy: true });
+  if (t >= T.law && t < T.like) { const up = easeOut(ramp(t, T.law, T.law + 0.35)); astronaut(130, 792, 1.0, t >= T.top ? "smirk" : "talk", { t, armL: lerp(0.25, -0.55, up), armR: lerp(-0.25, 0.55, up) }); lawBook(130, 792 - lerp(36, 50, up), 1.15 * (0.6 + 0.4 * up), t); }
   ctx = MAIN;
   compositeOutline(clamp(2.2 * S * Math.pow(z, 0.75), 2.5, 8));
   // Effekte in der Welt
@@ -999,6 +1000,16 @@ function drawWorld(t, z) {
   if (t >= T.worm + 0.6 && t < T.worm + 1.4) sparkleBurst(700, 700, t, T.worm + 0.6);
 }
 
+function lawBook(x, y, s, t) { // aufgeschlagenes Gesetzbuch: „GESETZ NR. 1 – ?“
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  ctx.fillStyle = "#5a3a1a"; rr(-46, -30, 92, 54, 4); ctx.fill();
+  ctx.fillStyle = "#fbf6e6"; rr(-43, -27, 42, 48, 3); ctx.fill(); rr(1, -27, 42, 48, 3); ctx.fill();
+  ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.fillRect(-1, -27, 2, 48);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#3a2a1a"; ctx.font = "7px Comic"; ctx.fillText("GESETZ", -22, -14); ctx.fillText("NR. 1", -22, -5);
+  ctx.fillStyle = "rgba(0,0,0,0.25)"; for (let i = 0; i < 3; i++) ctx.fillRect(-36, 4 + i * 5, 28, 1.3);
+  ctx.fillStyle = RED; ctx.font = "26px Comic"; ctx.fillText("?", 22, -2 + Math.sin(t * 5) * 1.5);
+  ctx.restore();
+}
 // ------------------------------------------------------------ Karten (sichere Zone: Mitte SX, Breite ≤ 420)
 function card(fn, y) { ctx.save(); ctx.translate(SX, y); ctx.scale(0.88, 0.88); ctx.translate(-288, -y); fn(); ctx.restore(); }
 function profileCard8(t, s) {
@@ -1041,9 +1052,6 @@ function lawCall(t, s) { // Gesetzestafel + leere Kommentarkarte wie in Tag 2
   ctx.fillStyle = "#a0a4ad"; ctx.font = "700 10.5px InterX"; ctx.fillText("gerade eben  ·  Antworten", -142, 27);
   ctx.fillStyle = "#fe2c55"; ctx.font = "18px 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.fillText("❤️", 178, -10 + Math.sin(t * 6) * 2);
   ctx.restore();
-  // Gesetzestafel „GESETZ NR. 1 | ?“
-  ctx.save(); ctx.translate(SX, 380); ctx.scale(s, s); ctx.fillStyle = "#1b1424"; rr(-96, -54, 192, 108, 12); ctx.fill(); ctx.fillStyle = "#b9b3ab"; rr(-90, -48, 180, 96, 10); ctx.fill();
-  ctx.fillStyle = "#2a2a30"; ctx.font = "18px Comic"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("GESETZ NR. 1", 0, -24); ctx.fillStyle = RED; ctx.font = "44px Comic"; ctx.fillText("?", 0, 16); ctx.restore();
 }
 function likeButton(t, s) { // TikTok-Herz wird angetippt, ein Döner fliegt zum Monster
   if (s <= 0.01) return;
@@ -1103,7 +1111,7 @@ window.renderFrame = function (t) {
   let [cx, cy, z] = cam(t); cx += Math.sin(t * 0.9) * 3 / z; cy += Math.cos(t * 0.7) * 2 / z;
   if (t < T.crash || t >= T.loop) drawFlight(t >= T.loop ? t - T.loop : t);
   else { ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-cx, -cy); drawWorld(t, z); ctx.restore(); dust(t); }
-  if (t >= T.cliff && t < T.follow) { ctx.fillStyle = "rgba(20,5,30,0.35)"; ctx.fillRect(0, 0, W, H); }
+  if (t >= T.cliff && t < T.law) { ctx.fillStyle = "rgba(20,5,30,0.35)"; ctx.fillRect(0, 0, W, H); }
   const vg = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.3, W / 2, H * 0.5, H * 0.8); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(30,5,30,0.4)"); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
   // ---- Einblendungen (sichere Zone)
@@ -1113,17 +1121,17 @@ window.renderFrame = function (t) {
   if (t >= T.fall && t < T.crash) topLabel("⚠ ABSTURZ!", pop(t, T.fall + 0.05, T.crash) * (1 + 0.06 * Math.max(0, Math.sin(t * 14))), "#fff", 160, 42, RED);
   if (t >= T.monster && t < T.fall) topLabel("🕹 MONSTER AM STEUER", pop(t, T.monster + 0.1, T.fall - 0.05), "#14223a", 160, 30, "#ffd23a");
   if (t >= T.crash && t < T.card) topLabel("💥 BRUCHLANDUNG", pop(t, T.crash + 0.05, T.card - 0.05), "#fff", 160, 40, RED);
-  if (t >= T.card && t < T.neu + 0.2) { profileCard8(t, pop(t, T.card, T.neu + 0.1)); confetti(t, T.card + 0.2); }
+  if (t >= T.card && t < T.follow) { profileCard8(t, pop(t, T.card, T.follow - 0.05)); confetti(t, T.card + 0.2); }
   if (t >= T.neu + 0.2 && t < T.jens) topLabel("🚩 ROTANIEN 2.0", pop(t, T.neu + 0.3, T.jens - 0.05), "#fff", 160, 40, "#4a2b9a");
   if (t >= T.jens && t < T.mehmet) { card(() => tkComment(pop(t, T.jens, T.mehmet - 0.1), "Jens", "ich Stelle döner wieder her", "Vor 22 Std.", 0, AV.jens, 240), 240); topLabel("⭐ ERSTE AMTSHANDLUNG", pop(t, T.jens + 0.2, T.mehmet - 0.1), "#14223a", 138, 24, "#ffd23a"); if (t >= T.build) stamp("✓ ERFÜLLT", 360, 300, pop(t, T.build + 0.15, T.mehmet - 0.1)); }
   if (t >= T.mehmet && t < T.roader) { card(() => tkComment(pop(t, T.mehmet, T.roader - 0.1), "Mehmet_brb", "Apple Store auf dem nächsten Planeten 😂?", "Vor 17 Std.", 0, AV.mehmet, 240), 240); topLabel("📅 FRAGT SEIT TAG 3", pop(t, T.mehmet + 0.4, T.roader - 0.1), "#fff", 138, 24, "#14223a"); if (t >= T.apple) stamp("✓ ERFÜLLT", 360, 310, pop(t, T.apple + 0.1, T.roader - 0.1)); }
   if (t >= T.roader && t < T.nico) { card(() => tkComment(pop(t, T.roader, T.nico - 0.1), "roader", "man bitteeeee mein wurm", "Vor 14 Std.", 0, AV.roader, 240), 240); if (t >= T.worm) { stamp("✓ ERFÜLLT", 360, 300, pop(t, T.worm + 0.1, T.nico - 0.1)); const [wx, wy] = toScreen(720, 690, t); pill("ROADERS WURM", Math.min(wx, 400), wy, pop(t, T.worm + 0.5, T.nico - 0.1), "#fff", "#14223a", "🪱 "); } }
   if (t >= T.nico && t < T.cliff) { const [nx, ny] = toScreen(120, 640, t); pill("FIRE.NICO", Math.max(70, Math.min(nx, 420)), ny, pop(t, T.nico + 0.2, T.cliff - 0.1), "#fff", "#14223a", "🎮 "); topLabel("💬 JEDER WUNSCH ZÄHLT", pop(t, T.wish, T.cliff - 0.05), "#14223a", 160, 32, "#ffd23a"); }
-  if (t >= T.cliff && t < T.follow) { topLabel("👣 NICHT DIE ERSTEN …", pop(t, T.cliff + 0.2, T.follow - 0.05), "#fff", 160, 36, null); }
-  if (t >= T.follow && t < T.like) { boardingPass8(pop(t, T.follow, T.like - 0.08)); topLabel("1 FOLLOW = 1 PLATZ", pop(t, T.follow + 0.2, T.like - 0.08), "#14223a", 140, 28, "#ffd23a"); }
-  if (t >= T.like && t < T.law) { likeButton(t, pop(t, T.like, T.law - 0.08)); topLabel("1 LIKE = 1 DÖNER", pop(t, T.like + 0.1, T.law - 0.08), "#14223a", 140, 28, "#ffd23a");
+  if (t >= T.cliff && t < T.law) { topLabel("👣 NICHT DIE ERSTEN …", pop(t, T.cliff + 0.2, T.follow - 0.05), "#fff", 160, 36, null); }
+  if (t >= T.follow && t < T.neu) { boardingPass8(pop(t, T.follow + 0.1, T.neu - 0.08)); topLabel("👥 NEUE MITBEWOHNER GESUCHT", pop(t, T.follow, T.neu - 0.08), "#14223a", 140, 28, "#ffd23a"); }
+  if (t >= T.like && t < T.loop) { likeButton(t, pop(t, T.like, T.loop - 0.05)); topLabel("1 LIKE = 1 DÖNER", pop(t, T.like + 0.1, T.loop - 0.05), "#14223a", 140, 28, "#ffd23a");
     for (let i = 0; i < 3; i++) { const t0 = T.like + 0.3 + i * 0.5, d = (t - t0) / 0.45; if (d < 0 || d > 1) continue; const [mx, my] = toScreen(STAND.x + 230, 700, t); ctx.save(); ctx.translate(lerp(SX, mx, d), lerp(300, my, d) - Math.sin(Math.PI * d) * 80); ctx.rotate(d * 6); doner(0, 0, 1.6); ctx.restore(); } }
-  if (t >= T.law && t < T.loop) { lawCall(t, pop(t, T.law, 99)); const b = pop(t, T.top + 0.1, 99); if (b > 0) { ctx.save(); ctx.translate(SX, 470); ctx.scale(b, b); outlined("+ dein Wunsch kommt vielleicht ins nächste Video 👇", 0, 0, 15, "#fff", "#0e1a30", 5); ctx.restore(); } }
+  if (t >= T.law && t < T.like) { lawCall(t, pop(t, T.law, T.like - 0.08)); const b = pop(t, T.top + 0.1, T.like - 0.08); if (b > 0) { ctx.save(); ctx.translate(SX, 312); ctx.scale(b, b); outlined("+ dein Wunsch kommt vielleicht ins nächste Video 👇", 0, 0, 15, "#fff", "#0e1a30", 5); ctx.restore(); } }
   ctx.save(); ctx.setTransform(S, 0, 0, S, 0, 0); flash(t); ctx.restore();
   captions(t);
 };

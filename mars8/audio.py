@@ -254,7 +254,7 @@ place(T["mehmet"], pop(700), 0.4); place(T["apple"] - 0.08, hiss(0.4), 0.3); pla
 place(T["roader"], pop(700), 0.4); place(T["worm"], slither(1.2), 0.45); place(T["worm"] + 0.6, ding(1976), 0.3); place(T["worm"] + 0.1, boing(), 0.25)
 place(T["nico"], pop(800), 0.3)
 for k in range(4): place(T["nico"] + 0.3 + k * 0.14, blip(1500 + 200 * k), 0.12)
-place(T["cliff"], drone(T["follow"] - T["cliff"] + 0.3), 0.5); place(T["cliff"] + 0.3, sniffs(), 0.45); place(T["eyes"], growl(0.9), 0.5)
+place(T["cliff"], drone(T["law"] - T["cliff"] + 0.3), 0.5); place(T["cliff"] + 0.3, sniffs(), 0.45); place(T["eyes"], growl(0.9), 0.5)
 place(T["follow"], whoosh(0.5), 0.3); place(T["follow"] + 0.1, ding(2093), 0.3)
 for k in range(3): place(T["like"] + 0.3 + k * 0.5, pop(900), 0.15); place(T["like"] + 0.3 + k * 0.5 + 0.45, plop(), 0.2)
 place(T["law"], pop(650), 0.4); place(T["law"] + 0.25, ding(1760), 0.25); place(T["top"] + 0.1, pop(800), 0.3)
@@ -288,8 +288,8 @@ MC = os.path.join(HERE, "build", "music_cand")
 parts = [
     ("Volatile_Reaction.mp3", 28.0, 0.0, T["crash"] + 0.05, 1.0),          # Flug durchs Asteroidenfeld + Absturz
     ("Five_Armies.mp3", 20.0, T["crash"] + 0.7, T["cliff"], 0.85),         # episch: neuer Planet, Wünsche
-    ("Ossuary_6_-_Air.mp3", 30.0, T["cliff"], T["follow"], 0.75),         # Höhle: unheimlich
-    ("Hitman.mp3", 12.0, T["follow"], EV["duration"], 0.8),               # spannend bis zum Schluss (CTA)
+    ("Ossuary_6_-_Air.mp3", 30.0, T["cliff"], T["law"], 0.75),            # Höhle: unheimlich
+    ("Hitman.mp3", 12.0, T["law"], EV["duration"], 0.8),                  # spannend bis zum Schluss (Gesetz + Like)
 ]
 m = np.zeros((N, 2), np.float32); xf = int(0.15 * SR)
 for f, off, a, b, g in parts:
