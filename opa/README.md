@@ -2,6 +2,7 @@
 
 Grundidee inspiriert von @kopfkino.du (Zahl über jedem Kopf), Geschichte, Personen und Sprechertext neu geschrieben.
 Animation mit Sprecherstimme (Edge TTS, de-DE-ConradNeural), 84,8 s, 1080×1920, Musik + Effekte.
+Stil: Figuren-Rig mit Gelenken, Kleidung, Blinzeln und Atmen (auch als tools/figur_rig.js), Szenenwechsel als Kameraschwenk.
 Über jedem Kopf steht, wie viele Stunden ihr noch zusammen habt: Kollegin 3.400, der pfeifende Typ im Aufzug 90,
 der weggedrückte Bruder 260, die beste Freundin in Hamburg 140, Opa mit seiner Fahrradwerkstatt nur 23.
 Im Zug wird aus „einmal im Jahr eine Stunde“ ein einziges Wochenende. Am Samstag flickst du mit Opa einen Reifen,
