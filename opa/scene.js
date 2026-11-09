@@ -2,7 +2,7 @@
 //   await window.setup(timeline)  ->  window.renderFrame(t)
 "use strict";
 const W = 1080, H = 1920;
-const TEXT_TOP = 1130, TEXT_CX = 500, TEXT_W = 820;
+const TEXT_TOP = 280, TEXT_CX = 510, TEXT_W = 820;   // Untertitel oben (unter den TikTok-Tabs)
 const SC = [300, 1080];                     // Szene
 const FL = 960;                             // Boden
 const cv = document.getElementById("c");
@@ -181,51 +181,52 @@ function badge(x, y, val, a = 1, opt = {}) {
 }
 const pop = (t, t0) => back(ramp(t, t0, t0 + 0.3));
 
+const TOPW = -280;                          // Hintergründe reichen im Vollbild bis über den oberen Rand
 // ------------------------------------------------------------ Hintergründe
 function bgStreet(t) {
-  let g = ctx.createLinearGradient(0, SC[0], 0, FL); g.addColorStop(0, "#8fc6ec"); g.addColorStop(1, "#d8eef9");
-  ctx.fillStyle = g; ctx.fillRect(0, SC[0], W, FL - SC[0]);
+  let g = ctx.createLinearGradient(0, TOPW, 0, FL); g.addColorStop(0, "#8fc6ec"); g.addColorStop(1, "#d8eef9");
+  ctx.fillStyle = g; ctx.fillRect(0, TOPW, W, FL - TOPW);
   for (let i = 0; i < 8; i++) { ctx.fillStyle = ["#c9a98a", "#b8c2d4", "#d9b48a", "#a8b8c8"][i % 4]; const x = i * 140 - 20, h = 300 + (i % 3) * 90; ctx.fillRect(x, FL - h, 130, h); ctx.fillStyle = "rgba(255,255,255,0.55)"; for (let k = 0; k < 6; k++) ctx.fillRect(x + 18 + (k % 2) * 56, FL - h + 30 + Math.floor(k / 2) * 70, 36, 40); }
-  ctx.fillStyle = "#8a8f9c"; ctx.fillRect(0, FL, W, 120); ctx.fillStyle = "#6a6f7c"; ctx.fillRect(0, FL, W, 8);
+  ctx.fillStyle = "#8a8f9c"; ctx.fillRect(0, FL, W, 420); ctx.fillStyle = "#6a6f7c"; ctx.fillRect(0, FL, W, 8);
 }
 function bgOffice() {
-  ctx.fillStyle = "#dfe6f0"; ctx.fillRect(0, SC[0], W, FL - SC[0]);
+  ctx.fillStyle = "#dfe6f0"; ctx.fillRect(0, TOPW, W, FL - TOPW);
   ctx.fillStyle = "#c8d4e4"; ctx.fillRect(60, 380, 420, 260); ctx.fillStyle = "#a8c8ea"; ctx.fillRect(74, 394, 392, 232);
-  ctx.fillStyle = "#5a6a82"; ctx.fillRect(0, FL, W, 120);
+  ctx.fillStyle = "#5a6a82"; ctx.fillRect(0, FL, W, 420);
   ctx.fillStyle = "#7a5a3a"; ctx.fillRect(160, FL - 170, 360, 18); ctx.fillRect(180, FL - 152, 14, 152); ctx.fillRect(490, FL - 152, 14, 152);
   ctx.fillStyle = "#1d1d22"; rr(320, FL - 290, 150, 110, 8); ctx.fill(); ctx.fillStyle = "#7fd0ff"; ctx.fillRect(332, FL - 280, 126, 88);
   circle(560, FL - 200, 30, "#4a9a5a"); ctx.fillStyle = "#c8743a"; rr(540, FL - 180, 40, 50, 6); ctx.fill();
 }
 function bgElevator(t, open) {
-  ctx.fillStyle = "#c8ccd6"; ctx.fillRect(0, SC[0], W, FL - SC[0]);
+  ctx.fillStyle = "#c8ccd6"; ctx.fillRect(0, TOPW, W, FL - TOPW);
   ctx.fillStyle = "#e9ecf2"; ctx.fillRect(240, 360, 600, FL - 360);
   ctx.fillStyle = "#f6f2e6"; ctx.fillRect(250, 370, 580, FL - 370);
   const o = open * 280;
   ctx.fillStyle = "#9aa3b4"; ctx.fillRect(250, 370, 290 - o, FL - 370); ctx.fillRect(540 + o, 370, 290 - o, FL - 370);
   ctx.fillStyle = "#1d1d22"; rr(870, 560, 50, 90, 8); ctx.fill(); circle(895, 590, 10, "#ffd36e"); circle(895, 620, 10, "#5a6070");
-  ctx.fillStyle = "#4a4f5c"; ctx.fillRect(0, FL, W, 120);
+  ctx.fillStyle = "#4a4f5c"; ctx.fillRect(0, FL, W, 420);
 }
 function bgHome() {
-  ctx.fillStyle = "#3a3458"; ctx.fillRect(0, SC[0], W, FL - SC[0]);
+  ctx.fillStyle = "#3a3458"; ctx.fillRect(0, TOPW, W, FL - TOPW);
   ctx.fillStyle = "#e9e4d8"; ctx.fillRect(700, 380, 220, 220); ctx.fillStyle = "#1a2448"; ctx.fillRect(712, 392, 196, 196); circle(860, 440, 18, "#f3f0d6");
   ctx.fillStyle = "#5a4a8a"; rr(120, FL - 240, 520, 150, 30); ctx.fill(); ctx.fillStyle = "#6a5a9a"; rr(100, FL - 120, 560, 120, 24); ctx.fill();
-  ctx.fillStyle = "#2a2340"; ctx.fillRect(0, FL, W, 120);
+  ctx.fillStyle = "#2a2340"; ctx.fillRect(0, FL, W, 420);
 }
 function bgWorkshop(t, outside) {
   if (outside) {
-    let g = ctx.createLinearGradient(0, SC[0], 0, FL); g.addColorStop(0, "#9ad0f2"); g.addColorStop(1, "#e2f2fa"); ctx.fillStyle = g; ctx.fillRect(0, SC[0], W, FL - SC[0]);
+    let g = ctx.createLinearGradient(0, TOPW, 0, FL); g.addColorStop(0, "#9ad0f2"); g.addColorStop(1, "#e2f2fa"); ctx.fillStyle = g; ctx.fillRect(0, TOPW, W, FL - TOPW);
     circle(880, 400, 50, "#ffe27a"); glow(880, 400, 140, "255,226,122", 0.4);
     ctx.fillStyle = "#c86a4a"; ctx.fillRect(140, 470, 640, FL - 470); ctx.fillStyle = "#8a3a2a"; ctx.beginPath(); ctx.moveTo(110, 480); ctx.lineTo(460, 340); ctx.lineTo(810, 480); ctx.fill();
     ctx.fillStyle = "#3a2a22"; rr(340, 640, 240, FL - 640, [16, 16, 0, 0]); ctx.fill(); ctx.fillStyle = "#ffd88a"; rr(352, 652, 216, FL - 652, [12, 12, 0, 0]); ctx.fill();
     ctx.fillStyle = "#f6f2e6"; rr(330, 520, 260, 60, 8); ctx.fill(); ctx.fillStyle = "#3a2a22"; ctx.font = "900 26px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("FAHRRÄDER", 460, 551);
-    ctx.fillStyle = "#6aaa5a"; ctx.fillRect(0, FL, W, 120);
+    ctx.fillStyle = "#6aaa5a"; ctx.fillRect(0, FL, W, 420);
   } else {
-    ctx.fillStyle = "#6a4a3a"; ctx.fillRect(0, SC[0], W, FL - SC[0]);
-    ctx.fillStyle = "#5a3e30"; for (let i = 0; i < 12; i++) ctx.fillRect(i * 92, SC[0], 4, FL - SC[0]);
+    ctx.fillStyle = "#6a4a3a"; ctx.fillRect(0, TOPW, W, FL - TOPW);
+    ctx.fillStyle = "#5a3e30"; for (let i = 0; i < 12; i++) ctx.fillRect(i * 92, TOPW, 4, FL - TOPW);
     ctx.fillStyle = "#3a2a22"; ctx.fillRect(80, 420, 540, 16);                                         // Werkzeugwand
     for (let i = 0; i < 8; i++) { ctx.strokeStyle = "#c8ccd6"; ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(110 + i * 64, 444); ctx.lineTo(110 + i * 64, 520 + (i % 3) * 14); ctx.stroke(); }
     ctx.fillStyle = "#e9e4d8"; ctx.fillRect(700, 400, 220, 180); ctx.fillStyle = "#a8d8f0"; ctx.fillRect(712, 412, 196, 156);
-    ctx.fillStyle = "#4a3a30"; ctx.fillRect(0, FL, W, 120);
+    ctx.fillStyle = "#4a3a30"; ctx.fillRect(0, FL, W, 420);
     glow(540, 380, 300, "255,214,150", 0.18);
   }
 }
@@ -239,14 +240,14 @@ function bike(x, y, s = 1, flatK = 0) {
   ctx.restore();
 }
 function bgTrain(t) {
-  ctx.fillStyle = "#e6e2d8"; ctx.fillRect(0, SC[0], W, FL - SC[0]);
+  ctx.fillStyle = "#e6e2d8"; ctx.fillRect(0, TOPW, W, FL - TOPW);
   ctx.fillStyle = "#cfd6e2"; rr(120, 380, 840, 300, 40); ctx.fill();
   ctx.save(); ctx.beginPath(); ctx.roundRect(140, 400, 800, 260, 30); ctx.clip();
   let g = ctx.createLinearGradient(0, 400, 0, 660); g.addColorStop(0, "#9ad0f2"); g.addColorStop(1, "#d9f0e0"); ctx.fillStyle = g; ctx.fillRect(140, 400, 800, 260);
   for (let i = 0; i < 6; i++) { const x = 940 - ((t * 260 + i * 170) % 900); ctx.fillStyle = "#6aaa5a"; ctx.fillRect(x, 560, 140, 100); circle(x + 60, 560, 40, "#4a8a4a"); }
   ctx.restore();
   ctx.fillStyle = "#3a5a8a"; rr(80, FL - 260, 260, 260, 26); ctx.fill();
-  ctx.fillStyle = "#5a5f6c"; ctx.fillRect(0, FL, W, 120);
+  ctx.fillStyle = "#5a5f6c"; ctx.fillRect(0, FL, W, 420);
 }
 
 // ------------------------------------------------------------ Szenen je Satz
@@ -255,10 +256,10 @@ function scene(t, si) {
   if (si <= 1) {                                                        // Straße mit Zahlen über den Köpfen
     bgStreet(t);
     const zahl = Wt(0, "ZAHL");
-    const ppl = [[150, { c1: "#ffd2b0", c2: "#e8a07a", cap: "#3b7dd8" }, 820], [340, { c1: "#d6e8ff", c2: "#8fb0e0", hair: "#5a3a2a" }, 3100], [560, DU, null], [760, { c1: "#e3d3ff", c2: "#b89ae8", glasses: true }, 46], [930, { c1: "#c8f0d8", c2: "#7fc8a0" }, 2200]];
+    const ppl = [[225, { c1: "#ffd2b0", c2: "#e8a07a", cap: "#3b7dd8" }, 820], [382, { c1: "#d6e8ff", c2: "#8fb0e0", hair: "#5a3a2a" }, 3100], [540, DU, null], [698, { c1: "#e3d3ff", c2: "#b89ae8", glasses: true }, 46], [855, { c1: "#c8f0d8", c2: "#7fc8a0" }, 2200]];
     ppl.forEach(([x, o, v], i) => {
       const P = person(x + Math.sin(t * 0.8 + i) * 6, FL, { ...o, s: 0.9, f: i === 2 ? (t > zahl ? "wide" : "neutral") : "neutral", look: i === 2 ? Math.sin(t * 1.5) : 0, walk: i % 2 ? t * 6 : 0 });
-      if (v) badge(P.hx, P.hy - 80, v, pop(t, zahl + i * 0.12));
+      if (v) badge(P.hx, P.hy - 80 - (i % 2) * 46, v, pop(t, zahl + i * 0.12), { s: 0.85 });   // gestaffelt, damit nichts überlappt
     });
   } else if (si === 2) {                                                // Büro: Kollegin
     bgOffice();
@@ -464,11 +465,11 @@ window.renderFrame = function (t) {
   ctx.fillStyle = "#0b0c12"; ctx.fillRect(0, 0, W, H);
   const si = sentenceAt(t);
   const drawSc = (k, dx) => {
-    ctx.save(); ctx.beginPath(); ctx.roundRect(24, SC[0], W - 48, SC[1] - SC[0], 26); ctx.clip();
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
     ctx.translate(dx, 0);
-    const z = 1 + 0.035 * ramp(t, S[k] - 0.15, (S[k + 1] || TL.duration) - 0.15);
+    const z = 1.32 * (1 + 0.035 * ramp(t, S[k] - 0.15, (S[k + 1] || TL.duration) - 0.15));
     const px = Math.sin((t - S[k]) * 0.35) * 10;                   // langsame Kamerafahrt
-    ctx.translate(540 + px, 700); ctx.scale(z, z); ctx.translate(-540, -700);
+    ctx.translate(540 + px, 1530); ctx.scale(z, z); ctx.translate(-540, -FL);   // Boden bei ~1530 px, Szene füllt das ganze Hochformat
     scene(t, k);
     sceneLight();
     ctx.restore();
@@ -477,6 +478,10 @@ window.renderFrame = function (t) {
   const tr = si > 0 ? ramp(t, S[si] - 0.15, S[si] + 0.25) : 1;
   if (tr < 1) { const k = easeIO(tr); drawSc(si - 1, -W * k); drawSc(si, W * (1 - k)); }
   else drawSc(si, 0);
+  const tg = ctx.createLinearGradient(0, 120, 0, 700);
+  tg.addColorStop(0, "rgba(8,9,14,0.75)"); tg.addColorStop(0.6, "rgba(8,9,14,0.45)"); tg.addColorStop(1, "rgba(8,9,14,0)");
+  ctx.fillStyle = tg; ctx.fillRect(0, 0, W, 700);
+  ctx.fillStyle = "rgba(8,9,14,0.75)"; ctx.fillRect(0, 0, W, 120);
   for (const card of TL.cards) if (t >= card.start - 0.1 && t <= card.end + 0.05) drawCard(card, t);
   ctx.globalAlpha = 0.035; ctx.fillStyle = GRAIN[Math.floor(t * 10) % GRAIN.length]; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
   const fade = Math.max(1 - ramp(t, 0, 0.3), ramp(t, TL.duration - 1.4, TL.duration - 0.2));
@@ -484,9 +489,9 @@ window.renderFrame = function (t) {
 };
 // weiches Licht: oben heller, Ecken und Boden etwas dunkler
 function sceneLight() {
-  let g = ctx.createRadialGradient(540, 520, 120, 540, 640, 760);
+  let g = ctx.createRadialGradient(540, 560, 160, 540, 640, 980);
   g.addColorStop(0, "rgba(255,240,220,0.10)"); g.addColorStop(0.6, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,0.35)");
-  ctx.fillStyle = g; ctx.fillRect(0, SC[0], W, SC[1] - SC[0]);
+  ctx.fillStyle = g; ctx.fillRect(-200, TOPW, W + 400, FL - TOPW + 400);
   g = ctx.createLinearGradient(0, FL - 30, 0, FL + 20);
   g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(0.6, "rgba(0,0,0,0.18)"); g.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = g; ctx.fillRect(0, FL - 30, W, 50);
