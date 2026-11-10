@@ -271,10 +271,10 @@ for key in ("pizza", "iph", "wohn", "goyo"): place(T[key] - 0.05, whoosh(0.3), 0
 place(T["pizza"] + 0.1, sizzle(0.6), 0.2); place(T["iph"] + 0.1, blip(1600), 0.25); place(T["iph"] + 0.22, blip(2000), 0.25)
 place(T["wohn"] + 0.1, jingle(), 0.4); place(T["goyo"] + 0.1, ding(1760), 0.3)
 place(T["done"], thud(), 0.5); place(T["done"] + 0.05, clank(), 0.3); place(T["done"] + 0.3, cheer(0.8), 0.3)
-place(T["cliff"], drone(T["follow"] - T["cliff"] + 0.3), 0.55); place(T["cliff"] + 0.3, sniffs(), 0.45)
+place(T["cliff"], drone(T["law2"] - T["cliff"] + 0.3), 0.55); place(T["cliff"] + 0.3, sniffs(), 0.45)
 place(T["paw"], growl(1.0), 0.6); place(T["paw"], boom(), 0.5)
 place(T["follow"], whoosh(0.5), 0.3); place(T["follow"] + 0.12, ding(2093), 0.3)
-place(T["name"], pop(650), 0.4); place(T["name"] + 0.3, boing(), 0.25); place(T["top"] + 0.1, pop(800), 0.3)
+place(T["law2"], pop(650), 0.4); place(T["law2"] + 0.3, ding(1760), 0.25); place(T["top"] + 0.1, pop(800), 0.3); place(T["name"], pop(700), 0.35); place(T["name"] + 0.35, boing(), 0.25)
 place(T["loop"] + 0.05, sniffs(), 0.5)
 for t in EV["cuts"]:
     if 0.5 < t < T["loop"]: place(t - 0.2, whoosh(0.3), 0.1)
@@ -304,8 +304,8 @@ def norm(x): return x / (np.sqrt((x ** 2).mean()) + 1e-9) * 0.12
 MC = os.path.join(HERE, "build", "music_cand")
 parts = [
     ("Five_Armies.mp3", 20.0, 0.0, T["cliff"], 0.85),                    # episch: Stadt, Gesetz, Jobs, Wünsche
-    ("Ossuary_6_-_Air.mp3", 30.0, T["cliff"], T["follow"], 0.75),        # Höhle: unheimlich
-    ("Hitman.mp3", 12.0, T["follow"], EV["duration"], 0.8),              # spannend bis zum Schluss
+    ("Ossuary_6_-_Air.mp3", 30.0, T["cliff"], T["law2"], 0.75),        # Höhle: unheimlich
+    ("Hitman.mp3", 12.0, T["law2"], EV["duration"], 0.8),              # spannend bis zum Schluss
 ]
 m = np.zeros((N, 2), np.float32); xf = int(0.15 * SR)
 for f, off, a, b, g in parts:

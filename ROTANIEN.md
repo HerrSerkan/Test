@@ -15,7 +15,7 @@ alle creatorbezogenen Stellen (Zahlen, Kommentare, Namen, Umfragen) sind auf die
 | 6 | `mars6/` | 824 | 824 | +2 | 4.256 | **Absturz auf Pluto** (eigene Folge, 31,8 s, 60 fps): 0 % Treibstoff, Pluto = Zwergplanet, Pluto-Wesen will Döner, Tim Dönermann, Rotanien 2.0, **Umfrage** „Bleiben oder weiterfliegen?“ (🥙 auf Pluto bleiben / 🚀 besseren Planeten suchen, Mehrheit entscheidet Tag 7!) |
 | 7 | `mars7/` | 830 | 830 | +6 | 4.317 | **Blinder Passagier**: echte Umfrage Tag 6 = 72 % weiterfliegen (60 Stimmen), Monster im Döner-Vorrat, Maskottchen (Jens), Asteroiden, nur noch 1 Sprung, **Umfrage** „Durch oder außenrum?“ (Mehrheit entscheidet Tag 8) |
 | 8 | `mars8/` | 829 | 829 | −1 | 4.352 | **Neuer Planet, neues Land** (Aufbau wie Tag 2): Umfrage Tag 7 = 67 % mitten durch (27 Stimmen), Monster hat gelenkt, Bruchlandung, Wünsche erfüllt (Jens Dönerladen, Mehmet Apple Store, roaders Wurm, Fire.Nico Gamer), Höhle mit Augen, Follow-/Like-CTA, Ende: Top-Kommentar = **Gesetz Nr. 1** |
-| 9 | `mars9/` | 834 | 834 | +5 | 4.390 | **Jobs für alle** (wie Tag 2): Stadt über Nacht, Gesetz Nr. 1 „Jeder bekommt einen Job“, l.cgln16 Präsident + Janic Vize, luk Polizei, einfachso Security, MEO YouTuber, Phillip orange Katze (4. Anfrage), Alex Pizzaofen, Noam 2 iPhones, Mehmet Wohnung, Leonard Goyo, Höhle: Pfote wie das Monster, Ende: **Name fürs Monster** = Top-Kommentar |
+| 9 | `mars9/` | 834 | 834 | +5 | 4.390 | **Jobs für alle** (wie Tag 2): Stadt über Nacht, Gesetz Nr. 1 „Jeder bekommt einen Job“, l.cgln16 Präsident + Janic Vize, luk Polizei, einfachso Security, MEO YouTuber, Phillip orange Katze (4. Anfrage), Alex Pizzaofen, Noam 2 iPhones, Mehmet Wohnung, Leonard Goyo, Höhle: Pfote wie das Monster, Follow-Aufruf früh (Bordkarte Rakete 4), Ende: **Gesetz Nr. 2** = Top-Kommentar + **Name fürs Monster** |
 
 Bereits erfüllte Wünsche (mit Namen gezeigt): Gabriel Emilijan Laserschwert, elster pinker Anzug + Hundeohren,
 Entenlover/Nr. 410 Enten-Freund (Tag 3); Jakob Stein-Freund, Bz_Full Huhn auf dem Kopf, herobrine Minecraft-Rucksack (Tag 4).
@@ -26,7 +26,7 @@ Dönerladen „SAFUAN“ (kazeyaha), Jimmbos Burek-Launcher, Fans in der Rakete:
 Nach Tag 5 ist der Mars zerstört. Tag 6: Absturz auf Pluto. Erfüllt in Tag 6: Tim_16 Dönermann, Delon Laserpistole, Janic Präsident, Mehmet „Apple Store (bald)“,
 Noam iPhone (kein Empfang), OGnani Lichtantrieb + Tablet „Zwergplanet“, Elias Pizza-Helm, keanu blauer Riese, Taylor_ Motorrad, Phillip orange Katze,
 Alex Alien-Freund (das Wesen), Lolel Lambo-Aufkleber, TickTock Rolex + Brille.
-Tag 7 hat die Umfrage aus Tag 6 umgesetzt (72 % weiter). Tag 8 hat die Umfrage aus Tag 7 umgesetzt (67 % mitten durch). Tag 9: kein Gesetz vorgeschlagen → Gesetz Nr. 1 „Jeder bekommt einen Job“. **Tag 10: Monster-Name aus den Kommentaren unter Tag 9 + neue Job-Wünsche.** Früher: (🥙 auf Pluto bleiben oder 🚀 mit OGnanis Lichtantrieb einen besseren Planeten suchen) – Ergebnis-Screenshot vom Nutzer holen.
+Tag 7 hat die Umfrage aus Tag 6 umgesetzt (72 % weiter). Tag 8 hat die Umfrage aus Tag 7 umgesetzt (67 % mitten durch). Tag 9: kein Gesetz vorgeschlagen → Gesetz Nr. 1 „Jeder bekommt einen Job“. **Tag 10: Gesetz Nr. 2 (Top-Kommentar unter Tag 9) + Monster-Name + neue Job-Wünsche.** Früher: (🥙 auf Pluto bleiben oder 🚀 mit OGnanis Lichtantrieb einen besseren Planeten suchen) – Ergebnis-Screenshot vom Nutzer holen.
 - Nutzer wünscht Umfragen (TikTok-Umfrage) statt „Kommentier X oder Y“, und die Frage soll sich aus der Geschichte ergeben (nicht „random“).
 Noch offen aus den Kommentaren: Leonard „Goyo“-Astronaut, Balerz09 Brille + Barça-Trikot, Döner-Preis 2 € / 3 € (Globi, fan_emilia1), Laserkanone.
 
@@ -71,3 +71,5 @@ Benötigt: `pip install faster-whisper scipy librosa` (falls im neuen Container 
 - Achtung: Der Nutzer macht echte TikTok-Umfragen (Tag 6: „Was machen wir“, 60 Stimmen). Immer nach dem Screenshot des Umfrage-Ergebnisses fragen, nicht nur Kommentare zählen.
 - Musik: Nutzer will spannende Musik (Five Armies / Hitman / Volatile Reaction), keine Gute-Laune-Musik wie „Carefree“.
 - Briefings (aus einem anderen Chat) sehen keine TikTok-Umfragen: Aussagen wie „keiner hat abgestimmt“ immer beim Nutzer prüfen.
+- Nutzer will den Follow-Aufruf („neue Bewohner“) immer früh im Video (direkt nach der Profilkarte) und am Ende die Frage nach dem nächsten Gesetz (du mit dem Gesetzbuch).
+- Namen in der Stimme mit Whisper gegenprüfen (Janic → „Janik“, MEO → „Me-o“ schreiben).
