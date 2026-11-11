@@ -1,6 +1,6 @@
 # Rotanien – Tag 10 „24 Wünsche – alle gebaut“ (1:1 nach dem Aufbau des Vorbild-Videos „Neu-Followburg“, angepasst)
 
-Animation mit Sprecher, 48,2 s, 1080×1920, 60 fps. Stand 11.11.2026: 835 Follower, 4.422 Likes (= „Taler“ der Stadtkasse).
+Animation mit Sprecher, 51,6 s, 1080×1920, 60 fps. Stand 11.11.2026: 835 Follower, 4.422 Likes (= „Taler“ der Stadtkasse).
 Neuer Stil wie im Vorbild: Stadtkarte von oben + Stadt-Infokarte („ROTANIEN 2.0 · TAG 10 · 835 Bewohner · 4.422 Taler“), Wunsch-Häuser als Karten mit @Namen.
 Fremder Planet: pinker Boden, Krater, türkiser Leuchtfluss, Kristalle, Landeplatz; Hauskarten mit Sternenhimmel und pinkem Sand.
 Ablauf (wie Vorbild): „Ihr wolltet einen Dönerladen? Gleich dreimal!“ (Jens, Safuan, Fabi 2.) → „24 Wünsche – alle gebaut“ (Sammelkarte, Zähler)
@@ -21,6 +21,6 @@ Offen für Tag 11: Monster-Name (Bob von Fabi 2. oder Kuchen von Jens – beide 
 
 
 ## Überarbeitung (Nutzer-Feedback)
-- Einstieg: „Heute bauen wir unsere Stadt auf!“ (vor dem Dönerladen-Hook).
+- Einstieg: „Heute bauen wir unsere Stadt auf!“, dann kurze Format-Erklärung „Jeder Follower ist ein Bewohner. Ihr wünscht – ich baue!“ (vor dem Dönerladen-Hook).
 - Rätsel/Auflösung: Riesenhaus mit Rakete statt Astronauten-Statue.
 - Häuser neu gezeichnet: jedes Haus eigene Form (`bld`, Schalter `k`), Schatten, leuchtende Fenster, Rauch, kleine Bewegungen.

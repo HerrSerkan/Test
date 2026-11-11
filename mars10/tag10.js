@@ -3,10 +3,10 @@
 // angepasst auf Rotanien 2.0: fremder Planet (pinker Sand, Krater, türkiser Leuchtfluss, Kristalle), echte Kommentare, echte Zahlen.
 const FOLLOWERS = 835, TALER = 4422;
 const T = {
-  hook: wt(6), triple: wt(11), count: wt(14), built: wt(20), range: wt(21), edeka: wt(25), crazy: wt(30), halt: wt(36), tipp: wt(45), end: wt(51),
-  list: wt(56), such: wt(62), wieder: wt(69), oben: wt(76), f: [wt(80), wt(82), wt(84), wt(86), wt(88), wt(90), wt(92)], law: wt(98),
-  reso: wt(104), wunsch: wt(108), reveal: wt(111), higher: wt(118), recht: wt(121), stadt: wt(124), moeglich: wt(128), grow: wt(132),
-  comm: wt(136), denk: wt(140), like: wt(143), folg: wt(150), wish: wt(152), loop: 1e9,
+  expl: wt(6), wish2: wt(11), hook: wt(15), triple: wt(20), count: wt(22), built: wt(28), range: wt(29), edeka: wt(33), crazy: wt(38), halt: wt(44), tipp: wt(53), end: wt(59),
+  list: wt(64), such: wt(70), wieder: wt(77), oben: wt(84), f: [wt(88), wt(90), wt(92), wt(94), wt(96), wt(99), wt(101)], law: wt(107),
+  reso: wt(113), wunsch: wt(117), reveal: wt(120), higher: wt(127), recht: wt(130), stadt: wt(133), moeglich: wt(137), grow: wt(141),
+  comm: wt(145), denk: wt(149), like: wt(152), folg: wt(159), wish: wt(161), loop: 1e9,
 };
 const AV = {};
 const INK = "#2b1a3a", CREAM = "#fff6e6", PINK = "#ff4f8b", TEAL = "#19b8a6", GOLD = "#ffd23a";
@@ -224,7 +224,8 @@ window.renderFrame = function (t) {
   // 1) Hook: „Ihr wolltet einen Dönerladen? Gleich dreimal!“
   if (t < T.hook) { // Einstieg: „Heute bauen wir unsere Stadt auf!“
     const a = 1 - ramp(t, T.hook - 0.12, T.hook);
-    title("HEUTE BAUEN WIR", "UNSERE STADT AUF! 🏗️", 232, a, GOLD);
+    if (t < T.expl) title("HEUTE BAUEN WIR", "UNSERE STADT AUF! 🏗️", 232, a, GOLD);
+    else { title("JEDER FOLLOWER", "= 1 BEWOHNER 🧑‍🚀", 232, a * pop(t, T.expl, 1e9), GOLD); tagLabel("💬 IHR WÜNSCHT – ICH BAUE! 🏠", SX, 560, a * pop(t, T.wish2, 1e9), PINK, "#fff", -0.03, 17); }
     for (const [k, i, hx] of [[0, 4, -150], [1, 6, -50], [2, 7, 50], [3, 8, 150]]) { const up = t < 0.02 ? 1 : back(ramp(t, 0.02 + k * 0.12, 0.3 + k * 0.12)); if (k && up <= 0) continue; ctx.save(); ctx.translate(SX + hx, 470); ctx.scale(a, a); OL(() => { ctx.save(); ctx.scale(1, k ? up : 1); bld(i, 0, 0, 0.98); ctx.restore(); }, 4); ctx.restore(); if (k) puffs(SX + hx, 470, t, 0.02 + k * 0.12, 4); }
   }
   if (t >= T.hook && t < T.count) {

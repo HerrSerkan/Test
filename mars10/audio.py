@@ -265,6 +265,7 @@ def coin():
 F = T["f"]
 place(0.02, pop(650), 0.4)
 for k in range(1, 4): place(0.02 + k * 0.12, pop(700 + 60 * k), 0.32)   # Einstieg: Häuser poppen auf
+place(T["expl"], pop(800), 0.35); place(T["wish2"], pop(900), 0.35); place(T["wish2"] + 0.75, ding(1976), 0.25)
 place(T["hook"], whoosh(0.3), 0.3); place(T["hook"] + 0.1, pop(650), 0.38); place(T["triple"] + 0.05, pop(750), 0.4); place(T["triple"] + 0.15, pop(850), 0.4); place(T["triple"] + 0.25, ding(1976), 0.3)
 for k in range(12): place(T["count"] + (T["built"] - 0.1 - T["count"]) * k / 11, tick(1200 + 50 * k), 0.25)
 place(T["built"], thud(), 0.45); place(T["built"] + 0.05, cheer(1.0), 0.3); place(T["built"] + 0.02, ding(2093), 0.3)
