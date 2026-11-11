@@ -4,7 +4,7 @@ Kanal: **Gedacht**, TikTok **@einfach..wissen** (zwei Punkte). Profilbild: `mars
 Jede Folge ist ein 1:1-Nachbau eines Mond-Videos („Orbitanien“, Account @jno.028), aber auf dem **Mars**, Land heißt **Rotanien**,
 alle creatorbezogenen Stellen (Zahlen, Kommentare, Namen, Umfragen) sind auf diesen Kanal angepasst.
 
-## Stand nach Tag 9 (10.11.2026)
+## Stand nach Tag 10 (11.11.2026)
 | Tag | Ordner | Follower | Einwohner | Neu | Likes | Gesetz / Thema |
 |---|---|---|---|---|---|---|
 | 1 | `mars/`  | 0   | 1   | –    | 0     | Land gegründet, Top-Kommentar = Gesetz |
@@ -16,6 +16,7 @@ alle creatorbezogenen Stellen (Zahlen, Kommentare, Namen, Umfragen) sind auf die
 | 7 | `mars7/` | 830 | 830 | +6 | 4.317 | **Blinder Passagier**: echte Umfrage Tag 6 = 72 % weiterfliegen (60 Stimmen), Monster im Döner-Vorrat, Maskottchen (Jens), Asteroiden, nur noch 1 Sprung, **Umfrage** „Durch oder außenrum?“ (Mehrheit entscheidet Tag 8) |
 | 8 | `mars8/` | 829 | 829 | −1 | 4.352 | **Neuer Planet, neues Land** (Aufbau wie Tag 2): Umfrage Tag 7 = 67 % mitten durch (27 Stimmen), Monster hat gelenkt, Bruchlandung, Wünsche erfüllt (Jens Dönerladen, Mehmet Apple Store, roaders Wurm, Fire.Nico Gamer), Höhle mit Augen, Follow-/Like-CTA, Ende: Top-Kommentar = **Gesetz Nr. 1** |
 | 9 | `mars9/` | 834 | 834 | +5 | 4.390 | **Jobs für alle** (wie Tag 2): Stadt über Nacht, Gesetz Nr. 1 „Jeder bekommt einen Job“, l.cgln16 Präsident + Janic Vize, luk Polizei, einfachso Security, MEO YouTuber, Phillip orange Katze (4. Anfrage), Alex Pizzaofen, Noam 2 iPhones, Mehmet Wohnung, Leonard Goyo, Höhle: Pfote wie das Monster, Follow-Aufruf früh (Bordkarte Rakete 4), Ende: **Gesetz Nr. 2** = Top-Kommentar + **Name fürs Monster** |
+| 10 | `mars10/` | 835 | 835 | +1 | 4.422 | **24 Wünsche – alle gebaut** (neuer Stil nach Vorbild „Neu-Followburg“: Stadtkarte von oben, Hauskarten, Rätsel, Hausliste): Gesetz Nr. 2 „Alle haben eine Villa“ (Janic-Energy), Rätsel = Riesen-Astronaut in Blau (keanu), Likes = Taler, Ende: „Wie soll die Stadt weiterwachsen?“ |
 
 Bereits erfüllte Wünsche (mit Namen gezeigt): Gabriel Emilijan Laserschwert, elster pinker Anzug + Hundeohren,
 Entenlover/Nr. 410 Enten-Freund (Tag 3); Jakob Stein-Freund, Bz_Full Huhn auf dem Kopf, herobrine Minecraft-Rucksack (Tag 4).
@@ -73,3 +74,5 @@ Benötigt: `pip install faster-whisper scipy librosa` (falls im neuen Container 
 - Briefings (aus einem anderen Chat) sehen keine TikTok-Umfragen: Aussagen wie „keiner hat abgestimmt“ immer beim Nutzer prüfen.
 - Nutzer will den Follow-Aufruf („neue Bewohner“) immer früh im Video (direkt nach der Profilkarte) und am Ende die Frage nach dem nächsten Gesetz (du mit dem Gesetzbuch).
 - Namen in der Stimme mit Whisper gegenprüfen (Janic → „Janik“, MEO → „Me-o“ schreiben).
+- Ab Tag 10: Stimme „Chris“ (voice_id iP95p4xoKVk53GoZ742B, stability 0.4, similarity 0.75, style 0.35), Tempo nur 1.17 – Nutzer will sie freundlicher und weniger KI-lastig als „Liam“.
+- Tag 10 nutzt den Stadtkarten-Stil (mars10/tag10.js); Monster-Name (Bob/Kuchen) ist noch offen.
