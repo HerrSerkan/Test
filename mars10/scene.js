@@ -833,64 +833,91 @@ const walkY = (t, on) => on ? -Math.abs(Math.sin(t * 11)) * 5 : 0;
 // angepasst auf Rotanien 2.0: fremder Planet (pinker Sand, Krater, türkiser Leuchtfluss, Kristalle), echte Kommentare, echte Zahlen.
 const FOLLOWERS = 835, TALER = 4422;
 const T = {
-  triple: wt(5), count: wt(7), built: wt(13), range: wt(14), edeka: wt(18), crazy: wt(23), halt: wt(29), tipp: wt(38), end: wt(44),
-  list: wt(49), such: wt(55), wieder: wt(62), oben: wt(69), f: [wt(73), wt(75), wt(77), wt(79), wt(81), wt(83), wt(85)], law: wt(91),
-  reso: wt(97), wunsch: wt(101), reveal: wt(104), higher: wt(108), recht: wt(112), stadt: wt(115), moeglich: wt(119), grow: wt(123),
-  comm: wt(127), denk: wt(131), like: wt(134), folg: wt(141), wish: wt(143), loop: 1e9,
+  hook: wt(6), triple: wt(11), count: wt(14), built: wt(20), range: wt(21), edeka: wt(25), crazy: wt(30), halt: wt(36), tipp: wt(45), end: wt(51),
+  list: wt(56), such: wt(62), wieder: wt(69), oben: wt(76), f: [wt(80), wt(82), wt(84), wt(86), wt(88), wt(90), wt(92)], law: wt(98),
+  reso: wt(104), wunsch: wt(108), reveal: wt(111), higher: wt(118), recht: wt(121), stadt: wt(124), moeglich: wt(128), grow: wt(132),
+  comm: wt(136), denk: wt(140), like: wt(143), folg: wt(150), wish: wt(152), loop: 1e9,
 };
 const AV = {};
 const INK = "#2b1a3a", CREAM = "#fff6e6", PINK = "#ff4f8b", TEAL = "#19b8a6", GOLD = "#ffd23a";
 
 // ------------------------------------------------------------ die 24 Wünsche (alle aus echten Kommentaren, Tag 2–9)
 const HAUS = [
-  { u: "Jens", w: "Dönerladen", e: "🥙", c: "#ffcf7a", roof: "awning", av: "jens" },
-  { u: "Safuan", w: "Döner „SAFUAN“", e: "🥙", c: "#ffb347", roof: "awning", av: "safuan" },
-  { u: "Fabi 2.", w: "Dönermann-Stand", e: "🥙", c: "#ffe0a3", roof: "awning", av: "fabi" },
-  { u: "Mehmet_brb", w: "Edeka", e: "🛒", c: "#ffe14a", roof: "flat", av: "mehmet", txt: "Bitte einen Edeka" },
-  { u: "Janic-Energy", w: "Villa", e: "🏛️", c: "#fff3d6", roof: "villa", av: "janicenergy", txt: "Alle haben eine Villa" },
-  { u: "berat_bulut", w: "Schwertschmiede", e: "⚔️", c: "#b9c0cc", roof: "tri", av: "berat", txt: "Kriege ich jetzt endlich ein Schwert" },
-  { u: "sami&zoe", w: "Schule", e: "🏫", c: "#ff9d7a", roof: "tri", av: "sami", txt: "Kann ich Lehrerin sein" },
-  { u: "Phillip", w: "Katzencafé", e: "🐱", c: "#ffb26b", roof: "dome", av: "phillip", txt: "Wann bekomme ich meine Orange Katze?" },
-  { u: "Fire.Nico", w: "Gaming-Halle", e: "🎮", c: "#8a6bff", roof: "flat", av: "nico", txt: "möchte endlich Gamer Astronaut sein bitte bitte" },
-  { u: "roader", w: "Wurmhaus", e: "🪱", c: "#ff9db4", roof: "dome", av: "roader", txt: "man bitteeeee mein wurm" },
-  { u: "Mehmet_brb", w: "Apple Store", e: "🍎", c: "#f4f6f8", roof: "flat", av: "mehmet" },
-  { u: "MEO", w: "Haus für alle", e: "🏠", c: "#7bd0ff", roof: "tri", av: "meo" },
-  { u: "Alex", w: "Pizzeria", e: "🍕", c: "#e57a5a", roof: "dome", av: "alex" },
-  { u: "Noam", w: "iPhone-Turm", e: "📱", c: "#cfd6e4", roof: "tower", av: "noam" },
-  { u: "l.cgln16", w: "Palast", e: "👑", c: "#ffd76b", roof: "villa", av: "lcgln" },
-  { u: "luk", w: "Polizeiwache", e: "🚓", c: "#5a8bff", roof: "flat", av: "luk" },
-  { u: "einfachso", w: "Security-Turm", e: "🛡️", c: "#4a4f5c", roof: "tower", av: "einfachso" },
-  { u: "MEO", w: "YouTube-Studio", e: "🎥", c: "#ff5a5a", roof: "flat", av: "meo" },
-  { u: "Leonard", w: "Goyo-Haus", e: "✨", c: "#b06bff", roof: "tri", av: "leonard" },
-  { u: "Arda", w: "Monster-Höhle", e: "👾", c: "#6b5bd6", roof: "dome", av: "arda" },
-  { u: "Bz_Full", w: "Hühnerstall", e: "🐔", c: "#f0e2c0", roof: "tri" },
-  { u: "Jakob", w: "Stein-Haus", e: "🪨", c: "#9a8f88", roof: "dome" },
-  { u: "elster", w: "Hundehütte", e: "🐶", c: "#ff9fd2", roof: "tri" },
-  { u: "keanu", w: "???", e: "❓", c: "#4a7bff", roof: "statue", av: "keanu", txt: "ich frage seit Tag 2 darf ich ein riesen Astronaut werden in Blau" },
+  { u: "Jens", w: "Dönerladen", k: "doner", c: "#ffe7b8", sign: "DÖNER", av: "jens" },
+  { u: "Safuan", w: "Döner „SAFUAN“", k: "doner", c: "#ffd08a", sign: "SAFUAN", av: "safuan" },
+  { u: "Fabi 2.", w: "Dönermann-Stand", k: "doner", c: "#fff1cf", sign: "DÖNER", av: "fabi" },
+  { u: "Mehmet_brb", w: "Edeka", k: "markt", c: "#ffe14a", av: "mehmet", txt: "Bitte einen Edeka" },
+  { u: "Janic-Energy", w: "Villa", k: "villa", c: "#fff3d6", av: "janicenergy", txt: "Alle haben eine Villa" },
+  { u: "berat_bulut", w: "Schwertschmiede", k: "schmiede", c: "#aab2c0", av: "berat", txt: "Kriege ich jetzt endlich ein Schwert" },
+  { u: "sami&zoe", w: "Schule", k: "schule", c: "#ff8f6b", av: "sami", txt: "Kann ich Lehrerin sein" },
+  { u: "Phillip", w: "Katzencafé", k: "katze", c: "#ffae5e", av: "phillip", txt: "Wann bekomme ich meine Orange Katze?" },
+  { u: "Fire.Nico", w: "Gaming-Halle", k: "gaming", c: "#7a5cff", av: "nico", txt: "möchte endlich Gamer Astronaut sein bitte bitte" },
+  { u: "roader", w: "Wurmhaus", k: "wurm", c: "#ff9db4", av: "roader", txt: "man bitteeeee mein wurm" },
+  { u: "Mehmet_brb", w: "Apple Store", k: "apple", c: "#dff3ff", av: "mehmet" },
+  { u: "MEO", w: "Haus für alle", k: "haus", c: "#7bd0ff", av: "meo" },
+  { u: "Alex", w: "Pizzeria", k: "pizza", c: "#e57a5a", av: "alex" },
+  { u: "Noam", w: "iPhone-Turm", k: "iphone", c: "#2b2f3c", av: "noam" },
+  { u: "l.cgln16", w: "Palast", k: "palast", c: "#ffd76b", av: "lcgln" },
+  { u: "luk", w: "Polizeiwache", k: "polizei", c: "#5a8bff", av: "luk" },
+  { u: "einfachso", w: "Security-Turm", k: "security", c: "#4a4f5c", av: "einfachso" },
+  { u: "MEO", w: "YouTube-Studio", k: "youtube", c: "#ff4b4b", av: "meo" },
+  { u: "Leonard", w: "Goyo-Haus", k: "goyo", c: "#b06bff", av: "leonard" },
+  { u: "Arda", w: "Monster-Höhle", k: "monster", c: "#6b5bd6", av: "arda" },
+  { u: "Bz_Full", w: "Hühnerstall", k: "huhn", c: "#f6e8c6" },
+  { u: "Jakob", w: "Stein-Haus", k: "stein", c: "#9a8f88" },
+  { u: "elster", w: "Hundehütte", k: "hund", c: "#ff9fd2" },
+  { u: "keanu", w: "Riesenhaus", k: "riesen", c: "#4a7bff", av: "keanu", txt: "ich frage seit Tag 2 darf ich ein riesen Astronaut werden in Blau" },
 ];
 const N = HAUS.length, MYST = N - 1;
 const FEAT = [3, 5, 6, 7, 8, 9, 4];       // Edeka, Schwertschmiede, Schule, Katzencafé, Gaming-Halle, Wurmhaus, Villa
 const FTAG = ["EDEKA!", "SCHMIEDE!", "SCHULE!", "KATZENCAFÉ!", "GAMING!", "WURMHAUS!", "VILLA FÜR ALLE!"];
+let TNOW = 0;
 
-// ------------------------------------------------------------ Gebäude-Icons (flach, mit dunklem Rand)
+// ------------------------------------------------------------ Gebäude (jedes mit eigener Form, Schatten, Licht, kleinen Bewegungen)
 function bld(i, x, y, s, sil = false) { // Unterkante Mitte
-  const b = HAUS[i]; ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.lineJoin = "round"; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  const body = (w, h, c) => { ctx.fillStyle = c; rr(-w / 2, -h, w, h, 5); ctx.fill(); ctx.stroke(); };
-  const dark = c => c;
-  if (b.roof === "statue") { // riesiger blauer Astronaut auf Sockel
-    ctx.fillStyle = "#9aa3ab"; rr(-26, -12, 52, 12, 3); ctx.fill(); ctx.stroke();
-    ctx.restore(); astronaut(x, y - 12 * s, 0.62 * s, "happy", { t: 0, acc: "#1f4fd6", suit: "#4a7bff", suit2: "#5f8cff", suit3: "#3a62d0", armR: -2.5 }); return;
+  const b = HAUS[i], t = TNOW, ph = i * 1.7;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s * (1 + 0.012 * Math.sin(t * 3 + ph))); ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.fillStyle = "rgba(70,20,70,0.22)"; ctx.beginPath(); ctx.ellipse(0, 2, 44, 6, 0, 0, Math.PI * 2); ctx.fill();
+  const box = (w, h, c, x0 = 0, r = 5) => { ctx.fillStyle = c; rr(x0 - w / 2, -h, w, h, r); ctx.fill(); ctx.save(); ctx.beginPath(); ctx.roundRect(x0 - w / 2, -h, w, h, r); ctx.clip(); ctx.fillStyle = "rgba(0,0,0,0.10)"; ctx.fillRect(x0 + w * 0.2, -h, w, h); ctx.fillStyle = "rgba(255,255,255,0.28)"; ctx.fillRect(x0 - w / 2, -h, w, 5); ctx.restore(); rr(x0 - w / 2, -h, w, h, r); ctx.stroke(); };
+  const tri = (w, yb, h, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(-w / 2, yb); ctx.lineTo(0, yb - h); ctx.lineTo(w / 2, yb); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.strokeStyle = "rgba(255,255,255,0.4)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-w * 0.3, yb - h * 0.28); ctx.lineTo(-w * 0.06, yb - h * 0.8); ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 3; };
+  const flat = (w, yb, c = "#3a3f4e", h = 12) => { ctx.fillStyle = c; rr(-w / 2, yb - h, w, h, 4); ctx.fill(); ctx.stroke(); };
+  const win = (wx, wy, w = 16, h = 14) => { const g = 0.75 + 0.25 * Math.sin(t * 2 + ph + wx); ctx.fillStyle = sil ? "#000" : `rgba(255,${Math.round(225 * g + 20)},140,1)`; rr(wx - w / 2, wy - h / 2, w, h, 3); ctx.fill(); ctx.stroke(); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(wx, wy - h / 2); ctx.lineTo(wx, wy + h / 2); ctx.moveTo(wx - w / 2, wy); ctx.lineTo(wx + w / 2, wy); ctx.stroke(); ctx.lineWidth = 3; };
+  const door = (dx, w = 14, h = 24, c = "#6b3f1e") => { ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(dx - w / 2, 0); ctx.lineTo(dx - w / 2, -h + w / 2); ctx.arc(dx, -h + w / 2, w / 2, Math.PI, 0); ctx.lineTo(dx + w / 2, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); circle(dx + w * 0.22, -h * 0.42, 1.6, GOLD); };
+  const sign = (txt, sy, bg = "#2a2a30", fg = GOLD, sz = 9) => { if (sil) return; ctx.font = `900 ${sz}px InterX`; const w = ctx.measureText(txt).width + 10; ctx.fillStyle = bg; rr(-w / 2, sy - sz * 0.8, w, sz * 1.6, 3); ctx.fill(); ctx.lineWidth = 1.5; ctx.stroke(); ctx.lineWidth = 3; ctx.fillStyle = fg; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, 0, sy + 0.5); };
+  const emo = (e, ex, ey, sz = 18) => { if (sil) return; ctx.font = `${sz}px 'Noto Color Emoji'`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(e, ex, ey); };
+  const smoke = (sx, sy) => { if (sil) return; for (let k = 0; k < 3; k++) { const d = ((t * 0.5 + k / 3 + ph) % 1); ctx.globalAlpha = 0.5 * (1 - d); circle(sx + Math.sin(t + k) * 4 * d, sy - d * 30, 4 + 6 * d, "#fff"); ctx.globalAlpha = 1; } };
+  const chimney = (cx, cy) => { ctx.fillStyle = "#8a5a4a"; rr(cx - 5, cy - 16, 10, 18, 2); ctx.fill(); ctx.stroke(); smoke(cx, cy - 18); };
+  switch (b.k) {
+    case "doner": box(64, 42, b.c); for (let k = 0; k < 6; k++) { ctx.fillStyle = k % 2 ? "#fff" : "#e5442f"; ctx.beginPath(); ctx.moveTo(-36 + k * 12, -52); ctx.lineTo(-24 + k * 12, -52); ctx.lineTo(-25 + k * 12, -40); ctx.lineTo(-35 + k * 12, -40); ctx.fill(); } ctx.strokeRect(-36, -52, 72, 12);
+      ctx.fillStyle = "#cfeaf7"; rr(-26, -34, 26, 22, 3); ctx.fill(); ctx.stroke(); if (!sil) { ctx.fillStyle = "#a0522d"; ctx.beginPath(); ctx.moveTo(-19, -32); ctx.lineTo(-7, -32); ctx.lineTo(-10, -14); ctx.lineTo(-16, -14); ctx.fill(); ctx.fillStyle = "#777"; ctx.fillRect(-13.6, -34, 1.2, 22); } door(16); sign(b.sign, -62); break;
+    case "markt": box(78, 44, b.c); flat(84, -44, "#1c4fa0", 14); sign("EDEKA", -51, "#ffe14a", "#1c4fa0", 9); ctx.fillStyle = "#cfeaf7"; rr(-32, -32, 38, 24, 3); ctx.fill(); ctx.stroke(); door(22, 16, 26, "#2a6fd0"); emo("🛒", -13, -20, 15); break;
+    case "villa": box(82, 42, b.c); for (const cx of [-30, -11, 11, 30]) { ctx.fillStyle = "#fff"; rr(cx - 3.5, -40, 7, 38, 2); ctx.fill(); ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 3; } tri(96, -42, 26, "#e9cf8a"); door(0, 12, 22, GOLD); if (!sil) { ctx.fillStyle = "#e5262b"; ctx.beginPath(); ctx.moveTo(0, -80); ctx.lineTo(14, -75 + Math.sin(t * 5) * 2); ctx.lineTo(0, -70); ctx.fill(); } ctx.beginPath(); ctx.moveTo(0, -68); ctx.lineTo(0, -82); ctx.stroke(); break;
+    case "schmiede": box(64, 42, b.c); for (let k = 0; k < 5; k++) { ctx.lineWidth = 1.2; ctx.strokeStyle = "rgba(60,60,70,0.5)"; ctx.strokeRect(-30 + (k % 3) * 20, -36 + Math.floor(k / 3) * 16, 16, 10); ctx.strokeStyle = INK; ctx.lineWidth = 3; } tri(76, -42, 28, "#4a4f5c"); chimney(20, -56); door(-14, 16, 24, "#3a2a1a"); if (!sil) { glow(-14, -10, 22, "255,120,30", 0.5 + 0.3 * Math.sin(t * 9)); emo("⚔️", 14, -20, 16); } break;
+    case "schule": box(72, 44, b.c); tri(84, -44, 22, "#b3402e"); ctx.fillStyle = "#fff6e6"; rr(-9, -84, 18, 26, 3); ctx.fill(); ctx.stroke(); circle(0, -72, 6, "#fff"); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, -72, 6, 0, Math.PI * 2); ctx.moveTo(0, -72); ctx.lineTo(0, -76); ctx.moveTo(0, -72); ctx.lineTo(3, -71); ctx.stroke(); ctx.lineWidth = 3; win(-22, -24); win(22, -24); door(0, 14, 24); sign("SCHULE", -40, "#fff", INK, 7); break;
+    case "katze": box(64, 40, b.c); ctx.fillStyle = b.c; ctx.beginPath(); ctx.ellipse(0, -40, 32, 24, 0, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); for (const d of [-1, 1]) { ctx.fillStyle = b.c; ctx.beginPath(); ctx.moveTo(d * 28, -52); ctx.lineTo(d * 24, -78); ctx.lineTo(d * 8, -60); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = "#ff8fb8"; ctx.beginPath(); ctx.moveTo(d * 23, -58); ctx.lineTo(d * 22, -70); ctx.lineTo(d * 14, -61); ctx.fill(); }
+      if (!sil) { for (const d of [-1, 1]) { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(d * 12, -46, 6, (t + ph) % 3.2 < 0.15 ? 1 : 6, 0, 0, Math.PI * 2); ctx.fill(); circle(d * 12, -46, 2.6, INK); } ctx.fillStyle = "#ff6b8b"; ctx.beginPath(); ctx.moveTo(-3, -38); ctx.lineTo(3, -38); ctx.lineTo(0, -34); ctx.fill(); ctx.lineWidth = 1.2; for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(d * 6, -35); ctx.lineTo(d * 22, -37); ctx.moveTo(d * 6, -33); ctx.lineTo(d * 22, -31); ctx.stroke(); } ctx.lineWidth = 3; } door(0, 14, 22); break;
+    case "gaming": box(72, 46, b.c); flat(78, -46, "#1b1b2a", 12); if (!sil) { const on = Math.sin(t * 6 + ph) > -0.3; glow(0, -30, 34, "120,255,240", on ? 0.5 : 0.15); ctx.fillStyle = on ? "#5ffff0" : "#2a8a84"; rr(-20, -38, 40, 16, 8); ctx.fill(); ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 3; circle(10, -30, 2.5, "#ff4b6e"); circle(15, -33, 2.5, "#ffd23a"); ctx.fillStyle = INK; ctx.fillRect(-14, -31.2, 8, 2.4); ctx.fillRect(-11.2, -34, 2.4, 8); } ctx.beginPath(); ctx.moveTo(26, -58); ctx.lineTo(26, -74); ctx.stroke(); circle(26, -76, 3, Math.sin(t * 8) > 0 ? "#ff3b3b" : "#7a1a1a"); door(0, 14, 16, "#2a2140"); break;
+    case "wurm": ctx.fillStyle = b.c; ctx.beginPath(); ctx.ellipse(0, 0, 38, 50, 0, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.beginPath(); ctx.ellipse(-14, -30, 8, 12, -0.5, 0, Math.PI * 2); ctx.fill(); circle(0, -16, 12, "#5b2a3a"); ctx.beginPath(); ctx.arc(0, -16, 12, 0, Math.PI * 2); ctx.stroke(); win(-22, -26, 10, 10); if (!sil) { const wy = -54 - Math.abs(Math.sin(t * 3 + ph)) * 6; for (let k = 0; k < 3; k++) { circle(14 + k * 5, wy + k * 6, 6, INK); circle(14 + k * 5, wy + k * 6, 4.6, "#ff7a9c"); } circle(12.5, wy - 1, 1.2, INK); circle(16, wy - 1, 1.2, INK); } break;
+    case "apple": ctx.fillStyle = "rgba(190,235,255,0.9)"; rr(-34, -50, 68, 50, 6); ctx.fill(); ctx.stroke(); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -50); ctx.lineTo(0, 0); ctx.moveTo(-34, -25); ctx.lineTo(34, -25); ctx.stroke(); ctx.lineWidth = 3; ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.beginPath(); ctx.moveTo(-28, -44); ctx.lineTo(-10, -44); ctx.lineTo(-28, -18); ctx.fill(); emo("🍎", 0, -27, 22); break;
+    case "haus": box(60, 40, b.c); tri(74, -40, 30, "#e5503a"); chimney(18, -54); win(-14, -22); door(14); break;
+    case "pizza": ctx.fillStyle = b.c; ctx.beginPath(); ctx.ellipse(0, 0, 38, 48, 0, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.lineWidth = 1.2; for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.moveTo(-30 + k * 12, -6 - (k % 2) * 14); ctx.lineTo(-22 + k * 12, -6 - (k % 2) * 14); ctx.stroke(); } ctx.lineWidth = 3; ctx.fillStyle = "#2a1a1a"; ctx.beginPath(); ctx.ellipse(0, 0, 18, 22, 0, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); if (!sil) { glow(0, -8, 22, "255,150,40", 0.6 + 0.3 * Math.sin(t * 10)); emo("🍕", 0, -62 - Math.sin(t * 3) * 2, 18); } chimney(22, -38); break;
+    case "iphone": ctx.fillStyle = b.c; rr(-20, -92, 40, 92, 9); ctx.fill(); ctx.stroke(); ctx.fillStyle = sil ? "#000" : "#59d4ff"; rr(-15, -84, 30, 70, 5); ctx.fill(); if (!sil) { ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.beginPath(); ctx.moveTo(-15, -84); ctx.lineTo(3, -84); ctx.lineTo(-15, -52); ctx.fill(); ctx.fillStyle = "#fff"; ctx.font = "900 16px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("18", 0, -48); } circle(0, -7, 3, "#555"); break;
+    case "palast": box(56, 46, b.c); for (const d of [-1, 1]) { box(18, 64, "#ffe29a", d * 34, 4); ctx.fillStyle = "#e5503a"; ctx.beginPath(); ctx.moveTo(d * 34 - 12, -64); ctx.lineTo(d * 34, -84); ctx.lineTo(d * 34 + 12, -64); ctx.closePath(); ctx.fill(); ctx.stroke(); } door(0, 16, 26, "#8a2be2"); win(0, -36, 14, 10); emo("👑", 0, -60 + Math.sin(t * 3) * 1.5, 20); break;
+    case "polizei": box(72, 44, b.c); flat(78, -44, "#1c2f6b", 12); sign("POLIZEI", -50, "#fff", "#1c2f6b", 7); win(-22, -24); win(22, -24); door(0, 14, 24, "#1c2f6b"); { const on = Math.sin(t * 9) > 0; if (!sil) glow(0, -66, 26, on ? "255,60,60" : "80,140,255", 0.7); ctx.fillStyle = on ? "#ff3b3b" : "#5a8bff"; rr(-6, -72, 12, 12, 4); ctx.fill(); ctx.stroke(); } break;
+    case "security": ctx.beginPath(); ctx.moveTo(-16, 0); ctx.lineTo(-9, -50); ctx.moveTo(16, 0); ctx.lineTo(9, -50); ctx.moveTo(-13, -22); ctx.lineTo(13, -30); ctx.stroke(); box(44, 30, b.c, 0, 4); ctx.save(); ctx.translate(0, -50); box(46, 30, b.c, 0, 4); ctx.fillStyle = sil ? "#000" : "#ffe9a0"; rr(-17, -22, 34, 12, 3); ctx.fill(); ctx.stroke(); tri(56, -30, 16, "#2b2f3c"); ctx.restore(); ctx.fillStyle = "#f3a2c6"; emo("🛡️", 0, -14, 14); break;
+    case "youtube": box(72, 46, b.c, 0, 10); if (!sil) { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(-9, -36); ctx.lineTo(13, -24); ctx.lineTo(-9, -12); ctx.closePath(); ctx.fill(); ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 3; } ctx.beginPath(); ctx.moveTo(-20, -46); ctx.lineTo(-28, -64); ctx.moveTo(20, -46); ctx.lineTo(28, -64); ctx.stroke(); if (!sil) { circle(28, -66, 4, Math.sin(t * 6) > 0 ? "#ff3b3b" : "#fff"); emo("🎥", -30, -70, 14); } break;
+    case "goyo": box(60, 40, b.c); tri(74, -40, 30, "#7a3bd6"); win(-14, -22); door(14, 14, 24, "#3a1a6b"); if (!sil) { glow(0, -78, 22, "255,240,150", 0.5 + 0.4 * Math.sin(t * 5)); emo("✨", 0, -78, 18); } break;
+    case "monster": ctx.fillStyle = b.c; ctx.beginPath(); for (let k = 0; k <= 16; k++) { const a = Math.PI + k / 16 * Math.PI, r = k % 2 ? 44 : 40; const px = Math.cos(a) * r, py = Math.sin(a) * r * 1.15; k ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = "#1a1030"; ctx.beginPath(); ctx.ellipse(0, 0, 22, 28, 0, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); if (!sil) for (const d of [-1, 1]) { const bl = (t + ph) % 2.8 < 0.12; glow(d * 8, -14, 12, "255,230,80", 0.6); ctx.fillStyle = "#ffe14a"; ctx.beginPath(); ctx.ellipse(d * 8, -14, 5, bl ? 0.8 : 5, 0, 0, Math.PI * 2); ctx.fill(); circle(d * 8, -14, bl ? 0 : 2, INK); } for (const d of [-1, 1]) { ctx.fillStyle = "#cfeaff"; ctx.beginPath(); ctx.moveTo(d * 20, -42); ctx.lineTo(d * 30, -60); ctx.lineTo(d * 30, -38); ctx.closePath(); ctx.fill(); ctx.stroke(); } break;
+    case "huhn": box(56, 34, b.c); tri(70, -34, 26, "#d9463a"); ctx.fillStyle = "#3a2a1a"; ctx.beginPath(); ctx.arc(0, -10, 9, Math.PI, 0); ctx.lineTo(9, 0); ctx.lineTo(-9, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); emo("🐔", 20, -8 - Math.abs(Math.sin(t * 6 + ph)) * 3, 15); break;
+    case "stein": ctx.fillStyle = b.c; ctx.beginPath(); ctx.moveTo(-38, 0); ctx.lineTo(-34, -30); ctx.lineTo(-14, -52); ctx.lineTo(16, -50); ctx.lineTo(36, -26); ctx.lineTo(38, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = "rgba(255,255,255,0.25)"; ctx.beginPath(); ctx.moveTo(-28, -28); ctx.lineTo(-12, -46); ctx.lineTo(-6, -34); ctx.fill(); door(0, 14, 22, "#4a3a34"); if (!sil) for (const d of [-1, 1]) { circle(d * 16, -30, 4.5, "#fff"); circle(d * 16 + 1, -29.5, 2, INK); } break;
+    case "hund": box(50, 32, b.c); tri(64, -32, 28, "#e75fa8"); ctx.fillStyle = "#5a2a4a"; ctx.beginPath(); ctx.arc(0, -12, 11, Math.PI, 0); ctx.lineTo(11, 0); ctx.lineTo(-11, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); emo("🦴", 0, -44, 12); emo("🐶", 0, -9 - Math.abs(Math.sin(t * 5 + ph)) * 2, 13); break;
+    case "riesen": // Riesenhaus mit Raketen-Anlegeplatz
+      box(74, 112, b.c, 0, 6); tri(90, -112, 34, "#2a4fd0"); ctx.fillStyle = sil ? "#000" : "#bfe6ff"; ctx.beginPath(); ctx.arc(0, -84, 13, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-13, -84); ctx.lineTo(13, -84); ctx.moveTo(0, -97); ctx.lineTo(0, -71); ctx.stroke(); ctx.lineWidth = 3;
+      ctx.fillStyle = "#1c2f6b"; ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(-20, -44); ctx.arc(0, -44, 20, Math.PI, 0); ctx.lineTo(20, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); circle(12, -26, 2.5, GOLD);
+      for (const wx of [-24, 24]) win(wx, -84 + 0, 0.01, 0.01);
+      ctx.beginPath(); ctx.moveTo(37, -70); ctx.lineTo(52, -70); ctx.stroke(); ctx.restore(); ctx.save(); ctx.translate(x, y); ctx.scale(s, s); rocket(62, 0, 0.42, 0);
+      if (!sil) { ctx.fillStyle = "#e5262b"; ctx.beginPath(); ctx.moveTo(0, -162); ctx.lineTo(18, -156 + Math.sin(t * 5) * 2); ctx.lineTo(0, -150); ctx.fill(); } ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -146); ctx.lineTo(0, -164); ctx.stroke(); break;
   }
-  if (b.roof === "tower") { body(30, 78, b.c); for (let k = 0; k < 4; k++) { ctx.fillStyle = "#cfeaf7"; ctx.fillRect(-8, -70 + k * 16, 16, 8); } ctx.fillStyle = dark("#e5262b"); ctx.beginPath(); ctx.moveTo(-18, -78); ctx.lineTo(0, -98); ctx.lineTo(18, -78); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  else if (b.roof === "villa") { body(78, 44, b.c); for (const cx of [-28, -10, 10, 28]) { ctx.fillStyle = "#fff"; ctx.fillRect(cx - 3, -40, 6, 36); ctx.strokeRect(cx - 3, -40, 6, 36); } ctx.fillStyle = "#e0c27a"; ctx.beginPath(); ctx.moveTo(-46, -44); ctx.lineTo(0, -70); ctx.lineTo(46, -44); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  else { body(64, 46, b.c);
-    if (b.roof === "tri") { ctx.fillStyle = "#e5503a"; ctx.beginPath(); ctx.moveTo(-40, -44); ctx.lineTo(0, -76); ctx.lineTo(40, -44); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-    if (b.roof === "flat") { ctx.fillStyle = "#3a3f4e"; rr(-36, -58, 72, 14, 4); ctx.fill(); ctx.stroke(); }
-    if (b.roof === "dome") { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(0, -46, 32, 24, 0, Math.PI, 0); ctx.closePath(); ctx.fillStyle = "#ffe9f2"; ctx.fill(); ctx.stroke(); }
-    if (b.roof === "awning") { for (let k = 0; k < 6; k++) { ctx.fillStyle = k % 2 ? "#fff" : "#e5442f"; ctx.fillRect(-36 + k * 12, -58, 12, 14); } ctx.strokeRect(-36, -58, 72, 14); }
-    ctx.fillStyle = "#5b3a1e"; rr(8, -24, 16, 24, 3); ctx.fill(); ctx.fillStyle = "#cfeaf7"; rr(-26, -34, 22, 18, 3); ctx.fill(); ctx.stroke();
-  }
-  if (!sil) { ctx.font = "30px 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(b.e, 0, b.roof === "tower" ? -108 : b.roof === "villa" ? -84 : -88); }
   ctx.restore();
 }
 function silhouette(fn, col = "#161020") { // zeichnet fn als einfarbige Silhouette
@@ -898,10 +925,9 @@ function silhouette(fn, col = "#161020") { // zeichnet fn als einfarbige Silhoue
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = "source-in"; ctx.fillStyle = col; ctx.fillRect(0, 0, 1080, 1920); ctx.globalCompositeOperation = "source-over"; ctx = keep;
   MAIN.save(); MAIN.setTransform(1, 0, 0, 1, 0, 0); MAIN.drawImage(lc, 0, 0); MAIN.restore();
 }
-function statueBig(x, y, s, t, wave = true) { // der Riesen-Astronaut mit Rakete daneben (Größenvergleich)
-  ctx.save(); ctx.fillStyle = "#9aa3ab"; ctx.strokeStyle = INK; ctx.lineWidth = 3; rr(x - 60 * s, y - 20 * s, 120 * s, 20 * s, 5); ctx.fill(); ctx.stroke(); ctx.restore();
-  astronaut(x, y - 20 * s, 1.5 * s, "happy", { t, acc: "#1f4fd6", suit: "#4a7bff", suit2: "#5f8cff", suit3: "#3a62d0", armR: wave ? -2.5 + Math.sin(t * 4) * 0.25 : -0.25 });
-  rocket(x + 118 * s, y, 0.42 * s, 0);
+function giantScene(x, y, s, t, sil = false) { // Riesenhaus (mit Rakete) + ein normales Haus zum Größenvergleich; bei der Auflösung winkt der Riesen-Astronaut
+  bld(MYST, x - 20 * s, y, 1.55 * s, sil); bld(11, x - 150 * s, y, 0.5 * s, sil);
+  if (!sil) astronaut(x + 152 * s, y, 1.42 * s, "happy", { t, acc: "#1f4fd6", suit: "#4a7bff", suit2: "#5f8cff", suit3: "#3a62d0", armR: -2.5 + Math.sin(t * 4) * 0.25 });
 }
 
 // ------------------------------------------------------------ Stadtkarte von oben (fremder Planet), einmal vorgezeichnet
@@ -965,15 +991,15 @@ function houseCard(i, x, y, s, w = 140, h = 180) { // große Karte: Haus + @name
 }
 function miniCard(i, x, y, w = 132, h = 96) { // kleine Karte in der Hausliste
   const b = HAUS[i]; ctx.save(); ctx.translate(x, y); ctx.fillStyle = "#fff"; rr(0, 0, w, h, 9); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = PINK; ctx.font = "900 9.5px InterX"; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText("@" + b.u, 7, 11); ctx.fillStyle = INK; ctx.font = "800 9.5px InterX"; ctx.fillText(i === MYST ? "???" : b.w, 7, 24);
+  ctx.fillStyle = PINK; ctx.font = "900 9.5px InterX"; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText("@" + b.u, 7, 11); ctx.fillStyle = INK; ctx.font = "800 9.5px InterX"; ctx.fillText(i === MYST && TNOW < T.reveal ? "???" : b.w, 7, 24);
   ctx.fillStyle = "rgba(243,162,198,0.6)"; rr(4, h - 22, w - 8, 18, 6); ctx.fill();
-  if (i === MYST) { ctx.fillStyle = INK; ctx.font = "32px Comic"; ctx.textAlign = "center"; ctx.fillText("?", w / 2, h - 34); } else bld(i, w / 2 + 26, h - 8, 0.5);
+  if (i === MYST && TNOW < T.reveal) { ctx.fillStyle = INK; ctx.font = "32px Comic"; ctx.textAlign = "center"; ctx.fillText("?", w / 2, h - 34); } else bld(i, w / 2 + 26, h - 8, i === MYST ? 0.3 : 0.5);
   ctx.restore();
 }
 function iconGrid(t, s, n, y = 470) { // Sammelkarte mit allen Wunschhäusern
   if (s <= 0.01) return; ctx.save(); ctx.translate(SX, y); ctx.scale(s, s);
   ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 8; ctx.fillStyle = CREAM; rr(-212, -150, 424, 300, 14); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke();
-  for (let i = 0; i < Math.min(n, N); i++) { const cx = -175 + (i % 6) * 70, cy = -78 + Math.floor(i / 6) * 72; if (i === MYST) { ctx.fillStyle = INK; ctx.font = "34px Comic"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("?", cx, cy - 22); } else bld(i, cx, cy, 0.52); }
+  for (let i = 0; i < Math.min(Math.floor(n), N); i++) { const cx = -175 + (i % 6) * 70, cy = -78 + Math.floor(i / 6) * 72, pk = back(clamp((n - i) / 1.2)); if (i === MYST && TNOW < T.reveal) { ctx.fillStyle = INK; ctx.font = "34px Comic"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("?", cx, cy - 22); } else bld(i, cx, cy, (i === MYST ? 0.34 : 0.52) * pk); }
   ctx.restore();
 }
 function featureCard(k, t, s) { // große Kommentarkarte oben („die verrücktesten“)
@@ -994,7 +1020,7 @@ function mysteryCard(t, s, lit = false) {
   ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 12; ctx.fillStyle = "#fff0c9"; rr(-205, -150, 410, 300, 16); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.stroke();
   ctx.save(); ctx.beginPath(); ctx.roundRect(-201, -146, 402, 292, 13); ctx.clip(); for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2 + t * 0.3; ctx.fillStyle = "rgba(255,214,120,0.55)"; ctx.beginPath(); ctx.moveTo(0, 20); ctx.arc(0, 20, 420, a, a + 0.22); ctx.fill(); } ctx.restore();
   ctx.restore();
-  ctx.save(); ctx.translate(SX, 400); ctx.scale(s, s); silhouette(() => statueBig(-20, 128, 0.95, 0, false)); ctx.restore();
+  ctx.save(); ctx.translate(SX, 400); ctx.scale(s, s); silhouette(() => giantScene(0, 128, 0.95, 0, true)); ctx.restore();
   ctx.save(); ctx.translate(SX, 400); ctx.scale(s, s); for (const [qx, qy, ph] of [[-160, -90, 0], [165, -100, 1], [-165, 80, 2], [160, 70, 3]]) { ctx.save(); ctx.translate(qx, qy + Math.sin(t * 3 + ph) * 5); circle(0, 0, 15, PINK); ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = "#fff"; ctx.font = "900 18px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("?", 0, 1); ctx.restore(); } ctx.restore();
   tagLabel("TOP SECRET", SX, 400 - 150 * s, s, INK, "#fff", -0.03, 18);
 }
@@ -1019,24 +1045,28 @@ function bookmark(t, s) { if (s <= 0.01) return; ctx.save(); ctx.translate(440, 
 // ------------------------------------------------------------ Bild
 window.renderFrame = function (t) {
   MAIN.setTransform(1, 0, 0, 1, 0, 0); MAIN.fillStyle = "#000"; MAIN.fillRect(0, 0, 1080, 1920);
-  ctx.setTransform(S, 0, 0, S, 0, 0);
+  ctx.setTransform(S, 0, 0, S, 0, 0); TNOW = t;
   const dark = (t >= T.crazy && t < T.list) || (t >= T.reso && t < T.reveal);
   const dk = t >= T.crazy && t < T.list ? ramp(t, T.crazy + 0.5, T.crazy + 0.9) * (1 - ramp(t, T.list - 0.15, T.list)) : t >= T.reso && t < T.reveal ? ramp(t, T.reso, T.reso + 0.3) : 0;
   cityMap(t, 1 - dk);
   header(t);
 
   // 1) Hook: „Ihr wolltet einen Dönerladen? Gleich dreimal!“
-  if (t < T.count) {
-    title("IHR WOLLTET EINEN", "DÖNERLADEN?", 232, 1);
-    const a = t < T.triple ? 1 : 0;
-    houseCard(0, t < T.triple ? SX : lerp(SX, SX - 145, easeOut(ramp(t, T.triple, T.triple + 0.25))), 400, 1 * (t < 0.05 ? 1 : 1), 138, 180);
+  if (t < T.hook) { // Einstieg: „Heute bauen wir unsere Stadt auf!“
+    const a = 1 - ramp(t, T.hook - 0.12, T.hook);
+    title("HEUTE BAUEN WIR", "UNSERE STADT AUF! 🏗️", 232, a, GOLD);
+    for (const [k, i, hx] of [[0, 4, -150], [1, 6, -50], [2, 7, 50], [3, 8, 150]]) { const up = t < 0.02 ? 1 : back(ramp(t, 0.02 + k * 0.12, 0.3 + k * 0.12)); if (k && up <= 0) continue; ctx.save(); ctx.translate(SX + hx, 470); ctx.scale(a, a); OL(() => { ctx.save(); ctx.scale(1, k ? up : 1); bld(i, 0, 0, 0.98); ctx.restore(); }, 4); ctx.restore(); if (k) puffs(SX + hx, 470, t, 0.02 + k * 0.12, 4); }
+  }
+  if (t >= T.hook && t < T.count) {
+    title("IHR WOLLTET EINEN", "DÖNERLADEN?", 232, pop(t, T.hook, T.count));
+    houseCard(0, t < T.triple ? SX : lerp(SX, SX - 145, easeOut(ramp(t, T.triple, T.triple + 0.25))), 400, back(ramp(t, T.hook, T.hook + 0.22)), 138, 180);
     if (t >= T.triple) { houseCard(1, SX, 400, back(ramp(t, T.triple + 0.05, T.triple + 0.3)), 138, 180); houseCard(2, SX + 145, 400, back(ramp(t, T.triple + 0.15, T.triple + 0.4)), 138, 180); tagLabel("GLEICH DREIMAL!", SX, 520, pop(t, T.triple + 0.2, T.count - 0.05), PINK, "#fff", -0.04, 22); }
   }
   // 2) „24 Wünsche. Und wir haben alle gebaut.“
   if (t >= T.count && t < T.range) {
-    const n = Math.round(lerp(1, N, easeOut(ramp(t, T.count, T.built - 0.1))));
+    const nf = lerp(1, N + 0.99, easeOut(ramp(t, T.count, T.built - 0.1))), n = Math.min(N, Math.floor(nf));
     title(n + " NEUE", "WUNSCHHÄUSER", 232, pop(t, T.count, T.range - 0.05), "#fff");
-    iconGrid(t, pop(t, T.count + 0.05, T.range - 0.05), n, 450);
+    iconGrid(t, pop(t, T.count + 0.05, T.range - 0.05), nf, 450);
     tagLabel("ALLE GEBAUT!", SX + 90, 615, pop(t, T.built, T.range - 0.05), TEAL, "#fff", -0.05, 22); if (t >= T.built) confetti(t, T.built);
   }
   // 3) „Von der Villa bis zum Edeka ist alles dabei.“
@@ -1067,7 +1097,7 @@ window.renderFrame = function (t) {
   if (t >= T.reso && t < T.reveal) {
     for (const d of [-1, 1]) { ctx.save(); ctx.translate(SX + d * 200, 760); ctx.rotate(d * (-0.45 + Math.sin(t * 2) * 0.08)); const g = ctx.createLinearGradient(0, 0, 0, -600); g.addColorStop(0, "rgba(255,245,200,0.35)"); g.addColorStop(1, "rgba(255,245,200,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-110, -600); ctx.lineTo(110, -600); ctx.lineTo(14, 0); ctx.fill(); ctx.restore(); }
     title("DIE AUFLÖSUNG", null, 250, pop(t, T.reso, T.reveal - 0.05), "#fff");
-    ctx.save(); ctx.translate(SX, 0); silhouette(() => statueBig(-20, 560, 1.05 + 0.03 * Math.sin(t * 5), 0, false), "#fff0c9"); ctx.restore();
+    ctx.save(); ctx.translate(SX, 0); silhouette(() => giantScene(0, 590, 1.0 + 0.03 * Math.sin(t * 5), 0, true), "#fff0c9"); ctx.restore();
     tagLabel("DER VERRÜCKTESTE?", SX, 620, pop(t, T.wunsch, T.reveal - 0.05), GOLD, INK, 0, 22);
   }
   if (t >= T.reveal && t < T.stadt) {
@@ -1075,12 +1105,13 @@ window.renderFrame = function (t) {
     ctx.save(); ctx.translate(SX, 430); ctx.scale(a, a); ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 10; ctx.fillStyle = "#fff"; rr(-205, -170, 410, 340, 16); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.stroke();
     ctx.save(); ctx.beginPath(); ctx.roundRect(-199, -164, 398, 270, 12); ctx.clip(); ctx.fillStyle = "#1a1030"; ctx.fillRect(-199, -164, 398, 200); for (let j = 0; j < 20; j++) circle(-190 + (j * 53) % 380, -160 + (j * 37) % 180, 1.4, "#fff"); circle(140, -110, 26, "#3fd3c8"); ctx.strokeStyle = "rgba(255,230,160,0.9)"; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(140, -110, 46, 11, -0.35, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = "#f3a2c6"; ctx.fillRect(-199, 36, 398, 80); ctx.restore();
     ctx.restore();
-    if (a > 0.5) { ctx.save(); ctx.translate(SX, 430); ctx.scale(a, a); OL(() => { statueBig(-30, 96, 1.0, t, true); for (const [hx, i] of [[-150, 11], [150, 0]]) bld(i, hx, 96, 0.55); }, 5); ctx.restore(); }
+    if (a > 0.5) { ctx.save(); ctx.translate(SX, 430); ctx.scale(a, a); OL(() => giantScene(-38, 100, 1.0, t, false), 5); ctx.restore(); }
     ctx.save(); ctx.translate(SX, 430); ctx.scale(a, a); const av = AV.keanu; circle(-170, 136, 16, "#3a4256"); if (av) { ctx.save(); ctx.beginPath(); ctx.arc(-170, 136, 15, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(av, -185, 121, 30, 30); ctx.restore(); }
-    ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillStyle = PINK; ctx.font = "900 12px InterX"; ctx.fillText("@keanu", -148, 128); ctx.fillStyle = INK; ctx.font = "800 12px InterX"; ctx.fillText("„darf ich ein riesen Astronaut werden in Blau“", -148, 145); ctx.restore();
-    tagLabel("RIESEN-ASTRONAUT!", SX, 262, pop(t, T.reveal + 0.1, T.stadt - 0.1), PINK, "#fff", -0.05, 26);
-    tagLabel("HÖHER ALS JEDE RAKETE!", SX + 40, 315, pop(t, T.higher, T.stadt - 0.1), GOLD, INK, 0.04, 16);
-    tagLabel("GEWÜNSCHT SEIT TAG 2", SX - 70, 500, pop(t, T.reveal + 0.6, T.stadt - 0.1), TEAL, "#fff", -0.05, 14);
+    ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillStyle = PINK; ctx.font = "900 12px InterX"; ctx.fillText("@keanu", -148, 128); ctx.fillStyle = INK; ctx.font = "800 10px InterX"; ctx.fillText("„ich frage seit Tag 2: darf ich ein riesen Astronaut werden in Blau“", -148, 145); ctx.restore();
+    tagLabel("RIESENHAUS!", SX, 262, pop(t, T.reveal + 0.1, T.stadt - 0.1), PINK, "#fff", -0.05, 26);
+    tagLabel("FÜR DEN RIESEN-ASTRONAUTEN", SX + 20, 315, pop(t, T.reveal + 0.7, T.stadt - 0.1), GOLD, INK, 0.04, 15);
+    tagLabel("🚀 MIT EIGENER RAKETE!", SX - 62, 452, pop(t, T.higher, T.stadt - 0.1), PINK, "#fff", 0.05, 15);
+    
     tagLabel("HATTEST DU RECHT?", SX, 640, pop(t, T.recht, T.stadt - 0.1), TEAL, "#fff", 0, 22);
     confetti(t, T.reveal + 0.05); if (t >= T.recht) confetti(t, T.recht);
   }

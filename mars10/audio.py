@@ -263,7 +263,9 @@ def coin():
 
 # ------------------------------------------------------------ Effekte platzieren
 F = T["f"]
-place(0.02, pop(650), 0.4); place(T["triple"] + 0.05, pop(750), 0.4); place(T["triple"] + 0.15, pop(850), 0.4); place(T["triple"] + 0.25, ding(1976), 0.3)
+place(0.02, pop(650), 0.4)
+for k in range(1, 4): place(0.02 + k * 0.12, pop(700 + 60 * k), 0.32)   # Einstieg: Häuser poppen auf
+place(T["hook"], whoosh(0.3), 0.3); place(T["hook"] + 0.1, pop(650), 0.38); place(T["triple"] + 0.05, pop(750), 0.4); place(T["triple"] + 0.15, pop(850), 0.4); place(T["triple"] + 0.25, ding(1976), 0.3)
 for k in range(12): place(T["count"] + (T["built"] - 0.1 - T["count"]) * k / 11, tick(1200 + 50 * k), 0.25)
 place(T["built"], thud(), 0.45); place(T["built"] + 0.05, cheer(1.0), 0.3); place(T["built"] + 0.02, ding(2093), 0.3)
 place(T["range"] + 0.1, pop(700), 0.35); place(T["edeka"] - 0.1, pop(800), 0.35)
@@ -277,7 +279,7 @@ for i, t0 in enumerate(F): place(t0 - 0.05, whoosh(0.3), 0.3); place(t0 + 0.12, 
 place(T["law"] + 0.2, thud(), 0.5); place(T["law"] + 0.22, clank(), 0.3); place(T["law"] + 0.4, cheer(1.0), 0.3)
 place(T["reso"], drumroll(T["reveal"] - T["reso"]), 0.5); place(T["reso"], whoosh(0.6), 0.3)
 place(T["reveal"] - 0.12, boom(), 0.5); place(T["reveal"] + 0.05, fanfare(), 0.3); place(T["reveal"] + 0.3, cheer(1.6), 0.4)
-place(T["higher"], pop(800), 0.3); place(T["recht"], ding(2093), 0.3)
+place(T["higher"], whoosh(0.5), 0.3); place(T["higher"] + 0.1, pop(800), 0.3); place(T["recht"], ding(2093), 0.3)
 place(T["stadt"], whoosh(0.5), 0.3); place(T["moeglich"], pop(700), 0.35); place(T["grow"], pop(650), 0.35); place(T["comm"], pop(800), 0.3)
 place(T["denk"], pop(650), 0.3)
 for k in range(8): place(T["like"] - 0.1 + k * 0.28, coin(), 0.22)
