@@ -2,9 +2,9 @@
 import json, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 W = json.load(open(os.path.join(HERE, "build", "words.json")))
-CHUNKS = ["12 GEBÄUDE. !15 SEKUNDEN.|4", "~LOS!|1", "*STADION!|1", "*MILITÄRBASIS|1", "MIT !JETS!|2", "*ZOO!|1", "*TIERHEIM!|1", "!BUREK-KANONE!|2", "*TOKEN-HAUS!|2",
+CHUNKS = ["~FOLG MIR,|2", "WENN DU *DABEI SEIN WILLST|5", "UND ~KOMMENTIER,|2", "WAS DU IN DER *STADT|5", "HABEN WILLST!|2", "NUN BAUEN WIR UNSERE *STADT!|5", "12 GEBÄUDE. !15 SEKUNDEN.|4", "~LOS!|1", "*STADION!|1", "*MILITÄRBASIS|1", "MIT !JETS!|2", "*ZOO!|1", "*TIERHEIM!|1", "!BUREK-KANONE!|2", "*TOKEN-HAUS!|2",
   "UND SAMI&ZOE FRAGT:|5", "~WO BIN ICH?|3", "*HIER!|1", "DU BIST ~LEHRERIN!|3", "PLUS !5 EXTRAS:|3", "*STARTRAMPE,|2", "*ACHTERBAHN,|1", "*WASSERPARK,|1", "*LASERTURM,|1", "*KINO!|1",
-  "~GESCHAFFT!|1", "!ALARM!|1", "ETWAS !KOMMT …|2", "EIN ~FOLLOW IST EIN PLATZ|5", "IN *RAKETE 4.|3", "WAS BAUEN WIR ALS *NÄCHSTES?|5", "DEIN ~KOMMENTAR WIRD *GEBAUT!|4"]
+  "~GESCHAFFT!|1", "!ALARM!|1", "ETWAS !KOMMT …|2", "WAS BAUEN WIR ALS *NÄCHSTES?|5", "DEIN ~KOMMENTAR WIRD *GEBAUT!|4"]
 out, i = [], 0
 for c in CHUNKS:
     txt, n = c.split("|"); n = int(n)

@@ -5,19 +5,19 @@ const FOLLOWERS = 837, TALER = 4443;
 const INK = "#2b1a3a", CREAM = "#fff6e6", PINK = "#ff4f8b", TEAL = "#19b8a6", GOLD = "#ffd23a";
 const SX = 245, CX = 288, GY = 640, HZ = 575;
 const T = {
-  los: wt(4), card0: wt(5), jets: wt(7), sami: wt(15), wo: wt(20), hier: wt(23), lehr: wt(24), plus: wt(27),
-  done: wt(36), alarm: wt(37), kommt: wt(38), follow: wt(40), rakete: wt(45), was: wt(48), dein: wt(53),
+  komm: wt(7), nun: wt(16), start: wt(21), los: wt(25), card0: wt(26), jets: wt(28), sami: wt(36), wo: wt(41), hier: wt(44), lehr: wt(45), plus: wt(48),
+  done: wt(57), alarm: wt(58), kommt: wt(59), was: wt(61), dein: wt(66),
 };
 const END = SPEECH_END + 0.55;
 const B = [ // t = Einschlag
-  { k: "stadion", t: 0.14, c: wt(5), u: "voltron_e", av: "voltron", txt: "Ich Bau ein Fußball Stadion" },
-  { k: "militaer", t: wt(6), u: "einfachso", av: "einfachso", txt: "Militär base mit Jets zu verteidigung" },
-  { k: "zoo", t: wt(9), u: "Mehmet_brb", av: "mehmet", txt: "Bitte ein ZOO" },
-  { k: "tierheim", t: wt(10), u: "Aulara44", av: "aulara", txt: "Ein tierheim für mich bitte" },
-  { k: "burek", t: wt(11), u: "Jimmbo", av: "jimmbo", txt: "wo ist mein burek haus mit burek kanone" },
-  { k: "token", t: wt(13), u: "DerRaul", av: "raul", txt: "ich will ein token haus" },
-  { k: "schule", t: wt(23), c: wt(15), u: "sami&zoe", av: "sami", txt: "Wo bin ich" },
-  { k: "rampe", t: wt(30) }, { k: "bahn", t: wt(32) }, { k: "wasser", t: wt(33) }, { k: "kuppel", t: wt(34) }, { k: "kino", t: wt(35) },
+  { k: "stadion", t: T.start + 0.14, c: wt(26), u: "voltron_e", av: "voltron", txt: "Ich Bau ein Fußball Stadion" },
+  { k: "militaer", t: wt(27), u: "einfachso", av: "einfachso", txt: "Militär base mit Jets zu verteidigung" },
+  { k: "zoo", t: wt(30), u: "Mehmet_brb", av: "mehmet", txt: "Bitte ein ZOO" },
+  { k: "tierheim", t: wt(31), u: "Aulara44", av: "aulara", txt: "Ein tierheim für mich bitte" },
+  { k: "burek", t: wt(32), u: "Jimmbo", av: "jimmbo", txt: "wo ist mein burek haus mit burek kanone" },
+  { k: "token", t: wt(34), u: "DerRaul", av: "raul", txt: "ich will ein token haus" },
+  { k: "schule", t: wt(44), c: wt(36), u: "sami&zoe", av: "sami", txt: "Wo bin ich" },
+  { k: "rampe", t: wt(51) }, { k: "bahn", t: wt(53) }, { k: "wasser", t: wt(54) }, { k: "kuppel", t: wt(55) }, { k: "kino", t: wt(56) },
 ];
 B.forEach((b, i) => { b.out = i < B.length - 1 ? (i === 5 ? T.sami - 0.05 : B[i + 1].t - 0.2) : T.done - 0.12; });
 const AV = {};
@@ -170,8 +170,8 @@ function header(t) {
   ctx.restore();
 }
 function timer(t) {
-  const loop = t > END - 0.14; if (t >= T.follow && !loop) return;
-  const rem = loop ? 15 : Math.max(0, 15 * (1 - t / T.done)), done = t >= T.done && !loop, alarm = t >= T.alarm && !loop;
+  const loop = t > END - 0.14; if (t >= T.was && !loop) return;
+  const rem = loop ? 15 : Math.max(0, 15 * (1 - Math.max(0, t - T.start) / (T.done - T.start))), done = t >= T.done && !loop, alarm = t >= T.alarm && !loop;
   const n = loop ? 0 : B.filter(b => t >= b.t).length, last = Math.max(...B.filter(b => t >= b.t).map(b => b.t), -9);
   const pu = 1 + 0.12 * Math.exp(-(t - last) * 9) + (done ? 0.1 * Math.exp(-(t - T.done) * 5) : 0) + (rem < 5 && !done ? 0.04 * Math.sin(t * 16) : 0);
   ctx.save(); ctx.translate(SX, 228); ctx.scale(pu, pu);
@@ -226,12 +226,20 @@ window.renderFrame = function (t) {
   // Wackler + Zoom-Punch bei jedem Einschlag
   let sh = 0, zp = 0, fl = 0; const hits = [...T.b, T.jets + 0.25, B[4].t + 0.75, T.done];
   for (const h of hits) if (t >= h) { const d = t - h; sh += 13 * Math.exp(-d * 8); zp += 0.07 * Math.exp(-d * 9); fl += 0.55 * Math.exp(-d * 16); }
-  if (t >= T.kommt && t < T.follow) sh += 5 * ramp(t, T.kommt, T.kommt + 0.4);
+  if (t >= T.kommt && t < T.was) sh += 5 * ramp(t, T.kommt, T.kommt + 0.4);
   if (t >= T.jets && t < T.jets + 0.9) sh += 4;
   const r = rng(Math.floor(t * 60) + 1); ctx.save(); ctx.translate(CX + (r() - 0.5) * 2 * sh, 600 + (r() - 0.5) * 2 * sh); ctx.scale(1 + zp, 1 + zp); ctx.translate(-CX, -600);
 
   if (t < T.done) { // ---------- Speedrun
     stage(t); plot(1);
+    if (t < T.start) { // ---------- Einstieg: Folgen + Kommentieren, dann „Nun bauen wir unsere Stadt“
+      const out = 1 - ramp(t, T.start - 0.15, T.start);
+      for (let i = 0; i < 5; i++) { const t0 = -0.12 + i * 0.16, lt = t - t0, fall = lt < 0.12 ? lerp(-500, 0, Math.pow(clamp(lt / 0.12), 2)) : 0, jump = t >= T.nun ? Math.abs(Math.sin((t - T.nun) * 9 + i)) * 26 : 0, ax = 96 + i * 96;
+        if (lt >= 0) { astronaut(ax + (1 - out) * (i < 2.5 ? -400 : 400), GY + 14 + fall - jump, 1.15, "happy", { t, acc: ["#ff4f8b", "#3fd3f2", "#ffd23a", "#7bf27a", "#b06bff"][i], armR: t >= T.nun ? -2.6 : undefined }); if (lt < 0.8) dustBurst(ax, GY + 10, lt - 0.12, 0.45); } }
+      const fb = pop(t, -1, T.nun - 0.1) * (1 + 0.06 * Math.sin(t * 10)); ctx.save(); ctx.translate(SX, 334); ctx.scale(fb * 1.25, fb * 1.25); ctx.fillStyle = "#fe2c55"; rr(-150, -28, 300, 56, 14); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.stroke(); ctx.fillStyle = "#fff"; ctx.font = "900 26px InterX, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("➕ Folgen = dabei sein", 0, 1); ctx.restore();
+      emptyComment(t, pop(t, T.komm, T.nun - 0.1), 432, "Was willst du in der Stadt? 👇");
+      tagLabel("🏗️ JETZT WIRD GEBAUT!", SX, 340, pop(t, T.nun, T.start - 0.12), GOLD, INK, -0.04, 28);
+    }
     const built = B.filter(b => t >= b.out);
     built.forEach(b => { const i = B.indexOf(b), k = easeOut(ramp(t, b.out, b.out + 0.22)); bld(b.k, lerp(CX, 34 + i * 46, k), lerp(GY, HZ + 4, k), lerp(BIG(b.k), 0.3, k), t, 9); });
     const cur = B.filter(b => t >= b.t - 0.2 && t < b.out).at(-1);
@@ -249,7 +257,7 @@ window.renderFrame = function (t) {
       const u = t - T.sami; ghost(CX, GY, 1.5, 0.9); const sx = CX + Math.sin(u * 4) * 150; ctx.fillStyle = "rgba(255,250,200,0.22)"; ctx.beginPath(); ctx.moveTo(sx - 20, 290); ctx.lineTo(sx + 20, 290); ctx.lineTo(sx + 90, GY + 10); ctx.lineTo(sx - 90, GY + 10); ctx.closePath(); ctx.fill();
       if (t >= T.wo + 0.25) { ctx.fillStyle = `rgba(10,5,25,${0.55 * ramp(t, T.wo + 0.25, T.wo + 0.5)})`; ctx.fillRect(-40, -40, W + 80, H + 80); emo("❓", CX, 520, 120 * pop(t, T.wo + 0.3, T.hier - 0.25)); }
     }
-  } else if (t < T.follow) { // ---------- Geschafft! -> Alarm
+  } else if (t < T.was) { // ---------- Geschafft! -> Alarm
     const z = lerp(1.35, 1, easeOut(ramp(t, T.done, T.done + 1.1))); ctx.save(); ctx.translate(CX, 600); ctx.scale(z, z); ctx.translate(-CX + lerp(-60, 0, easeOut(ramp(t, T.done, T.done + 1.1))), -600);
     wide(t, t >= T.kommt ? 8 : 0);
     if (t >= T.alarm) { const u = t - T.alarm; for (let i = 0; i < 3; i++) { const d = (u * 1.4 + i / 3) % 1; ctx.strokeStyle = `rgba(255,50,50,${1 - d})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(202, 540, 10 + d * 90, 0, Math.PI * 2); ctx.stroke(); }

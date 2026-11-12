@@ -263,7 +263,9 @@ def coin():
 
 # ------------------------------------------------------------ Effekte platzieren
 B = T["b"]
-k = 0.0
+for j in range(5): place(max(0, j * 0.16), pop(600 + 70 * j), 0.4)    # Einstieg: Astronauten landen
+place(T["komm"], pop(850), 0.35); place(T["nun"], whoosh(0.4), 0.4); place(T["nun"] + 0.15, ding(1760), 0.3)
+k = T["start"]
 while k < T["done"]:                                                    # Timer tickt durch bis 0:00 (zum Ende hin schneller)
     place(k, tick(1500 if k < T["done"] - 4 else 1900), 0.16); k += 0.5 if k < T["done"] - 4 else 0.25
 for i, t0 in enumerate(B):                                              # jedes Gebäude: Whoosh + Einschlag
@@ -279,9 +281,8 @@ place(B[6] + 0.1, cheer(1.2), 0.5); place(B[6] + 0.05, fanfare(), 0.35); place(T
 place(T["plus"], riser(B[7] - T["plus"]), 0.3)
 place(T["done"], boom(), 0.9); place(T["done"] + 0.05, fanfare(), 0.6); place(T["done"] + 0.1, cheer(1.0), 0.5)
 for j in range(4): place(T["done"] + 0.2 + j * 0.18, zap(), 0.25)
-place(T["alarm"], siren(T["follow"] - T["alarm"]), 0.5); place(T["alarm"] + 0.3, whoosh(0.8), 0.45)
-place(T["kommt"], drone(T["follow"] - T["kommt"]), 0.8); place(T["kommt"] + 0.45, growl(1.0), 0.6); place(T["kommt"] + 0.1, stomp(), 0.6); place(T["kommt"] + 0.7, stomp(), 0.6)
-place(T["follow"], whoosh(0.4), 0.45); place(T["follow"] + 0.15, pop(800), 0.35); place(T["rakete"], ding(1976), 0.3)
+place(T["alarm"], siren(T["was"] - T["alarm"]), 0.5); place(T["alarm"] + 0.3, whoosh(0.8), 0.45)
+place(T["kommt"], drone(T["was"] - T["kommt"]), 0.8); place(T["kommt"] + 0.45, growl(1.0), 0.6); place(T["kommt"] + 0.1, stomp(), 0.6); place(T["kommt"] + 0.7, stomp(), 0.6)
 place(T["was"], thud(), 0.5); place(T["was"] + 0.15, pop(750), 0.35); place(T["dein"], pop(900), 0.35); place(T["dein"] + 0.2, ding(2093), 0.3)
 
 raw = subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(HERE, "build", "voice.wav"), "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
@@ -309,10 +310,10 @@ def read(p):
 def norm(x): return x / (np.sqrt((x ** 2).mean()) + 1e-9) * 0.12
 MC = os.path.join(HERE, "build", "music_cand")
 parts = [
-    ("EDM_Detection_Mode.mp3", 15.0, 0.0, T["wo"] + 0.3, 1.0),                    # Speedrun: treibender Beat ab dem Drop
+    ("EDM_Detection_Mode.mp3", 15.0 - T["start"], 0.0, T["wo"] + 0.3, 1.0),                    # Speedrun: treibender Beat ab dem Drop
     ("EDM_Detection_Mode.mp3", 30.0, T["hier"] - 0.04, T["alarm"], 1.1),           # nach der Stille: Drop
-    ("Volatile_Reaction.mp3", 32.0, T["alarm"], T["follow"], 0.8),                # Alarm
-    ("EDM_Detection_Mode.mp3", 45.0, T["follow"], EV["duration"], 0.95),           # Bordkarte + Aufruf
+    ("Volatile_Reaction.mp3", 32.0, T["alarm"], T["was"], 0.8),                # Alarm
+    ("EDM_Detection_Mode.mp3", 45.0, T["was"], EV["duration"], 0.95),           # Bordkarte + Aufruf
 ]
 m = np.zeros((N, 2), np.float32); xf = int(0.04 * SR)
 for f, off, a, b, g in parts:
