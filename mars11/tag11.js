@@ -6,7 +6,7 @@ const INK = "#2b1a3a", CREAM = "#fff6e6", PINK = "#ff4f8b", TEAL = "#19b8a6", GO
 const SX = 245, CX = 288, GY = 640, HZ = 575;
 const T = {
   komm: wt(7), nun: wt(16), start: wt(21), los: wt(25), card0: wt(26), jets: wt(28), sami: wt(35), wo: wt(40), hier: wt(43), lehr: wt(44), plus: wt(47),
-  done: wt(55), alarm: wt(56), kommt: wt(57), was: wt(59), dein: wt(64),
+  done: wt(56), alarm: wt(57), kommt: wt(58), sich: wt(60), was: wt(61), dein: wt(66),
 };
 const END = SPEECH_END + 0.8;   // Stimme klingt nach dem letzten Wort noch aus – nie abschneiden
 const B = [ // t = Einschlag
@@ -17,12 +17,13 @@ const B = [ // t = Einschlag
   { k: "burek", t: wt(32), u: "Jimmbo", av: "jimmbo", txt: "wo ist mein burek haus mit burek kanone" },
   { k: "token", t: wt(34), u: "DerRaul", av: "raul", txt: "ich will ein token haus" },
   { k: "schule", t: wt(43), c: wt(35), u: "sami&zoe", av: "sami", txt: "Wo bin ich" },
-  { k: "rampe", t: wt(50) }, { k: "bahn", t: wt(51) }, { k: "wasser", t: wt(52) }, { k: "kuppel", t: wt(53) }, { k: "kino", t: wt(54) },
+  { k: "rampe", t: wt(50) }, { k: "bahn", t: wt(52) }, { k: "wasser", t: wt(53) }, { k: "kuppel", t: wt(54) }, { k: "kino", t: wt(55) },
 ];
 B.forEach((b, i) => { b.out = i < B.length - 1 ? (i === 5 ? T.sami - 0.05 : B[i + 1].t - 0.2) : T.done - 0.12; });
 const AV = {};
 const BIG = k => ({ stadion: 2.2, schule: 2.15, rampe: 2.3, kino: 2.45 }[k] || 2.6);
 T.b = B.map(b => b.t);
+const STEPS = []; for (let k = T.alarm + 0.7; k < T.was - 0.1; k += 0.8) STEPS.push(k);
 
 // ------------------------------------------------------------ Bausteine
 function box(w, h, c, x0 = 0, r = 5, yb = 0) { ctx.fillStyle = c; rr(x0 - w / 2, yb - h, w, h, r); ctx.fill(); ctx.save(); ctx.beginPath(); ctx.roundRect(x0 - w / 2, yb - h, w, h, r); ctx.clip(); ctx.fillStyle = "rgba(0,0,0,0.10)"; ctx.fillRect(x0 + w * 0.2, yb - h, w, h); ctx.fillStyle = "rgba(255,255,255,0.28)"; ctx.fillRect(x0 - w / 2, yb - h, w, 5); ctx.restore(); rr(x0 - w / 2, yb - h, w, h, r); ctx.stroke(); }
@@ -175,10 +176,10 @@ function timer(t) {
   const n = loop ? 0 : B.filter(b => t >= b.t).length, last = Math.max(...B.filter(b => t >= b.t).map(b => b.t), -9);
   const pu = 1 + 0.12 * Math.exp(-(t - last) * 9) + (done ? 0.1 * Math.exp(-(t - T.done) * 5) : 0) + (rem < 5 && !done ? 0.04 * Math.sin(t * 16) : 0);
   ctx.save(); ctx.translate(SX, 228); ctx.scale(pu, pu);
-  const bg = alarm ? (Math.sin(t * 12) > 0 ? "#e5262b" : "#7a1020") : done ? "#1fa35a" : "#e5262b";
+  const bg = alarm ? `rgb(${Math.round(120 + 60 * (0.5 + 0.5 * Math.sin((t - T.alarm) * 3.2)))},16,34)` : done ? "#1fa35a" : "#e5262b";
   ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 10; ctx.fillStyle = bg; rr(-150, -30, 300, 60, 16); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.stroke();
   ctx.fillStyle = "#fff"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
-  if (alarm) { ctx.textAlign = "center"; ctx.font = "900 34px InterX, 'Noto Color Emoji'"; ctx.fillText("🚨 ALARM 🚨", 0, 2); }
+  if (alarm) { ctx.textAlign = "center"; ctx.font = "900 34px InterX, 'Noto Color Emoji'"; ctx.globalAlpha = 0.75 + 0.25 * Math.sin((t - T.alarm) * 3.2); ctx.fillText("⚠️ ACHTUNG ⚠️", 0, 2); ctx.globalAlpha = 1; }
   else { ctx.font = "900 44px InterX"; const s = Math.floor(rem), txt = "0:" + String(s).padStart(2, "0"); ctx.fillText(txt, -132, 3); const w = ctx.measureText(txt).width; ctx.font = "900 22px InterX"; ctx.globalAlpha = 0.85; ctx.fillText("." + Math.floor((rem - s) * 10), -132 + w + 2, 11); ctx.globalAlpha = 1;
     ctx.fillStyle = "#fff"; rr(42, -19, 96, 38, 12); ctx.fill(); ctx.lineWidth = 2.5; ctx.stroke(); ctx.fillStyle = INK; ctx.font = "900 24px InterX, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.fillText(done ? "12/12" : n + "/12", 90, 2); if (done) { ctx.font = "900 15px InterX, 'Noto Color Emoji'"; } }
   ctx.restore();
@@ -222,8 +223,8 @@ function pass(s, t) { if (s <= 0.01) return; ctx.save(); ctx.translate(SX, 412);
 
 // ------------------------------------------------------------ Weitwinkel: die ganze Stadt (12 Gebäude + Höhle)
 const WIDE = [[86, 478, 0.6, 2], [215, 470, 0.56, 8], [350, 474, 0.6, 10], [84, 592, 0.74, 5], [226, 596, 0.74, 1], [372, 590, 0.74, 3], [506, 600, 0.7, 7], [100, 724, 0.85, 4], [262, 730, 0.82, 0], [420, 724, 0.8, 6], [500, 484, 0.52, 11], [540, 724, 0.62, 9]];
-function wide(t, quake = 0) {
-  stage(t, 400);
+function wide(t, quake = 0, behind = null) {
+  stage(t, 400); if (behind) behind();
   ctx.save(); ctx.translate((Math.random() - 0.5) * quake, 0); bld("hoehle", 480, 418, 0.62, t); ctx.restore();
   for (const [x, y, s, i] of WIDE) bld(B[i].k, x, y, s, t, 9);
 }
@@ -235,7 +236,7 @@ window.renderFrame = function (t) {
   // Wackler + Zoom-Punch bei jedem Einschlag
   let sh = 0, zp = 0, fl = 0; const hits = [...T.b, T.jets + 0.25, B[4].t + 0.75, T.done];
   for (const h of hits) if (t >= h) { const d = t - h; sh += 13 * Math.exp(-d * 8); zp += 0.07 * Math.exp(-d * 9); fl += 0.55 * Math.exp(-d * 16); }
-  if (t >= T.kommt && t < T.was) sh += 5 * ramp(t, T.kommt, T.kommt + 0.4);
+  for (const st of STEPS) if (t >= st && t < T.was) sh += (2 + 7 * ramp(st, T.alarm, T.was)) * Math.exp(-(t - st) * 9);   // schwere Schritte, immer näher
   if (t >= T.jets && t < T.jets + 0.9) sh += 4;
   const r = rng(Math.floor(t * 60) + 1); ctx.save(); ctx.translate(CX + (r() - 0.5) * 2 * sh, 600 + (r() - 0.5) * 2 * sh); ctx.scale(1 + zp, 1 + zp); ctx.translate(-CX, -600);
 
@@ -266,17 +267,21 @@ window.renderFrame = function (t) {
       const u = t - T.sami; ghost(CX, GY, 1.5, 0.9); const sx = CX + Math.sin(u * 4) * 150; ctx.fillStyle = "rgba(255,250,200,0.22)"; ctx.beginPath(); ctx.moveTo(sx - 20, 290); ctx.lineTo(sx + 20, 290); ctx.lineTo(sx + 90, GY + 10); ctx.lineTo(sx - 90, GY + 10); ctx.closePath(); ctx.fill();
       if (t >= T.wo + 0.25) { ctx.fillStyle = `rgba(10,5,25,${0.55 * ramp(t, T.wo + 0.25, T.wo + 0.5)})`; ctx.fillRect(-40, -40, W + 80, H + 80); emo("❓", CX, 520, 120 * pop(t, T.wo + 0.3, T.hier - 0.25)); }
     }
-  } else if (t < T.was) { // ---------- Geschafft! -> Alarm
-    const z = lerp(1.35, 1, easeOut(ramp(t, T.done, T.done + 1.1))); ctx.save(); ctx.translate(CX, 600); ctx.scale(z, z); ctx.translate(-CX + lerp(-60, 0, easeOut(ramp(t, T.done, T.done + 1.1))), -600);
-    wide(t, t >= T.kommt ? 8 : 0);
-    if (t >= T.alarm) { const u = t - T.alarm; for (let i = 0; i < 3; i++) { const d = (u * 1.4 + i / 3) % 1; ctx.strokeStyle = `rgba(255,50,50,${1 - d})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(202, 540, 10 + d * 90, 0, Math.PI * 2); ctx.stroke(); }
-      const ju = ramp(t, T.alarm + 0.25, T.alarm + 1.3); if (ju > 0 && ju < 1) { jet(lerp(226, 700, ju * ju), lerp(560, 300, ju), 0.9); jet(lerp(200, 660, ju * ju), lerp(590, 380, ju), 0.75); } }
+  } else if (t < T.was) { // ---------- Geschafft! -> „Achtung … etwas nähert sich …“ (langsam, unheimlich)
+    const dk = easeIO(ramp(t, T.alarm - 0.1, T.alarm + 1.4)), k = easeIO(ramp(t, T.alarm + 0.3, T.was - 0.15)), open = easeOut(ramp(t, T.sich + 0.15, T.sich + 0.9));
+    const z = lerp(1.35, 1, easeOut(ramp(t, T.done, T.done + 1.1))) + 0.14 * easeIO(ramp(t, T.alarm, T.was)); ctx.save(); ctx.translate(CX, 560); ctx.scale(z, z); ctx.translate(-CX + lerp(-60, 0, easeOut(ramp(t, T.done, T.done + 1.1))), -560);
+    wide(t, 0, () => { if (k <= 0) return; // riesiger Schatten steigt langsam hinter dem Horizont auf
+      const cy = 400 + 250 * (1 - k) - 40, br = 0.5 + 0.5 * Math.sin(t * 2.2); ctx.save(); ctx.beginPath(); ctx.rect(-200, -200, W + 400, 200 + 388 - 8 * Math.sin(CX * 0.02)); ctx.clip();   // nur im Himmel: steigt hinter dem Horizont auf
+      ctx.fillStyle = `rgba(12,4,22,${0.96 * Math.min(1, k * 1.6)})`; ctx.beginPath(); ctx.ellipse(CX + 10, cy, 245, 150 + 4 * br, 0, Math.PI, 0); ctx.lineTo(CX + 255, 410); ctx.lineTo(CX - 235, 410); ctx.closePath(); ctx.fill();
+      for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(CX + 10 + d * 120, cy - 110); ctx.quadraticCurveTo(CX + 10 + d * 200, cy - 190, CX + 10 + d * 230, cy - 250); ctx.quadraticCurveTo(CX + 10 + d * 160, cy - 170, CX + 10 + d * 60, cy - 140); ctx.fill(); }
+      if (open > 0) for (const d of [-1, 1]) { const ex = CX + 10 + d * 72, ey = cy - 22; glow(ex, ey, 70, "255,50,30", 0.85 * open); ctx.fillStyle = "#ffdf4a"; ctx.beginPath(); ctx.ellipse(ex, ey, 38, 17 * open, d * 0.28, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#1a0510"; ctx.beginPath(); ctx.ellipse(ex + d * -4, ey, 6, 15 * open, 0, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); });
+    if (t >= T.alarm) { const u = t - T.alarm; for (let i = 0; i < 2; i++) { const d = (u * 0.6 + i / 2) % 1; ctx.strokeStyle = `rgba(255,50,50,${0.8 * (1 - d)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(202, 540, 10 + d * 110, 0, Math.PI * 2); ctx.stroke(); } }   // Radar pingt langsam
     ctx.restore();
     if (t < T.alarm) { fireworks(t, T.done); speedLines(0.6 * (1 - ramp(t, T.done, T.done + 0.5)), "255,230,120"); tagLabel("12 / 12 GEBAUT! 🏆", CX, 330, pop(t, T.done + 0.05, T.alarm - 0.08), GOLD, INK, -0.04, 30); }
-    else { ctx.fillStyle = `rgba(230,20,40,${0.16 + 0.12 * Math.sin((t - T.alarm) * 12)})`; ctx.fillRect(-40, -40, W + 80, H + 80);
-      const k = easeOut(ramp(t, T.kommt, T.kommt + 0.9)); if (k > 0) { const g = ctx.createLinearGradient(0, 0, 0, 200 + 700 * k); g.addColorStop(0, `rgba(12,4,24,${0.92 * k})`); g.addColorStop(0.75, `rgba(12,4,24,${0.6 * k})`); g.addColorStop(1, "rgba(12,4,24,0)"); ctx.fillStyle = g; ctx.fillRect(-40, -40, W + 80, H + 80);
-        ctx.fillStyle = `rgba(8,2,16,${0.95 * k})`; ctx.beginPath(); ctx.ellipse(CX, 330 + 40 * k, 250 * k, 110 * k, 0, 0, Math.PI * 2); ctx.fill(); for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(CX + d * 150 * k, 300); ctx.lineTo(CX + d * 230 * k, 190); ctx.lineTo(CX + d * 90 * k, 280); ctx.fill(); }
-        const bl = (t - T.kommt) % 1.1 < 0.1 ? 0.15 : 1; for (const d of [-1, 1]) { glow(CX + d * 80, 350, 60, "255,60,40", 0.8 * k); ctx.fillStyle = "#ffdf4a"; ctx.beginPath(); ctx.ellipse(CX + d * 80, 350, 44 * k, 20 * k * bl, d * 0.25, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#1a0510"; ctx.beginPath(); ctx.ellipse(CX + d * 80, 350, 7 * k, 19 * k * bl, 0, 0, Math.PI * 2); ctx.fill(); } } }
+    if (dk > 0) { ctx.fillStyle = `rgba(10,5,30,${0.6 * dk})`; ctx.fillRect(-40, -40, W + 80, H + 80);                        // es wird Nacht
+      ctx.fillStyle = `rgba(150,20,40,${dk * (0.08 + 0.07 * Math.sin((t - T.alarm) * 3.2))})`; ctx.fillRect(-40, -40, W + 80, H + 80);   // langsames rotes Pulsieren
+      for (let i = 0; i < 5; i++) { const fx = ((i * 170 + (t - T.alarm) * (18 + i * 6)) % (W + 400)) - 200, fy = 470 + i * 70; ctx.fillStyle = `rgba(190,170,230,${0.13 * dk})`; ctx.beginPath(); ctx.ellipse(fx, fy, 230, 34, 0, 0, Math.PI * 2); ctx.fill(); }   // Nebel
+      const vg2 = ctx.createRadialGradient(CX, 520, 120, CX, 520, 620); vg2.addColorStop(0, "rgba(0,0,0,0)"); vg2.addColorStop(1, `rgba(0,0,0,${0.55 * dk})`); ctx.fillStyle = vg2; ctx.fillRect(-40, -40, W + 80, H + 80); }
   } else { // ---------- Bordkarte + Aufruf
     stage(t);
     for (let i = 0; i < 12; i++) if (i !== 7) bld(B[i].k, 34 + i * 46, HZ + 4, 0.3, t, 9);

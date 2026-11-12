@@ -12,7 +12,7 @@ def words(a):
 def db(a):
     w = int(0.01*SR); n = len(a)//w; return 20*np.log10(np.sqrt((a[:n*w].reshape(n, w)**2).mean(1))+1e-9)
 
-def islands(a, W, keep, pause):  # keep: Wort-Indizes; pause[i] = gewünschte Pause (nach Tempo) VOR Wort i
+def islands(a, W, keep, pause, tail=0.25):  # keep: Wort-Indizes; pause[i] = gewünschte Pause (nach Tempo) VOR Wort i
     D = db(a); out = []; cur = None; prev = None
     for i in keep:
         s, e = W[i][1], W[i][2]
@@ -34,7 +34,7 @@ def islands(a, W, keep, pause):  # keep: Wort-Indizes; pause[i] = gewünschte Pa
             want = pause.get(i, min(nat, 0.2))
             cur[1] = run[0]/100 + 0.06; out.append((cur, want)); cur = [(run[-1]+1)/100 - 0.04, None]
         prev = i
-    cur[1] = W[prev][2] + 0.25; out.append((cur, 0))
+    cur[1] = W[prev][2] + tail; out.append((cur, 0))
     return out
 
 def render(parts):
@@ -44,6 +44,7 @@ def render(parts):
         b += [seg, np.zeros(int(max(0.0, p*TEMPO - (0.10 if p else 0))*SR), np.float32)]   # Rand (0,06 + 0,04 s Stille) zählt mit
     return np.concatenate(b)
 
+TEMPO_FIX = 1.0
 I = rd("build/intro_raw1.mp3"); WI = words(I)
 A = rd("build/voice_raw.mp3"); WA = words(A)
 print(len(WI), [w[0] for w in WI]); print(len(WA), [w[0] for w in WA])
@@ -62,9 +63,22 @@ P = {fi(WA, "stadion")[0]: 0.3, fi(WA, "militär")[0]: 0.5, fi(WA, "zoo")[0]: 0.
      fi(WA, "token")[0]: 0.5, fi(WA, "und")[0]: 0.4, fi(WA, "hier")[0]: 0.5, fi(WA, "plus")[0]: 0.4, fi(WA, "start")[0]: 0.22,
      fi(WA, "achter")[0]: 0.22, fi(WA, "wasser")[0]: 0.22, fi(WA, "laser")[0]: 0.22, fi(WA, "kino")[0]: 0.22, fi(WA, "geschafft")[0]: 0.3,
      fi(WA, "alarm")[0]: 0.5, fi(WA, "etwas")[0]: 0.35, cut1: 0.45, fi(WA, "dein")[0]: 0.3}
-aa = islands(A, WA, keep, P)
+# Tag 11 (Nutzerwunsch): „Alarm, etwas kommt.“ -> ruhiger, unheimlicher: „Achtung … etwas nähert sich …“ (eigene Aufnahme, ohne Beschleunigung)
+al0, cut0b = fi(WA, "alarm")[0], cut0
+subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", "build/alarm_raw1.mp3", "-af", f"atempo={1/TEMPO:.4f}", "-ac", "1", "-ar", str(SR), "build/alarm_slow.wav"], check=True)
+X = rd("build/alarm_slow.wav"); WX = words(X); print(len(WX), [w[0] for w in WX])
+for w in WX:                                                     # leises „sich“ anheben
+    if w[0].lower().startswith("sich"):
+        s0, s1 = int((w[1]-0.02)*SR), min(len(X), int((w[2]+0.15)*SR)); g = np.ones(s1-s0); r = int(0.03*SR); g[:r] = np.linspace(0, 1, r); g[-r:] = np.linspace(1, 0, r)
+        X[s0:s1] *= 1 + (10**(6/20) - 1) * g
+PX = {fi(WX, "etwas")[0]: 0.85}                                  # lange, spannende Pause nach „Achtung“
+xa = islands(X, WX, list(range(len(WX))), PX, tail=0.45)
+aa1 = islands(A, WA, [k for k in keep if k < al0], P)
+aa2 = islands(A, WA, [k for k in keep if k >= cut1], P)
 ia[-1] = (ia[-1][0], 0.3)                                        # Pause zwischen Einstieg und „Zwölf Gebäude“
-parts = [(c, I, p) for c, p in ia] + [(c, A, p) for c, p in aa]
+aa1[-1] = (aa1[-1][0], 0.75)                                     # nach „Geschafft!“: Fanfare, dann wird es still
+xa[-1] = (xa[-1][0], 0.95)                                       # nach „… nähert sich …“: Spannung halten
+parts = [(c, I, p) for c, p in ia] + [(c, A, p) for c, p in aa1] + [(c, X * TEMPO_FIX, p) for c, p in xa] + [(c, A, p) for c, p in aa2]
 raw = render(parts)
 subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", "-",
                 "-af", f"atempo={TEMPO},equalizer=f=110:t=q:w=1:g=2.5,equalizer=f=3200:t=q:w=1.2:g=1.5,acompressor=threshold=-20dB:ratio=3:attack=8:release=160:makeup=2",

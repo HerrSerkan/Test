@@ -281,8 +281,14 @@ place(B[6] + 0.1, cheer(1.2), 0.5); place(B[6] + 0.05, fanfare(), 0.35); place(T
 place(T["plus"], riser(B[7] - T["plus"]), 0.3)
 place(T["done"], boom(), 0.9); place(T["done"] + 0.05, fanfare(), 0.6); place(T["done"] + 0.1, cheer(1.0), 0.5)
 for j in range(4): place(T["done"] + 0.2 + j * 0.18, zap(), 0.25)
-place(T["alarm"], siren(T["was"] - T["alarm"]), 0.5); place(T["alarm"] + 0.3, whoosh(0.8), 0.45)
-place(T["kommt"], drone(T["was"] - T["kommt"]), 0.8); place(T["kommt"] + 0.45, growl(1.0), 0.6); place(T["kommt"] + 0.1, stomp(), 0.6); place(T["kommt"] + 0.7, stomp(), 0.6)
+# „Achtung … etwas nähert sich …“: keine Sirene, sondern tiefes Dröhnen, Wind, Herzschlag und schwere Schritte, die näher kommen
+place(T["alarm"] - 0.08, womp(), 0.6)
+place(T["alarm"], drone(T["was"] - T["alarm"] + 0.2), 0.75); place(T["alarm"], wind(T["was"] - T["alarm"]), 0.3)
+k = T["alarm"] + 0.3
+while k < T["was"] - 0.2: place(k, heartbeat(), 0.45); k += 0.8
+k = T["alarm"] + 0.7; i = 0
+while k < T["was"] - 0.1: place(k, stomp(), 0.35 + 0.55 * (k - T["alarm"]) / (T["was"] - T["alarm"])); k += 0.8
+place(T["sich"] + 0.3, growl(1.4), 0.55)
 place(T["was"], thud(), 0.5); place(T["was"] + 0.15, pop(750), 0.35); place(T["dein"], pop(900), 0.35); place(T["dein"] + 0.2, ding(2093), 0.3)
 
 raw = subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(HERE, "build", "voice.wav"), "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
@@ -311,15 +317,14 @@ def norm(x): return x / (np.sqrt((x ** 2).mean()) + 1e-9) * 0.12
 MC = os.path.join(HERE, "build", "music_cand")
 parts = [
     ("EDM_Detection_Mode.mp3", 15.0 - T["start"], 0.0, T["wo"] + 0.3, 1.0),                    # Speedrun: treibender Beat ab dem Drop
-    ("EDM_Detection_Mode.mp3", 30.0, T["hier"] - 0.04, T["alarm"], 1.1),           # nach der Stille: Drop
-    ("Volatile_Reaction.mp3", 32.0, T["alarm"], T["was"], 0.8),                # Alarm
+    ("EDM_Detection_Mode.mp3", 30.0, T["hier"] - 0.04, T["alarm"] + 0.6, 1.1, 0.9),  # nach der Stille: Drop; bei „Achtung“ langsam ausblenden (Musik weg = unheimlich)
     ("EDM_Detection_Mode.mp3", 45.0, T["was"], EV["duration"], 0.95),           # Bordkarte + Aufruf
 ]
 m = np.zeros((N, 2), np.float32); xf = int(0.04 * SR)
-for f, off, a, b, g in parts:
+for f, off, a, b, g, *fo in parts:
     src = norm(read(os.path.join(MC, f))[int(off * SR):]) * g
     i0, i1 = int(a * SR), min(N, int(b * SR)); seg = src[: i1 - i0].copy()
-    rin = np.clip(np.arange(len(seg)) / xf, 0, 1); rout = np.clip((len(seg) - np.arange(len(seg))) / xf, 0, 1)
+    rin = np.clip(np.arange(len(seg)) / xf, 0, 1); rout = np.clip((len(seg) - np.arange(len(seg))) / (int(fo[0] * SR) if fo else xf), 0, 1)
     m[i0:i0 + len(seg)] += seg * (rin * rout)[:, None]
 m *= (1 - 0.86 * duck)[:, None]
 end = N - int(0.25 * SR); m[end:] *= np.linspace(1, 0, N - end)[:, None]
