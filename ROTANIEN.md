@@ -17,7 +17,7 @@ alle creatorbezogenen Stellen (Zahlen, Kommentare, Namen, Umfragen) sind auf die
 | 8 | `mars8/` | 829 | 829 | −1 | 4.352 | **Neuer Planet, neues Land** (Aufbau wie Tag 2): Umfrage Tag 7 = 67 % mitten durch (27 Stimmen), Monster hat gelenkt, Bruchlandung, Wünsche erfüllt (Jens Dönerladen, Mehmet Apple Store, roaders Wurm, Fire.Nico Gamer), Höhle mit Augen, Follow-/Like-CTA, Ende: Top-Kommentar = **Gesetz Nr. 1** |
 | 9 | `mars9/` | 834 | 834 | +5 | 4.390 | **Jobs für alle** (wie Tag 2): Stadt über Nacht, Gesetz Nr. 1 „Jeder bekommt einen Job“, l.cgln16 Präsident + Janic Vize, luk Polizei, einfachso Security, MEO YouTuber, Phillip orange Katze (4. Anfrage), Alex Pizzaofen, Noam 2 iPhones, Mehmet Wohnung, Leonard Goyo, Höhle: Pfote wie das Monster, Follow-Aufruf früh (Bordkarte Rakete 4), Ende: **Gesetz Nr. 2** = Top-Kommentar + **Name fürs Monster** |
 | 10 | `mars10/` | 835 | 835 | +1 | 4.422 | **24 Wünsche – alle gebaut** (neuer Stil nach Vorbild „Neu-Followburg“: Stadtkarte von oben, Hauskarten, Rätsel, Hausliste): Gesetz Nr. 2 „Alle haben eine Villa“ (Janic-Energy), Rätsel = Riesenhaus mit Rakete für den riesigen blauen Astronauten (keanu); Einstieg „Heute bauen wir unsere Stadt auf!“; Häuser mit eigener Form je Wunsch |
-| 11 | `mars11/` | 837 | 837 | +2 | 4.443 | **12 Gebäude in 15 Sekunden** (Bau-Speedrun, 26 s, Seitenansicht, Timer ab Frame 1): 7 Wünsche aus Tag 10 + 5 Extras; Cliffhanger „Alarm – etwas kommt“ (in Tag 12 auflösen); Aufruf „Was bauen wir als Nächstes?“; Musik EDM Detection Mode |
+| 11 | `mars11/` | 837 | 837 | +2 | 4.443 | **12 Gebäude in 15 Sekunden** (Bau-Speedrun, 26 s, Seitenansicht, Timer ab Frame 1): 7 Wünsche aus Tag 10 + 5 Extras; Cliffhanger „Alarm – etwas kommt“ (in Tag 12 auflösen); Aufruf „Was bauen wir als Nächstes?“; Musik EDM Detection Mode; Stimme mit `mars11/voice_build.py` (kein Schneiden in Wörtern) |
 
 Bereits erfüllte Wünsche (mit Namen gezeigt): Gabriel Emilijan Laserschwert, elster pinker Anzug + Hundeohren,
 Entenlover/Nr. 410 Enten-Freund (Tag 3); Jakob Stein-Freund, Bz_Full Huhn auf dem Kopf, herobrine Minecraft-Rucksack (Tag 4).
@@ -77,3 +77,5 @@ Benötigt: `pip install faster-whisper scipy librosa` (falls im neuen Container 
 - Namen in der Stimme mit Whisper gegenprüfen (Janic → „Janik“, MEO → „Me-o“ schreiben).
 - Ab Tag 10: Stimme „Chris“ (voice_id iP95p4xoKVk53GoZ742B, stability 0.4, similarity 0.75, style 0.35), Tempo nur 1.17 – Nutzer will sie freundlicher und weniger KI-lastig als „Liam“.
 - Tag 10 nutzt den Stadtkarten-Stil (mars10/tag10.js); Monster-Name (Bob/Kuchen) ist noch offen.
+
+- **Stimme nie abgeschnitten (Nutzerwunsch Tag 11):** ElevenLabs haucht manche Wörter (z. B. „willst“). Kein Pausen-Kürzen per Lautstärke-Schwelle (`voice_prep.py` hat so Wörter verschluckt). Stattdessen `mars11/voice_build.py` nutzen und das fertige Video mit Whisper Wort für Wort gegen das Skript prüfen, inkl. letztes Wort am Ende.

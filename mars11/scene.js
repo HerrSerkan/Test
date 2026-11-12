@@ -444,10 +444,10 @@ const FOLLOWERS = 837, TALER = 4443;
 const INK = "#2b1a3a", CREAM = "#fff6e6", PINK = "#ff4f8b", TEAL = "#19b8a6", GOLD = "#ffd23a";
 const SX = 245, CX = 288, GY = 640, HZ = 575;
 const T = {
-  komm: wt(7), nun: wt(16), start: wt(21), los: wt(25), card0: wt(26), jets: wt(28), sami: wt(36), wo: wt(41), hier: wt(44), lehr: wt(45), plus: wt(48),
-  done: wt(57), alarm: wt(58), kommt: wt(59), was: wt(61), dein: wt(66),
+  komm: wt(7), nun: wt(16), start: wt(21), los: wt(25), card0: wt(26), jets: wt(28), sami: wt(35), wo: wt(40), hier: wt(43), lehr: wt(44), plus: wt(47),
+  done: wt(55), alarm: wt(56), kommt: wt(57), was: wt(59), dein: wt(64),
 };
-const END = SPEECH_END + 0.55;
+const END = SPEECH_END + 0.8;   // Stimme klingt nach dem letzten Wort noch aus – nie abschneiden
 const B = [ // t = Einschlag
   { k: "stadion", t: T.start + 0.14, c: wt(26), u: "voltron_e", av: "voltron", txt: "Ich Bau ein Fußball Stadion" },
   { k: "militaer", t: wt(27), u: "einfachso", av: "einfachso", txt: "Militär base mit Jets zu verteidigung" },
@@ -455,8 +455,8 @@ const B = [ // t = Einschlag
   { k: "tierheim", t: wt(31), u: "Aulara44", av: "aulara", txt: "Ein tierheim für mich bitte" },
   { k: "burek", t: wt(32), u: "Jimmbo", av: "jimmbo", txt: "wo ist mein burek haus mit burek kanone" },
   { k: "token", t: wt(34), u: "DerRaul", av: "raul", txt: "ich will ein token haus" },
-  { k: "schule", t: wt(44), c: wt(36), u: "sami&zoe", av: "sami", txt: "Wo bin ich" },
-  { k: "rampe", t: wt(51) }, { k: "bahn", t: wt(53) }, { k: "wasser", t: wt(54) }, { k: "kuppel", t: wt(55) }, { k: "kino", t: wt(56) },
+  { k: "schule", t: wt(43), c: wt(35), u: "sami&zoe", av: "sami", txt: "Wo bin ich" },
+  { k: "rampe", t: wt(50) }, { k: "bahn", t: wt(51) }, { k: "wasser", t: wt(52) }, { k: "kuppel", t: wt(53) }, { k: "kino", t: wt(54) },
 ];
 B.forEach((b, i) => { b.out = i < B.length - 1 ? (i === 5 ? T.sami - 0.05 : B[i + 1].t - 0.2) : T.done - 0.12; });
 const AV = {};
@@ -621,7 +621,16 @@ function timer(t) {
   else { ctx.font = "900 44px InterX"; const s = Math.floor(rem), txt = "0:" + String(s).padStart(2, "0"); ctx.fillText(txt, -132, 3); const w = ctx.measureText(txt).width; ctx.font = "900 22px InterX"; ctx.globalAlpha = 0.85; ctx.fillText("." + Math.floor((rem - s) * 10), -132 + w + 2, 11); ctx.globalAlpha = 1;
     ctx.fillStyle = "#fff"; rr(42, -19, 96, 38, 12); ctx.fill(); ctx.lineWidth = 2.5; ctx.stroke(); ctx.fillStyle = INK; ctx.font = "900 24px InterX, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.fillText(done ? "12/12" : n + "/12", 90, 2); if (done) { ctx.font = "900 15px InterX, 'Noto Color Emoji'"; } }
   ctx.restore();
-  if (!alarm) { ctx.save(); ctx.translate(SX, 270); for (let i = 0; i < 12; i++) { const on = i < n || done; ctx.fillStyle = on ? (i < 7 ? "#3fe08a" : "#ffd23a") : "rgba(255,255,255,0.35)"; rr(-150 + i * 25.2, 0, 22, 9, 4); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke(); } ctx.restore(); }
+  if (!alarm) { // Ladebalken: am Anfang schnell, zum Ende hin immer langsamer (Ease-out)
+    const p = loop ? 0 : done ? 1 : clamp((t - T.start) / (T.done - T.start)), f = 1 - Math.pow(1 - p, 2.6), bw = 300, bh = 18;
+    ctx.save(); ctx.translate(SX - bw / 2, 264);
+    ctx.fillStyle = "rgba(20,10,40,0.55)"; rr(0, 0, bw, bh, 9); ctx.fill();
+    if (f > 0.005) { const g = ctx.createLinearGradient(0, 0, bw, 0); g.addColorStop(0, "#3fe08a"); g.addColorStop(0.7, "#9cf05a"); g.addColorStop(1, "#ffd23a"); ctx.fillStyle = g; rr(0, 0, Math.max(bh, bw * f), bh, 9); ctx.fill();
+      ctx.save(); ctx.beginPath(); ctx.roundRect(0, 0, Math.max(bh, bw * f), bh, 9); ctx.clip(); ctx.fillStyle = "rgba(255,255,255,0.28)"; for (let x = -40 + ((t * 60) % 20); x < bw; x += 20) { ctx.beginPath(); ctx.moveTo(x, bh); ctx.lineTo(x + 9, 0); ctx.lineTo(x + 16, 0); ctx.lineTo(x + 7, bh); ctx.fill(); } ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.fillRect(0, 2, bw, 4); ctx.restore();
+      if (!done) glow(bw * f, bh / 2, 16, "255,255,200", 0.8); }
+    ctx.strokeStyle = INK; ctx.lineWidth = 2.5; rr(0, 0, bw, bh, 9); ctx.stroke();
+    ctx.font = "900 13px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round"; ctx.strokeStyle = INK; ctx.lineWidth = 4; const pt = Math.round(f * 100) + " %"; ctx.strokeText(pt, bw / 2, bh / 2 + 1); ctx.fillStyle = "#fff"; ctx.fillText(pt, bw / 2, bh / 2 + 1);
+    ctx.restore(); }
 }
 function card(b, s, hot = 0) { // kleine Kommentarkarte oben
   if (s <= 0.01) return; ctx.save(); ctx.translate(SX, 322); ctx.rotate(-0.015); ctx.scale(s * (1 + 0.06 * hot), s * (1 + 0.06 * hot));

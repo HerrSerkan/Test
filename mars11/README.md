@@ -1,6 +1,6 @@
 # Rotanien – Tag 11: „12 Gebäude in 15 Sekunden“ (Bau-Speedrun)
 
-Animation mit Sprecher, 28,1 s, 1080×1920, 60 fps. Stand 12.11.2026: 837 Follower, 4.443 Likes (= „Taler“).
+Animation mit Sprecher, 29,4 s, 1080×1920, 60 fps. Stand 12.11.2026: 837 Follower, 4.443 Likes (= „Taler“).
 Vorgabe aus der Auswertung von Tag 10 (62 % weg in Sekunde 1, zu lang, zu ruhig): schnell, laut, kurz, Action ab Frame 1.
 
 ## Ablauf
@@ -12,6 +12,7 @@ sami&zoe „Wo bin ich“ → Schule, sie ist Lehrerin) → + 5 Extras (Startram
 ## Technik
 - `tag11.js`: Seitenansicht-Bühne (`stage`), 12 Gebäude + Höhle (`bld(k, …)`), Einschlag mit Staub/Wackler/Blitz, Timer-HUD, Weitwinkel (`wide`).
 - `scene.js` = `base.js helpers3.js tag11.js`. Untertitel: `make_lines.py` (~ gelb jetzt auch in `base.js` umgesetzt).
-- Stimme: ElevenLabs „Chris“ (stability 0.35, style 0.5), `voice_prep.py … 1.14 0.25`, danach Pausen zwischen den Gebäuden eingefügt (nur an Wortlücken).
+- Stimme: ElevenLabs „Chris“. **`voice_build.py`** setzt sie sicher aus den Rohaufnahmen zusammen: geschnitten wird nur in echter Stille (< −48 dB) zwischen von Whisper erkannten Wörtern, mit Rand; gehauchte Wörter („willst“) werden angehoben; Tempo 1,18. Grund: `voice_prep.py` hat leise Wortenden für Stille gehalten und „willst“ verschluckt.
+- Ladebalken unter dem Timer: läuft am Anfang schnell, zum Ende hin langsamer (Ease-out, `1-(1-p)^2.6`).
 - Ton: `audio.py` (Ducking 0.86 mit 80 ms Vorausschau, Stimme im Median 12,7 dB über Musik/Effekten), `mix_music.py … -20 -15 0` → −14 LUFS.
 - Musik: „EDM Detection Mode“, „Volatile Reaction“ – Kevin MacLeod (incompetech.com), CC BY 4.0.
