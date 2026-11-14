@@ -54,22 +54,23 @@ KICKS = [0, 3, 6, 8, 11, 14]                                                    
 K, C, H, HO, CR = kick(), clap(), hat(), hat(True), crash()
 CB = {s: cowbell(NOTE(s)) for _, s in MEL}
 mus = np.zeros(N + SR * 2, np.float32); perc = np.zeros_like(mus)
-def bar_on(b): # spielt Beat b (0..51)? (Pausen: Truhe 100 bis zum Öffnen, 1 Beat Stille nach dem Drop)
-    return b < 27 or 33 <= b < 35 or b >= 36
-for st in range(52 * 4):                         # 16tel-Schritte
+BB = EV["beats"]; MB, CBt, OB, PB, EB = BB["mont"], BB["c100"], BB["open"], BB["pass"], BB["end"]   # Beats aus timeline12.py
+def bar_on(b): # Pausen: Truhe 100 bis zum Öffnen, 1 Beat Stille nach dem Drop
+    return b < CBt or OB <= b < OB + 2 or b >= PB
+for st in range((EB + 1) * 4):                         # 16tel-Schritte
     b = st / 4; t0 = bt(b)
     if not bar_on(int(b)): continue
     p = st % 16; bar = st // 16
     if p in KICKS: place(perc, t0, K, 0.7); place(mus, t0, bass808(ROOTS[bar % 4], BT * 0.7), 0.28)
     if p in (4, 12): place(perc, t0, C, 0.6)
-    if p % 2 == 0 or 23 <= b < 27: place(perc, t0, HO if p == 14 else H, 0.35 if p % 2 == 0 else 0.22)
+    if p % 2 == 0 or MB <= b < CBt: place(perc, t0, HO if p == 14 else H, 0.35 if p % 2 == 0 else 0.22)
     for q, s in MEL:
-        if p == q and not (27 <= b < 36): place(mus, t0, CB[s], 0.6)
-    if 25 <= b < 27 and p % 2 == 1: place(perc, t0, C, 0.25 * (b - 24))   # Snare-Roll vor Truhe 100
-for b in (0, 16, 32, 33, 36, 48): place(perc, bt(b), CR, 0.5)
+        if p == q and not (CBt <= b < PB): place(mus, t0, CB[s], 0.6)
+    if CBt - 2 <= b < CBt and p % 2 == 1: place(perc, t0, C, 0.25 * (b - CBt + 3))   # Snare-Roll vor Truhe 100
+for b in (0, 16, 32, OB, PB): place(perc, bt(b), CR, 0.5)
 music = (mus + perc)[:N]
-music[int(bt(35) * SR):int(bt(36) * SR)] = 0                                         # harter Schnitt auf Stille
-music[int(bt(27) * SR):int(bt(27) * SR) + 64] *= np.linspace(1, 0, 64)
+music[int(bt(OB + 2) * SR):int(bt(PB) * SR)] = 0                                         # harter Schnitt auf Stille
+music[int(bt(CBt) * SR):int(bt(CBt) * SR) + 64] *= np.linspace(1, 0, 64)
 
 # ------------------------------------------------------------ Effekte
 fx = np.zeros(N + SR * 2, np.float32)
@@ -118,6 +119,11 @@ S = {k: mp3(k) for k in ["impact-cine-big", "bass-hit-short", "hit-fast-exciting
 place(fx, 0, S["impact-cine-big"], 0.8); place(fx, 0, S["air-whoosh-powerful"], 0.35)
 for k, tl in enumerate(EV["RAIN"]):
     if 0 <= tl < T["capt"]: place(fx, tl, knock(), 0.35); place(fx, tl + 0.005, thud(), 0.28 if k % 3 else 0.5)
+# Enthüllung: die Augen aus Tag 11 = Piraten
+place(fx, T["reveal"], S["whoosh-fast"], 0.4); place(fx, T["reveal"] + 0.05, S["bass-hit-short"], 0.5)
+# Stadtkasse: Traktorstrahl
+place(fx, T["kasse"], drone(1.4) * (1 + 0.5 * np.sin(2 * np.pi * 9 * np.arange(int(1.4 * SR)) / SR)), 0.3)
+for j in range(6): place(fx, T["kasse"] + 0.2 + j * 0.18, coin(), 0.18)
 # Kapitän: Knurr-„Arrr“, Token blitzt
 place(fx, T["capt"] + 0.05, growl(0.55), 0.35); place(fx, T["capt"] + 0.25, S["sparkle-poof-hit"], 0.45)
 for j in range(3): place(fx, T["capt"] + 0.3 + j * 0.08, coin(), 0.25)
@@ -128,7 +134,7 @@ for k, tc in enumerate(EV["CH"]):
 c1, c14, c23, c31, c46, c58 = EV["CH"]
 place(fx, c1 + 0.08, womp(), 0.55)                                                   # Socke: Fail
 for j in range(12): place(fx, c14 + 0.08 + j * 0.06, coin(), 0.22)                   # Bank: Münzregen
-place(fx, c23 + 0.35, roar(1.1), 0.55); place(fx, c23 + 0.35, S["wind-woosh-throw"], 0.5)  # Flugzeug startet
+place(fx, c23 + 0.35, roar(1.1), 0.3); place(fx, c23 + 0.35, S["wind-woosh-throw"], 0.3)  # Flugzeug startet
 for j in range(6): place(fx, c31 + 0.3 + j * 0.06, pop(600 + 90 * j), 0.3)           # Klamotten fliegen
 place(fx, c46 + 0.75, S["stomp-apocalyptic"], 0.6); place(fx, c46 + 0.8, S["gravel-fall-hit"], 0.45)   # Bunker gräbt sich ein
 place(fx, c58 + 0.25, drumroll(0.6), 0.35); place(fx, c58 + 0.6, pop(500), 0.25)    # Soldaten
@@ -138,8 +144,8 @@ k = T["mont"]
 while k < T["c100"]: place(fx, k, S["clock-tick-single"], 0.18); k += BT / 4
 # Truhe 100: Stille, Herzschlag, Zittern, Riser
 place(fx, T["c100"], drone(T["open"] - T["c100"]), 0.14); place(fx, T["c100"], rattle(T["open"] - T["c100"]), 0.12)
-for b in range(27, 33): place(fx, bt(b), S["heartbeat-single"], 0.28 + 0.06 * (b - 27))
-place(fx, bt(31), riser(bt(33) - bt(31)), 0.3)
+for b in range(CBt, OB): place(fx, bt(b), S["heartbeat-single"], 0.28 + 0.06 * (b - CBt))
+place(fx, bt(OB - 2), riser(bt(2)), 0.3)
 # Öffnen: Drop
 place(fx, T["open"], S["impact-epic-trailer"], 1.0); place(fx, T["open"] + 0.02, S["shimmer-sparkle-sweep"], 0.5); place(fx, T["open"] + 0.05, S["light-aura"], 0.4)
 # Bordkarte + Aufruf
@@ -147,16 +153,28 @@ place(fx, T["pass"], S["air-whoosh-powerful"], 0.45); place(fx, T["pass"] + 0.2,
 place(fx, T["cta"] + 0.15, S["ui-message-pop"], 0.5); place(fx, T["cta"] + 0.6, pop(950), 0.3); place(fx, T["tipp"], S["sparkle-poof-hit"], 0.3)
 # Loop-Sekunde: Schiff rauscht heran (nahtlos zu Frame 1)
 place(fx, T["loop"], S["whoosh-fast"], 0.3)
-fx = fx[:N]; fx[int(bt(35) * SR):int(bt(36) * SR)] *= np.linspace(1, 0, int(bt(36) * SR) - int(bt(35) * SR)) ** 4   # Stille vor der Bordkarte
+fx = fx[:N]; fx[int(bt(OB + 2) * SR):int(bt(PB) * SR)] *= np.linspace(1, 0, int(bt(PB) * SR) - int(bt(OB + 2) * SR)) ** 4   # Stille vor der Bordkarte
 
 # ------------------------------------------------------------ Mix (Effekte über der Musik, ohne Stimme)
 def rms(x): return np.sqrt((x ** 2).mean()) + 1e-9
-music = music / rms(music[: int(bt(27) * SR)]) * 0.11
+music = music / rms(music[: int(bt(CBt) * SR)]) * 0.11
 fx = fx / (np.abs(fx).max() + 1e-9) * 0.9
+r = subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(HERE, "build", "voice.wav"), "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
+voice = np.zeros(N, np.float32); vv = np.frombuffer(r, np.float32)[:N]; voice[:len(vv)] = vv
+from scipy.ndimage import uniform_filter1d
+mask = (uniform_filter1d(np.abs(voice), int(0.03 * SR)) > 0.02).astype(np.float32)
+duck = np.zeros(N, np.float32); g = 0.0; att, rel = np.exp(-1 / (0.02 * SR)), np.exp(-1 / (0.2 * SR))
+for i in range(0, N, 64):
+    tg = mask[i]; c = att if tg > g else rel; g = tg + (g - tg) * c ** 64; duck[i:i + 64] = g
+duck = np.maximum(duck, np.roll(duck, -int(0.08 * SR)))          # Vorausschau
+music *= 1 - 0.6 * duck; fx *= 1 - 0.72 * duck
+vo = hp(voice, 90); vo = vo + 0.35 * bp(vo, 2500, 6000)           # Präsenz
+vo = vo / (np.sqrt((vo[mask > 0] ** 2).mean()) + 1e-9) * 0.2      # Stimme klar über Musik
 mix = hp(music + fx, 45)
 mix = mix + 0.5 * bp(mix, 1500, 6000)   # mehr Präsenz für Handy-Lautsprecher
+mix = mix + vo
 mix = np.tanh(mix * 1.1) / np.tanh(1.1)
-mix[int((bt(35) + 0.04) * SR):int(bt(36) * SR)] = 0   # echte Stille vor der Bordkarte
+mix[int((bt(OB + 2) + 0.04) * SR):int(bt(PB) * SR)] = 0   # echte Stille vor der Bordkarte
 mix[-int(0.01 * SR):] *= np.linspace(1, 0, int(0.01 * SR))
 with wave.open(os.path.join(HERE, "build", "mix.wav"), "wb") as w:
     w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)

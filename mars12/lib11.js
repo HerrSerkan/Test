@@ -134,7 +134,7 @@ function header(t) {
   ctx.save(); ctx.translate(SX, 146);
   ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 8; ctx.fillStyle = CREAM; rr(-215, -36, 430, 68, 14); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke();
   ctx.fillStyle = INK; ctx.font = "900 20px InterX, 'Noto Color Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("🪐 ROTANIEN 2.0", 0, -17);
-  const chips = [["TAG 12", "#e5262b", "#fff"], [FOLLOWERS + " Bewohner", "#fff", INK], [TALER.toLocaleString("de-DE") + " Taler", GOLD, INK]];
+  const chips = [["TAG 12", "#e5262b", "#fff"], [FOLLOWERS + " Bewohner", "#fff", INK], [TALER.toLocaleString("de-DE") + " Taler", window.talerCol ? talerCol(t) : GOLD, window.talerCol && talerCol(t) !== GOLD ? "#fff" : INK]];
   ctx.font = "900 12.5px InterX"; let wsum = chips.reduce((a, c) => a + ctx.measureText(c[0]).width + 22 + 8, -8), x = -wsum / 2;
   for (const [txt, bg, fg] of chips) { const w = ctx.measureText(txt).width + 22; ctx.fillStyle = bg; rr(x, 0, w, 22, 11); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = fg; ctx.textAlign = "center"; ctx.fillText(txt, x + w / 2, 11.5); x += w + 8; }
   ctx.restore();

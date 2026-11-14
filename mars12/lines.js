@@ -1,34 +1,3 @@
-// Tag 12: kein Sprecher (ElevenLabs-Kontingent leer) – Untertitel liegen auf dem Beat-Raster (130 BPM).
-// Je Block: [Startbeat, Endbeat, "Text"]. "|" = neue Zeile, * türkis, ! rot, ~ gelb, "@12.5" = Wort erscheint auf Beat 12,5.
-// Block 1 steht ab Frame 1 komplett, danach Wort für Wort.
-(() => {
-  const BT = 60 / 130;
-  const SPEC = [
-    [0, 3, "1 VON !100 TRUHEN|HAT DEN ~TOKEN 🪙", "all"],
-    [3.25, 6.85, "WER IHN *FINDET,|KRIEGT ~ALLES ~GRATIS!"],
-    [7, 8.85, "TRUHE 1:|!NIX."],
-    [9, 11.85, "TRUHE 14:|*BANK ✅"],
-    [12, 14.85, "*FLUGHAFEN ✅|PILOT: ~NOAM"],
-    [15, 16.85, "*KLAMOTTENLADEN ✅"],
-    [17, 18.85, "*BUNKER ✅"],
-    [19, 22.85, "EINFACHSO SUCHT|!SOLDATEN 👇"],
-    [23, 26.9, "60…@23 80…@24.5 !99…@26"],
-    [27, 32.9, "TRUHE ~100@28 …@29"],
-    [33, 35.95, "… UND DRIN@33.5 IST …@34"],
-    [36, 41.85, "1 FOLLOW = 1 PLATZ|IN !RAKETE 4"],
-    [42, 46.4, "WAS IST IN|TRUHE ~100? 🤔"],
-    [46.5, 50.9, "RICHTIGER TIPP|KOMMT *INS VIDEO! 👇"],
-  ];
-  const chunks = [];
-  for (const [b0, b1, txt, mode] of SPEC) {
-    const s = b0 * BT, w = []; let k = 0;
-    txt.split("|").forEach((line, li) => line.split(" ").forEach(tok => {
-      let [word, at] = tok.split("@"); const col = word[0] === "*" ? 1 : word[0] === "!" ? 2 : word[0] === "~" ? 3 : 0;
-      word = word.replace(/^[*!~]/, ""); const tt = mode === "all" ? -0.2 : at ? at * BT : s + k * 0.11; k++;
-      w.push([word, tt, col, li]);
-    }));
-    chunks.push({ s: mode === "all" ? 0 : s, e: b1 * BT, w });
-  }
-  window.WORDS = [];
-  window.CHUNKS = chunks;
-})();
+// automatisch erzeugt (mars12/timeline12.py) – Untertitel aus den Whisper-Wortzeiten, Block 1 ab Frame 1 komplett
+window.WORDS = [];
+window.CHUNKS = [{"s": 0, "e": 1.786, "w": [["1", -0.2, 0, 0], ["VON", -0.2, 0, 0], ["100", -0.2, 2, 0], ["TRUHEN", -0.2, 0, 0], ["HAT", -0.2, 0, 1], ["DEN", -0.2, 0, 1], ["TOKEN", -0.2, 3, 1], ["🪙", -0.2, 0, 1]]}, {"s": 1.846, "e": 2.556, "w": [["DIE", 1.846, 0, 0], ["AUGEN", 1.946, 0, 0], ["AUS", 2.066, 0, 0], ["TAG", 2.226, 3, 0], ["11?", 2.346, 0, 0]]}, {"s": 2.586, "e": 3.632, "w": [["WELTRAUMPIRATEN!", 2.586, 2, 0]]}, {"s": 3.692, "e": 4.882, "w": [["IHR", 3.692, 0, 0], ["DEAL:", 3.812, 0, 0], ["FINDEN", 4.312, 0, 1], ["WIR", 4.412, 0, 1], ["DEN", 4.552, 0, 1], ["TOKEN,", 4.652, 3, 1]]}, {"s": 4.912, "e": 5.94, "w": [["IST", 4.912, 0, 0], ["ALLES", 5.072, 1, 0], ["GRATIS!", 5.232, 1, 0]]}, {"s": 6.0, "e": 7.668, "w": [["WENN", 6.0, 0, 0], ["NICHT,", 6.12, 2, 0], ["IST", 6.36, 0, 1], ["UNSERE", 6.44, 0, 1], ["STADTKASSE", 6.62, 3, 1], ["WEG!", 7.08, 2, 1]]}, {"s": 7.728, "e": 8.891, "w": [["TRUHE", 7.728, 0, 0], ["1:", 8.028, 0, 0], ["NIX.", 8.308, 2, 1]]}, {"s": 8.951, "e": 9.875, "w": [["TRUHE", 8.951, 0, 0], ["14:", 8.951, 0, 0], ["BANK", 9.231, 1, 1], ["✅", 9.231, 0, 1]]}, {"s": 9.935, "e": 11.045, "w": [["TRUHE", 9.935, 0, 0], ["23:", 9.935, 0, 0], ["FLUGHAFEN", 10.615, 1, 1], ["✅", 10.615, 0, 1]]}, {"s": 11.075, "e": 12.202, "w": [["PILOT:", 11.075, 0, 0], ["NOAM", 11.075, 3, 0], ["✈️", 11.075, 0, 0]]}, {"s": 12.262, "e": 13.325, "w": [["KLAMOTTENLADEN", 12.262, 1, 0], ["✅", 12.462, 0, 0]]}, {"s": 13.385, "e": 14.609, "w": [["BUNKER", 13.385, 1, 0], ["✅", 13.385, 0, 0]]}, {"s": 14.669, "e": 15.719, "w": [["EINFACHSO", 14.669, 0, 0], ["SUCHT", 14.769, 0, 0], ["SOLDATEN", 14.969, 2, 1], ["👇", 15.409, 0, 1]]}, {"s": 15.749, "e": 17.067, "w": [["GEGEN", 15.749, 0, 0], ["DIE", 15.889, 0, 0], ["PIRATEN!", 16.029, 3, 0]]}, {"s": 17.127, "e": 19.575, "w": [["60…", 17.127, 0, 0], ["80…", 17.727, 0, 0], ["99…", 18.407, 2, 0]]}, {"s": 19.635, "e": 21.384, "w": [["TRUHE", 19.635, 0, 0], ["100", 19.955, 3, 0], ["…", 19.955, 0, 0]]}, {"s": 21.434, "e": 23.518, "w": [["…", 21.434, 0, 0], ["UND", 21.554, 0, 0], ["DRIN", 21.554, 0, 0], ["IST", 21.794, 0, 0], ["…", 21.794, 0, 0]]}, {"s": 23.618, "e": 25.836, "w": [["FOLGE", 23.618, 3, 0], ["MIR", 23.818, 0, 0], ["FÜR", 23.938, 0, 0], ["EINEN", 24.058, 0, 0], ["PLATZ", 24.158, 0, 1], ["IN", 24.338, 0, 1], ["RAKETE", 24.458, 2, 1], ["4", 24.778, 0, 1]]}, {"s": 25.896, "e": 27.146, "w": [["WAS", 25.896, 0, 0], ["IST", 26.016, 0, 0], ["IN", 26.136, 0, 0], ["TRUHE", 26.136, 0, 1], ["100?", 26.216, 3, 1], ["🤔", 26.456, 0, 1]]}, {"s": 27.176, "e": 29.027, "w": [["RICHTIGER", 27.176, 0, 0], ["TIPP", 27.516, 0, 0], ["KOMMT", 27.636, 0, 1], ["INS", 27.636, 1, 1], ["VIDEO!", 27.816, 0, 1], ["👇", 27.976, 0, 1]]}];

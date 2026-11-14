@@ -1,27 +1,27 @@
 // ============================================================ Tag 12 „1 von 100 Truhen“ (base.js + helpers3.js + lib6c.js + pre12.js + lib11.js + tag12.js -> scene.js)
 // Token-Jagd: Ein Piratenschiff (die gelben Augen aus Tag 11 waren seine Fenster) kippt 100 Truhen auf Rotanien. Zähler „GEÖFFNET x/100“,
 // 5 Wünsche aus den Kommentaren unter Tag 11 springen aus Truhen, Speed-Montage bis 99, Truhe 100 öffnet sich – Schnitt, bevor man sieht, was drin ist.
-// Kein Sprecher. Alles liegt auf dem 130-BPM-Raster (bt(n) = Beat n), jede Öffnung auf einem Beat.
-const T = {
-  capt: bt(3.25), c1: bt(7), c14: bt(9), c23: bt(12), c31: bt(15), c46: bt(17), c58: bt(19), mont: bt(23), c100: bt(27),
-  open: bt(33), black: bt(35), pass: bt(36), cta: bt(42), tipp: bt(46.5), loop: bt(51), end: bt(52),
-};
+// Story: Die gelben Augen aus Tag 11 sind die Fenster eines Weltraumpiraten-Schiffs. Deal der Piraten: Findet Rotanien den Token, ist alles gratis,
+// wenn nicht, nehmen sie die Stadtkasse (die Taler oben). Die Truhen sind Piratenbeute – was gefunden wird, darf Rotanien behalten.
+// Stimme ElevenLabs „Chris“ (Satz für Satz, voice12.py), Zeiten aus timeline12.py (timeline.js): jedes Schlüsselwort liegt auf dem Beat, auf dem die Truhe aufspringt.
+const T = window.TL.T;
 const END = T.end;
-const CH = [
-  { n: 1, k: "socke", t: T.c1, e: T.c14 },
-  { n: 14, k: "bank", t: T.c14, e: T.c23, u: "berat_bulut", av: "berat", txt: "Wie wär's mit einer Bank" },
-  { n: 23, k: "flughafen", t: T.c23, e: T.c31, u: "Noam", av: "noam", txt: "Flughafen bitteeee ich bin der Pilot" },
-  { n: 31, k: "laden", t: T.c31, e: T.c46, u: "sami&zoe", av: "sami", txt: "können wir ein new Yorker haben" },
-  { n: 46, k: "bunker", t: T.c46, e: T.c58, u: "Minimaus", av: "minimaus", txt: "Bunker" },
-  { n: 58, k: "soldaten", t: T.c58, e: T.mont, u: "einfachso", av: "einfachso", txt: "Ich brauche Soldaten wer kommt ins Team ?" },
-];
-const DUDS = ["🥔", "🦆", "🥙", "💨", "🕸️", "👞", "🧦", "🥔"].map((e, k) => ({ e, t: bt(23 + k * 0.5), n: [60, 66, 72, 80, 86, 92, 96, 99][k] }));
+const CHX = {
+  bank: { u: "berat_bulut", av: "berat", txt: "Wie wär's mit einer Bank" }, flughafen: { u: "Noam", av: "noam", txt: "Flughafen bitteeee ich bin der Pilot" },
+  laden: { u: "sami&zoe", av: "sami", txt: "können wir ein new Yorker haben" }, bunker: { u: "Minimaus", av: "minimaus", txt: "Bunker" },
+  soldaten: { u: "einfachso", av: "einfachso", txt: "Ich brauche Soldaten wer kommt ins Team ?" },
+};
+const CH = window.TL.CH.map(c => ({ ...c, ...(CHX[c.k] || {}) }));
+const DUDS = ["🥔", "🦆", "🥙", "💨", "🕸️", "👞", "🧦", "🥔"].map((e, k) => ({ e, t: window.TL.DUDS[k], n: [60, 66, 72, 80, 86, 92, 96, 99][k] }));
+function talerCol(t) { // Stadtkasse in Gefahr: Taler-Chip blinkt rot
+  const hot = (t >= T.kasse && t < CH[0].s) || (t >= T.c100 && t < T.open);
+  return hot && Math.sin(t * 14) > -0.2 ? "#e5262b" : GOLD; }
 const RAIN = (() => { const r = rng(12), a = []; for (let i = 0; i < 30; i++) a.push({ ts: -0.32 + i * 0.058, x: 40 + r() * 440, y: GY - 25 + r() * 95, s: 0.55 + r() * 0.35, rot: (r() - 0.5) * 0.5, sp: r() }); return a.sort((p, q) => p.y - q.y); })();
 const ROW = ["stadion", "militaer", "zoo", "tierheim", "burek", "token", "schule", "rampe", "bahn", "wasser", "kuppel", "kino"];
 
 // ------------------------------------------------------------ Zähler „GEÖFFNET x/100“
 function count(t) {
-  if (t >= T.loop || t < T.c1) return 0;
+  if (t >= T.loop || t < CH[0].t) return 0;
   if (t >= T.open) return 100;
   if (t >= T.mont) return DUDS.filter(d => t >= d.t).at(-1)?.n ?? 58;
   return CH.filter(c => t >= c.t).at(-1).n;
@@ -202,7 +202,26 @@ function sceneRain(t, u) { // u = Zeit relativ zum Kippen (Frame 1 = 0; in der L
     const x = lerp(x0, c.x, k), y = lerp(470, c.y, k * k), lt = d - fall, bounce = lt > 0 ? Math.abs(Math.sin(lt * 14)) * 14 * Math.exp(-lt * 6) : 0;
     if (lt > 0) dustBurst(x, c.y, lt, 0.5 * c.s);
     ctx.save(); ctx.translate(x, y - bounce); ctx.rotate(lt > 0 ? c.rot * Math.exp(-lt * 8) : c.rot + d * 6); chest(0, 0, c.s, t, { num: null }); ctx.restore(); }
-  ship(CX + 40, 428, 0.6, t, { tilt: lerp(0.05, 0.22, easeOut(ramp(u, -0.4, 0.2))), hatch: 1 });
+  ship(CX + 40, 428, 0.6, t, { tilt: lerp(0.05, 0.22, easeOut(ramp(u, -0.4, 0.2))) * (1 - easeOut(ramp(t, T.reveal, T.reveal + 0.4))), hatch: 1 });
+  if (u >= 0 && t >= T.reveal) { const k = t - T.reveal; for (const d of [0, 1]) { const ex = CX + 40 + (92 + d * 44) * 0.6, ey = 428 + 16 * 0.6 + Math.sin(t * 2.2) * 4;   // Ringe um die Augen aus Tag 11
+      for (let i = 0; i < 2; i++) { const q = (k * 1.4 + i / 2) % 1; ctx.strokeStyle = `rgba(255,223,74,${0.9 * (1 - q)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(ex, ey, 14 + q * 40, 9 + q * 26, 0, 0, Math.PI * 2); ctx.stroke(); } }
+    emo("👀", CX - 60, 400 + Math.sin(t * 6) * 4, 46 * pop(t, T.reveal + 0.1, 99, 0.25)); outlined("➜", CX - 10, 410, 40 * pop(t, T.reveal + 0.2, 99, 0.25), GOLD, INK, 6);
+    if (t >= T.reveal + 0.9) { const fl = pop(t, T.reveal + 0.9, 99, 0.2); ctx.save(); ctx.translate(CX + 160, 338); ctx.rotate(-0.05); ctx.scale(fl, fl); ctx.fillStyle = "#1b1424"; ctx.beginPath(); ctx.moveTo(-40, -26); ctx.lineTo(44, -18 + Math.sin(t * 6) * 4); ctx.lineTo(-40, 26); ctx.closePath(); ctx.fill(); ctx.strokeStyle = GOLD; ctx.lineWidth = 3; ctx.stroke(); emo("🏴‍☠️", -8, 0, 30); ctx.restore(); } }
+}
+function sack(x, y, s, t) { ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(t * 4) * 0.12); ctx.scale(s, s); ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.lineJoin = "round";
+  ctx.fillStyle = "#c8a064"; ctx.beginPath(); ctx.moveTo(-14, -58); ctx.quadraticCurveTo(-58, -40, -52, -6); ctx.quadraticCurveTo(-46, 22, 0, 22); ctx.quadraticCurveTo(46, 22, 52, -6); ctx.quadraticCurveTo(58, -40, 14, -58); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#a07840"; rr(-18, -66, 36, 10, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = "#c8a064"; ctx.beginPath(); ctx.moveTo(-12, -66); ctx.lineTo(-22, -84); ctx.lineTo(0, -74); ctx.lineTo(22, -84); ctx.lineTo(12, -66); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = CREAM; rr(-44, -30, 88, 36, 6); ctx.fill(); ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = INK; ctx.font = "900 10px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("STADTKASSE", 0, -20); ctx.fillStyle = "#b8860b"; ctx.font = "900 13px InterX"; ctx.fillText(TALER.toLocaleString("de-DE") + " 🪙", 0, -4);
+  ctx.restore(); }
+function sceneKasse(t) { // „Wenn nicht, ist unsere Stadtkasse weg!“ – Traktorstrahl zieht die Kasse Richtung Schiff
+  const lt = t - T.kasse; stage(t); row(t);
+  const sx = CX + 40, sy = 400; ship(sx, sy, 0.55, t, { eyes: 1 });
+  const up = easeIO(ramp(lt, 0.1, 1.3)), ky = lerp(GY + 50, GY - 70, up);
+  ctx.save(); ctx.globalAlpha = 0.35 + 0.1 * Math.sin(t * 20); const g = ctx.createLinearGradient(0, sy + 40, 0, ky + 30); g.addColorStop(0, "rgba(120,255,170,0.9)"); g.addColorStop(1, "rgba(120,255,170,0.25)"); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(sx - 18, sy + 40); ctx.lineTo(sx + 18, sy + 40); ctx.lineTo(CX + 95, ky + 34); ctx.lineTo(CX - 95, ky + 34); ctx.closePath(); ctx.fill(); ctx.restore();
+  for (let i = 0; i < 8; i++) { const r = rng(i + 80), d = ((lt * 1.2 + r()) % 1); ctx.globalAlpha = 1 - d; emo("🪙", CX + (r() - 0.5) * 120 * (1 - d), lerp(ky, sy + 50, d), 18); ctx.globalAlpha = 1; }
+  sack(CX, ky, 1.9, t);
+  astronaut(CX - 150, GY + 90, 0.95, "shock", { t, acc: "#3fd3f2", armR: -2.6, armL: -0.4 }); astronaut(CX + 150, GY + 92, 0.95, "shock", { t, acc: "#ff4f8b", armL: 2.6, armR: 0.4 });
+  outlined("!", CX - 150, GY - 90, 52 * pop(t, T.kasse + 0.3, 99, 0.2), RED, INK, 8); outlined("!", CX + 150, GY - 90, 52 * pop(t, T.kasse + 0.4, 99, 0.2), RED, INK, 8);
 }
 function sceneCaptain(t) {
   const lt = t - T.capt, z = 1 + 0.07 * easeOut(ramp(lt, 0, 1.7)); ctx.save(); ctx.translate(CX, 560); ctx.scale(z, z); ctx.translate(-CX, -560);
@@ -217,7 +236,7 @@ function sceneChest(t, c, i) {
   const lt = t - c.t; stage(t); row(t);
   const settled = c.k === "socke" ? 0 : easeOut(ramp(lt, 0.2, 0.42));
   const cx = lerp(CX, CX + 168, settled), cy = lerp(GY + 40, GY + 150, settled), cs = lerp(2.3, 1.05, settled);
-  const drop = lt < 0 ? lerp(-700, 0, Math.pow(ramp(t, c.t - 0.16, c.t - 0.02), 2)) : 0, op = back(ramp(lt, 0, 0.12));
+  const drop = lt < 0 ? lerp(-700, 0, Math.pow(ramp(t, c.s, c.s + 0.14), 2)) + (t > c.s + 0.14 ? Math.abs(Math.sin((t - c.s) * 18)) * -6 : 0) : 0, op = back(ramp(lt, 0, 0.12));
   const grow = back(ramp(lt, 0.04, 0.32)), BX = CX - 10, BY = GY + 70;
   if (c.k === "socke") { chest(CX, GY + 40 + drop, 2.3, t, { open: op, num: c.n }); burst(CX, GY - 70, lt, 0.5, "200,200,210");
     if (lt > 0) { ctx.save(); ctx.translate(CX, lerp(GY - 40, GY - 210, easeOut(ramp(lt, 0, 0.3)))); ctx.rotate(Math.sin(lt * 9) * 0.25); emo("🧦", 0, 0, 110 * back(ramp(lt, 0, 0.25))); ctx.restore(); emo("💨", CX + 90, GY - 120, 60 * pop(t, c.t + 0.05, c.e - 0.2)); }
@@ -277,7 +296,8 @@ function sceneLater(t) { // Bordkarte + Aufruf
   } else {
     const lt = t - T.cta, sh = 2.5 * Math.sin(t * 40) * (0.5 + 0.5 * Math.sin(t * 3));
     for (let i = 0; i < 6; i++) { const r = rng(i + 60), d = ((lt * 0.35 + r()) % 1); ctx.globalAlpha = Math.sin(Math.PI * d) * 0.8; outlined("?", 40 + r() * 430, lerp(700, 470, d), 30 + r() * 20, GOLD, INK, 5); ctx.globalAlpha = 1; }
-    chest(CX + sh, GY + 70, 2.3, t, { num: 100, light: 0.55 + 0.25 * Math.sin(t * 4), q: true });
+    bld("token", 100, GY + 74, 1.35, t, 9); tagLabel("TOKEN-HAUS: LEER", 100, GY - 92, pop(t, T.cta + 0.9, 99), GOLD, INK, -0.04, 14);
+    chest(CX + 60 + sh, GY + 70, 2.3, t, { num: 100, light: 0.55 + 0.25 * Math.sin(t * 4), q: true });
     emptyComment(t, pop(t, T.cta + 0.15, 99), 366, "In Truhe 100 ist … 🤔");
     tagLabel("+ dein Bauwunsch 👇", SX, 446, pop(t, T.cta + 0.6, 99) * (1 + 0.03 * Math.sin(t * 8)), PINK, "#fff", -0.03, 20);
   }
@@ -298,8 +318,9 @@ window.renderFrame = function (t) {
   if (t < T.capt) for (const c of RAIN) { const d = t - c.ts - 0.42; if (d >= 0 && d < 1) sh += 4 * Math.exp(-d * 9); }
   const r = rng(Math.floor(t * 60) + 1); ctx.save(); ctx.translate(CX + (r() - 0.5) * 2 * sh, 600 + (r() - 0.5) * 2 * sh); ctx.scale(1 + zp, 1 + zp); ctx.translate(-CX, -600);
   if (t < T.capt) sceneRain(t, t);
-  else if (t < T.c1 - 0.16) sceneCaptain(t);
-  else if (t < T.mont) { let i = CH.findIndex((c, j) => t < (CH[j + 1]?.t ?? 99) - 0.16); if (i < 0) i = CH.length - 1; sceneChest(t, CH[i], i); }
+  else if (t < T.kasse) sceneCaptain(t);
+  else if (t < CH[0].s) sceneKasse(t);
+  else if (t < T.mont) { let i = CH.findIndex((c, j) => t < (CH[j + 1]?.s ?? 99)); if (i < 0) i = CH.length - 1; sceneChest(t, CH[i], i); }
   else if (t < T.c100) sceneMontage(t);
   else if (t < T.open) sceneC100(t);
   else if (t < T.pass) sceneOpen(t);
@@ -313,7 +334,7 @@ window.renderFrame = function (t) {
   const vg = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.35, W / 2, H * 0.5, H * 0.85); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(40,10,50,0.35)"); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   captions2(t);
 };
-window.exportEvents = function () { return { duration: END, T, CH: CH.map(c => c.t), DUDS: DUDS.map(d => d.t), RAIN: RAIN.map(c => c.ts + 0.42), BT }; };
+window.exportEvents = function () { return { duration: END, T, CH: CH.map(c => c.t), DUDS: DUDS.map(d => d.t), RAIN: RAIN.map(c => c.ts + 0.42), BT, beats: window.TL.beats }; };
 window.setup = async function () {
   await Promise.all([document.fonts.load("46px Comic"), document.fonts.load("900 30px InterX"), document.fonts.load("700 12px InterX"), document.fonts.load("16px 'Noto Color Emoji'")]);
   for (const k of ["berat", "noam", "sami", "minimaus", "einfachso"]) AV[k] = await new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = k + ".png"; });

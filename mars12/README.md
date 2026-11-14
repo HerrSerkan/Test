@@ -1,6 +1,6 @@
 # Rotanien – Tag 12: „1 von 100 Truhen“ (Token-Jagd)
 
-Animation **ohne Sprecher**, 24,0 s, 1080×1920, 60 fps, −14 LUFS. Stand 14.11.2026: 835 Follower, 4.474 Likes (= „Taler“).
+Animation mit Sprecher (ElevenLabs „Chris“, neuer Account), 29,5 s, 1080×1920, 60 fps, −14 LUFS. Stand 14.11.2026: 835 Follower, 4.474 Likes (= „Taler“).
 Vorgabe: `BRIEFING_TAG12.md` (Trend #token/#piratetoken, Frame 1 = Situation, kein Follow-Aufruf am Anfang, Schnitt alle 0,9–1,4 s).
 
 ## Ablauf (alles auf dem 130-BPM-Raster, `bt(n)` = Beat n)
@@ -20,3 +20,15 @@ Vorgabe: `BRIEFING_TAG12.md` (Trend #token/#piratetoken, Frame 1 = Situation, ke
 - Render: `node ../tools/canvas_render.js . --out rotanien_tag12.mp4 --audio build/mix.wav --fps 60` (vorher `--events`), danach Ton mit
   `loudnorm … ,volume=1.9dB,alimiter=limit=0.84` auf −14 LUFS gebracht (Prüfung mit video-cleanup `analyze.py`). Öffnungen liegen 22–50 ms nach dem Beat (≤ 3 Frames).
 - Kein Sprecher, weil das ElevenLabs-Kontingent leer ist (9.959/10.000, Reset ca. 4.12.2026).
+
+## Story-Version (Nutzerwunsch: passend zur Serie, nicht random)
+- Die gelben Augen aus Tag 11 = Bugfenster eines Weltraumpiraten-Schiffs (👀-Pfeil + Ringe + Piratenflagge).
+- Deal der Piraten: Token gefunden = alles gratis, sonst nehmen sie die **Stadtkasse** (Taler-Chip blinkt rot, Sack „STADTKASSE 4.474“ im Traktorstrahl).
+- Truhen = Piratenbeute → Wünsche aus Tag 11. einfachso (Security seit Tag 9, Chef der Militärbasis seit Tag 11) sucht Soldaten **gegen die Piraten**.
+- Aufruf: DerRauls Token-Haus aus Tag 11 steht leer daneben.
+
+## Pipeline mit Stimme
+1. `phrases_src.json` (Satz, Untertitel-Blöcke, Index des Schlüsselworts) → `python3 -I voice12.py` (je Satz eine TTS-Datei in build/vo, nur fehlende werden erzeugt; Tempo 1,18; nur Randstille entfernt)
+2. `python3 -I timeline12.py` → Schlüsselwort jedes Truhen-Satzes liegt auf dem Beat der Öffnung; schreibt `timeline.js`, `lines.js`, `build/voice.wav`
+3. `./build.sh`, `node ../tools/canvas_render.js . --events`, `python3 -I audio12.py` (Ducking: Musik −60 %, Effekte −72 % unter der Stimme), Render, dann `volume=0.5dB` → −14 LUFS
+4. Whisper-Prüfung des fertigen Videos: alle Wörter da, letztes Wort „Video“ bei 28,0 s nicht abgeschnitten.

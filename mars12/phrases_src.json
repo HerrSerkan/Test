@@ -1,0 +1,17 @@
+[
+ ["p1", "Eine von hundert Truhen hat den Token!", ["1 VON !100 TRUHEN|HAT DEN ~TOKEN 🪙"], 0],
+ ["p2", "Die Augen aus Tag elf? Weltraumpiraten!", ["DIE AUGEN AUS ~TAG 11?", "!WELTRAUMPIRATEN!"], 0],
+ ["p3", "Ihr Deal: Finden wir den Token, ist alles gratis.", ["IHR DEAL:|FINDEN WIR DEN ~TOKEN,", "IST *ALLES *GRATIS!"], 0],
+ ["p4", "Wenn nicht, ist unsere Stadtkasse weg!", ["WENN !NICHT,|IST UNSERE ~STADTKASSE !WEG!"], 0],
+ ["c1", "Truhe eins: nix!", ["TRUHE 1:|!NIX."], 2],
+ ["c14", "Vierzehn: Bank!", ["TRUHE 14:|*BANK ✅"], 1],
+ ["c23", "Dreiundzwanzig: Flughafen! Pilot Noam!", ["TRUHE 23:|*FLUGHAFEN ✅", "PILOT: ~NOAM ✈️"], 1],
+ ["c31", "Ein Klamottenladen!", ["*KLAMOTTENLADEN ✅"], 1],
+ ["c46", "Bunker!", ["*BUNKER ✅"], 0],
+ ["c58", "Und Einfachso sucht Soldaten gegen die Piraten!", ["EINFACHSO SUCHT|!SOLDATEN 👇", "GEGEN DIE ~PIRATEN!"], 1],
+ ["mont", "Sechzig … achtzig … neunundneunzig …", ["60… 80… !99…"], 0],
+ ["c100", "Truhe hundert …", ["TRUHE ~100 …"], 0],
+ ["open", "… und drin ist …", ["… UND DRIN IST …"], 0],
+ ["pass", "Folge mir für einen Platz in Rakete vier!", ["~FOLGE MIR FÜR EINEN|PLATZ IN !RAKETE 4"], 0],
+ ["cta", "Was ist in Truhe hundert? Richtiger Tipp kommt ins Video!", ["WAS IST IN|TRUHE ~100? 🤔", "RICHTIGER TIPP|KOMMT *INS VIDEO! 👇"], 0]
+]
