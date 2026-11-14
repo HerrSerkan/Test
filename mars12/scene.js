@@ -841,7 +841,7 @@ function crowd(t, mood, y0 = 1010, s0 = 1.15) { // Astronauten-Köpfe unten im B
 function speech(txt, x, y, s) { if (s <= 0.01) return; ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.fillStyle = "#fff"; ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(0, 0, 70, 34, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-20, 28); ctx.lineTo(-38, 56); ctx.lineTo(-2, 32); ctx.fill(); outlined(txt, 0, 2, 32, "#e5262b", INK, 6); ctx.restore(); }
 function captions2(t) {
   const c = window.CHUNKS.find(c => t >= c.s - 0.02 && t <= c.e); if (!c) return;
-  ctx.save(); ctx.font = "46px Comic, 'Noto Color Emoji'"; ctx.letterSpacing = "0.5px"; const sp = ctx.measureText(" ").width;
+  ctx.save(); ctx.globalAlpha = 1 - ramp(t, c.e - 0.1, c.e); ctx.font = "46px Comic, 'Noto Color Emoji'"; ctx.letterSpacing = "0.5px"; const sp = ctx.measureText(" ").width;
   const lines = []; for (const w of c.w) (lines[w[3]] ||= []).push([...w, ctx.measureText(w[0]).width]);
   const ys = lines.length > 1 ? [744, 800] : [772];
   lines.forEach((ln, li) => { const tw = ln.reduce((a, p) => a + p[4] + sp, -sp), fit = Math.min(1, 450 / tw), cx = 262, y = ys[li];
@@ -961,32 +961,50 @@ function sceneLater(t) { // Bordkarte + Aufruf
 
 // ------------------------------------------------------------ Bild
 const HITS = [
-  ...RAIN.map(c => [c.ts + 0.42, 4]),
-  ...CH.map(c => [c.t, 11]), [CH[2].t + 0.4, 3], [CH[4].t + 0.75, 5],
-  ...DUDS.map(d => [d.t, 6]), [T.open, 24], [T.pass, 6], [T.end + 0.42 - 0.32, 0],
+  ...RAIN.map(c => [c.ts + 0.42, 3]),
+  ...CH.map(c => [c.t, 7]), [CH[2].t + 0.4, 2], [CH[4].t + 0.75, 4],
+  ...DUDS.map(d => [d.t, 4]), [T.open, 20], [T.pass, 3],
 ];
+// Szenenliste mit weichen Übergängen (Zoom-Überblendung statt harter Schnitt); tr = Dauer der Überblendung
+const SC = [
+  { s: 0, fn: t => sceneRain(t, t) },
+  { s: T.capt, tr: 0.24, fn: sceneCaptain },
+  { s: T.kasse, tr: 0.24, fn: sceneKasse },
+  ...CH.map((c, i) => ({ s: c.s, tr: 0.2, fn: t => sceneChest(t, c, i) })),
+  { s: T.mont, tr: 0.2, fn: sceneMontage },
+  { s: T.c100, tr: 0.3, fn: sceneC100 },
+  { s: T.open, tr: 0, fn: sceneOpen },
+  { s: T.pass, tr: 0.3, fn: t => sceneLater(Math.min(t, T.cta - 0.001)) },
+  { s: T.cta, tr: 0.24, fn: sceneLater },
+  { s: T.loop, tr: 0.22, fn: t => sceneRain(t, t - T.end) },
+];
+const BUF = document.createElement("canvas"); BUF.width = 1080; BUF.height = 1920; const BCTX = BUF.getContext("2d");
+function camShake(t) { // weiches Wackeln (Schwingung statt Zufall pro Bild) + kleiner Zoom-Puls
+  let sh = 0, zp = 0, fl = 0;
+  const hits = t >= T.loop ? RAIN.map(c => [c.ts + 0.42 + T.end, 3]) : HITS;
+  for (const [h, s] of hits) if (t >= h && t - h < 1.2) { const d = t - h; sh += s * Math.exp(-d * 7); zp += s * 0.005 * Math.exp(-d * 7); fl += (s >= 10 ? 0.45 : 0) * Math.exp(-d * 12); }
+  const dx = sh * (Math.sin(t * 38) + 0.6 * Math.sin(t * 61 + 1.3)) / 1.6, dy = sh * (Math.sin(t * 45 + 0.7) + 0.6 * Math.sin(t * 71 + 2.1)) / 1.6;
+  return { dx, dy, zp, fl };
+}
+function drawScene(sc, t, cam, extraZ) {
+  ctx.save(); ctx.translate(CX + cam.dx, 600 + cam.dy); const z = (1 + cam.zp) * extraZ; ctx.scale(z, z); ctx.translate(-CX, -600); sc.fn(t); ctx.restore();
+}
 window.renderFrame = function (t) {
   MAIN.setTransform(1, 0, 0, 1, 0, 0); MAIN.fillStyle = "#000"; MAIN.fillRect(0, 0, 1080, 1920);
   ctx.setTransform(S, 0, 0, S, 0, 0);
-  let sh = 0, zp = 0, fl = 0;
-  const hits = t >= T.loop ? RAIN.map(c => [c.ts + 0.42 + T.end, 4]) : HITS;
-  for (const [h, s] of hits) if (t >= h && t - h < 1.2) { const d = t - h; sh += s * Math.exp(-d * 9); zp += s * 0.006 * Math.exp(-d * 9); fl += (s >= 10 ? 0.5 : 0) * Math.exp(-d * 16); }
-  if (t < T.capt) for (const c of RAIN) { const d = t - c.ts - 0.42; if (d >= 0 && d < 1) sh += 4 * Math.exp(-d * 9); }
-  const r = rng(Math.floor(t * 60) + 1); ctx.save(); ctx.translate(CX + (r() - 0.5) * 2 * sh, 600 + (r() - 0.5) * 2 * sh); ctx.scale(1 + zp, 1 + zp); ctx.translate(-CX, -600);
-  if (t < T.capt) sceneRain(t, t);
-  else if (t < T.kasse) sceneCaptain(t);
-  else if (t < CH[0].s) sceneKasse(t);
-  else if (t < T.mont) { let i = CH.findIndex((c, j) => t < (CH[j + 1]?.s ?? 99)); if (i < 0) i = CH.length - 1; sceneChest(t, CH[i], i); }
-  else if (t < T.c100) sceneMontage(t);
-  else if (t < T.open) sceneC100(t);
-  else if (t < T.pass) sceneOpen(t);
-  else if (t < T.loop) sceneLater(t);
-  else sceneRain(t, t - T.end);
-  ctx.restore();
+  const cam = camShake(t); let k = 0; for (let i = 0; i < SC.length; i++) if (t >= SC[i].s) k = i;
+  const cur = SC[k], e = cur.tr ? easeIO(ramp(t, cur.s, cur.s + cur.tr)) : 1;
+  drawScene(cur, t, cam, lerp(1.07, 1, e));
+  if (e < 1 && k > 0) { // alte Szene drüber, zoomt leicht weiter und blendet aus
+    BCTX.setTransform(1, 0, 0, 1, 0, 0); BCTX.clearRect(0, 0, 1080, 1920); ctx = BCTX; ctx.setTransform(S, 0, 0, S, 0, 0);
+    drawScene(SC[k - 1], t, cam, lerp(1, 0.96, e)); ctx = MAIN;
+    MAIN.save(); MAIN.setTransform(1, 0, 0, 1, 0, 0); MAIN.globalAlpha = 1 - e; MAIN.drawImage(BUF, 0, 0); MAIN.restore();
+  }
   // Kommentarkarten (kurz, klein, oben) – unten springt schon das Gebäude aus der Truhe
-  for (const c of CH) if (c.u) card(c, pop(t, c.t - 0.05, Math.min(c.e - 0.25, c.t + 1.2), 0.16));
-  if (fl > 0.02) { ctx.fillStyle = `rgba(255,250,225,${Math.min(0.6, fl)})`; ctx.fillRect(0, 0, W, H); }
-  if (!(t >= T.black && t < T.pass)) { header(t); counter(t); }
+  for (const c of CH) if (c.u) card(c, pop(t, c.t - 0.05, Math.min(c.e - 0.25, c.t + 1.2), 0.2));
+  if (cam.fl > 0.02) { ctx.fillStyle = `rgba(255,250,225,${Math.min(0.5, cam.fl)})`; ctx.fillRect(0, 0, W, H); }
+  const hudA = 1 - (t >= T.black && t < T.pass + 0.3 ? 1 - ramp(t, T.pass, T.pass + 0.3) : 0) * (t >= T.black ? 1 : 0);
+  if (hudA > 0.01) { ctx.globalAlpha = hudA; header(t); counter(t); ctx.globalAlpha = 1; }
   const vg = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.35, W / 2, H * 0.5, H * 0.85); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(40,10,50,0.35)"); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   captions2(t);
 };

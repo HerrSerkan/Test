@@ -1,6 +1,6 @@
 # Rotanien – Tag 12: „1 von 100 Truhen“ (Token-Jagd)
 
-Animation mit Sprecher (ElevenLabs „Chris“, neuer Account), 29,5 s, 1080×1920, 60 fps, −14 LUFS. Stand 14.11.2026: 835 Follower, 4.474 Likes (= „Taler“).
+Animation mit Sprecher (ElevenLabs „Chris“, neuer Account), 32,3 s, 1080×1920, 60 fps, −14 LUFS. Stand 14.11.2026: 835 Follower, 4.474 Likes (= „Taler“).
 Vorgabe: `BRIEFING_TAG12.md` (Trend #token/#piratetoken, Frame 1 = Situation, kein Follow-Aufruf am Anfang, Schnitt alle 0,9–1,4 s).
 
 ## Ablauf (alles auf dem 130-BPM-Raster, `bt(n)` = Beat n)
@@ -32,3 +32,7 @@ Vorgabe: `BRIEFING_TAG12.md` (Trend #token/#piratetoken, Frame 1 = Situation, ke
 2. `python3 -I timeline12.py` → Schlüsselwort jedes Truhen-Satzes liegt auf dem Beat der Öffnung; schreibt `timeline.js`, `lines.js`, `build/voice.wav`
 3. `./build.sh`, `node ../tools/canvas_render.js . --events`, `python3 -I audio12.py` (Ducking: Musik −60 %, Effekte −72 % unter der Stimme), Render, dann `volume=0.5dB` → −14 LUFS
 4. Whisper-Prüfung des fertigen Videos: alle Wörter da, letztes Wort „Video“ bei 28,0 s nicht abgeschnitten.
+
+## Geschmeidiger (Nutzerwunsch)
+- Stimme: jeder Satz mit `previous_text`/`next_text` (durchgehende Betonung), stability 0.5, style 0.28, Tempo 1,2, weiche Ein-/Ausblendung, lange Atempausen zwischen Wörtern gekürzt (nur zwischen Whisper-Wörtern, 0,1 s Rand), leichter Raumhall.
+- Bild: Szenenliste `SC` mit Zoom-Überblendungen (0,2–0,3 s) statt harter Schnitte, weiches Wackeln (Schwingung statt Zufall pro Bild), weniger Blitze, Untertitel blenden aus.

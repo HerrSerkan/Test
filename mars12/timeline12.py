@@ -7,7 +7,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); B = os.path.join(HERE, "build
 SR = 44100; BT = 60 / 130
 SRC = {p[0]: p for p in json.load(open(os.path.join(HERE, "phrases_src.json")))}
 PH = json.load(open(os.path.join(B, "phrases.json")))
-GAP = 0.12
+GAP = 0.06
 MINB = {"p1": 4, "p2": 4, "p3": 4, "p4": 4, "c1": 2, "c14": 2, "c23": 3, "c31": 2, "c46": 3, "c58": 4}
 place = {}            # pid -> Startzeit der Stimme (s)
 beat = {}             # Szenen-Startbeats

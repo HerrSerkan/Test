@@ -169,6 +169,9 @@ for i in range(0, N, 64):
 duck = np.maximum(duck, np.roll(duck, -int(0.08 * SR)))          # Vorausschau
 music *= 1 - 0.6 * duck; fx *= 1 - 0.72 * duck
 vo = hp(voice, 90); vo = vo + 0.35 * bp(vo, 2500, 6000)           # Präsenz
+from scipy.signal import fftconvolve                                 # leichter Raumhall: Sätze fließen ineinander
+ir = lp(rng.normal(0, 1, int(0.45 * SR)), 5000) * np.exp(-np.arange(int(0.45 * SR)) / SR / 0.11); ir /= np.sqrt((ir ** 2).sum())
+vo = vo + 0.16 * fftconvolve(vo, ir)[:N]
 vo = vo / (np.sqrt((vo[mask > 0] ** 2).mean()) + 1e-9) * 0.2      # Stimme klar über Musik
 mix = hp(music + fx, 45)
 mix = mix + 0.5 * bp(mix, 1500, 6000)   # mehr Präsenz für Handy-Lautsprecher
