@@ -1,21 +1,25 @@
 // Rendert scene.html Bild für Bild mit Chromium (Playwright) und schreibt das Video mit ffmpeg.
-//   node alphabet/render.js               -> alphabet/alphabet.mp4 (mit build/audio.wav)
-//   node falle/render.js --preview 1 5.5 -> build/preview_*.png
+//   node render.js --events          -> build/events.json (Zeitpunkte für die Soundeffekte)
+//   node render.js --preview 1 5.5   -> build/preview_*.png
+//   node render.js                   -> <name>.mp4 (mit build/audio.wav)
 const { chromium } = require("playwright");
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
 const HERE = __dirname;
+const NAME = path.basename(HERE);
 const FPS = 30;
 const WORKERS = 4;
-const timeline = JSON.parse(fs.readFileSync(path.join(HERE, "build", "timeline.json"), "utf8"));
+fs.mkdirSync(path.join(HERE, "build"), { recursive: true });
 
 async function openPage(browser) {
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
   page.on("pageerror", e => console.error("Seitenfehler:", e.message));
   await page.goto("file://" + path.join(HERE, "scene.html"));
-  await page.evaluate(tl => window.setup(tl), timeline);
+  await page.waitForFunction(() => window.setup !== undefined);
+  const tl = JSON.parse(fs.readFileSync(path.join(HERE, "build", "timeline.json"), "utf8"));
+  await page.evaluate(tl => window.setup(tl), tl);
   return page;
 }
 
@@ -26,7 +30,7 @@ const grab = (page, t, type) =>
   }, [t, type]);
 
 (async () => {
-  const browser = await chromium.launch({ args: ["--allow-file-access-from-files"] });
+  const browser = await chromium.launch({ args: ["--allow-file-access-from-files", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const args = process.argv.slice(2);
   if (args[0] === "--events") {
     const page = await openPage(browser);
@@ -44,13 +48,17 @@ const grab = (page, t, type) =>
     await browser.close();
     return;
   }
-
-  const n = Math.round(timeline.duration * FPS);
-  const out = path.join(HERE, "alphabet_armee.mp4");
+  const page0 = await openPage(browser);
+  const duration = await page0.evaluate(() => window.DURATION);
+  await page0.close();
+  const n = Math.round(duration * FPS);
+  // Lautheit ist bereits in audio.py auf -14 LUFS gebracht (EBU R128)
+  const out = path.join(HERE, NAME + ".mp4");
   const ff = spawn("ffmpeg", ["-y", "-v", "error", "-f", "image2pipe", "-framerate", String(FPS), "-c:v", "mjpeg", "-i", "-",
-    "-i", path.join(HERE, "build", "audio_final.wav"),
-    "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-maxrate", "6M", "-bufsize", "12M", "-pix_fmt", "yuv420p",
-    "-ar", "44100", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out], { stdio: ["pipe", "inherit", "inherit"] });
+    "-i", path.join(HERE, "build", "audio.wav"),
+    "-c:v", "libx264", "-preset", "medium", "-crf", "22", "-maxrate", "5M", "-bufsize", "10M", "-pix_fmt", "yuv420p",
+    "-ar", "44100", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out],
+    { stdio: ["pipe", "inherit", "inherit"] });
 
   const pages = await Promise.all(Array.from({ length: WORKERS }, () => openPage(browser)));
   const ready = new Map();

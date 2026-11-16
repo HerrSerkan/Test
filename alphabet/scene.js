@@ -1,421 +1,535 @@
-// "Alphabet-Armee – Tag 1" – eigene Figur, eigene Zeichnung. Stimme: Edge TTS (de-DE-ConradNeural).
-"use strict";
+// "Alphabet-Armee – Tag 1" (deutsche Version nach @naturebeauty2811) – 3D-Szene mit three.js.
+// Ehrlich als Tag 1: alle Buchstaben starten bei 0; die Armee aus Soldaten ist als BEISPIEL markiert.
+// render.js: await window.setup(timeline) -> window.renderFrame(t)
+import * as THREE from "three";
+
 const W = 1080, H = 1920;
-const TEXT_TOP = 250, TEXT_CX = 510, TEXT_W = 820;
-const cv = document.getElementById("c");
-const ctx = cv.getContext("2d");
-let TL = null, TOK = [], S = [];
+const HUD_Y = 400;                 // Abzeichen oben (unter den TikTok-Tabs)
+const CAP_Y = 1395, CAP_X = 490;   // Untertitel unter der Szene, frei von den Buttons rechts
+const out = document.getElementById("c");
+const octx = out.getContext("2d");
+const glc = document.getElementById("gl");
+const renderer = new THREE.WebGLRenderer({ canvas: glc, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 500);
+
+let TL = null, S = [], E = [], TOK = [], WORDS = [];
+
+// ------------------------------------------------------------------ Hilfen
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const ramp = (t, a, b) => (b === a ? (t >= a ? 1 : 0) : clamp((t - a) / (b - a)));
 const easeIO = x => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 const easeOut = x => 1 - Math.pow(1 - clamp(x), 3);
 const back = x => { x = clamp(x); const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
 const lerp = (a, b, k) => a + (b - a) * k;
+const lerp3 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
 const norm = s => s.toLowerCase().replace(/[^a-z0-9äöüß]/g, "");
-function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
-function circle(x, y, r, c) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
-function glow(x, y, r, c, a) { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${c},${a})`); g.addColorStop(1, `rgba(${c},0)`); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r); }
-function Wt(si, text) { const n = norm(text); const h = TOK.find(k => k.si === si && norm(k.text) === n); return h ? h.s : S[si] + 0.3; }
-function sentenceAt(t) { let i = 0; for (let k = 0; k < S.length; k++) if (t >= S[k] - 0.15) i = k; return i; }
+function rng(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function Wt(si, text, nth = 0) {
+  const n = norm(text);
+  const hits = TOK.filter(k => k.si === si && norm(k.text) === n);
+  if (!hits.length) throw new Error("Wort nicht gefunden: " + si + " " + text);
+  return hits[Math.min(nth, hits.length - 1)].s;
+}
+function rr(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath(); c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+function canvasTex(w, h, draw) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  draw(c.getContext("2d"), w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+
+// ------------------------------------------------------------------ Buchstaben
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-const LCOL = ["#e8443c", "#3b7dd8", "#f2a33a", "#2f9d6a", "#8a4ad9", "#e86a9a", "#3ab0c8", "#c8743a", "#5a6ad0", "#2fbf8a"];
+const LCOL = ["#ef4b3f", "#1fb8a6", "#9b4de0", "#f4c430", "#3d8ef0", "#ef5ca8", "#3fc35a", "#5b5ff0", "#f08a2c", "#2ec4e0",
+  "#e04f8a", "#9ad13b", "#2f6fe8", "#e8503a", "#8d5be8", "#24b37a", "#f0b429", "#e86a2c", "#e0408f", "#3aa0f0",
+  "#7b4de0", "#e8a02c", "#3fc38f", "#b04de0", "#f0d22c", "#3e7cf0"];
+const COLS = 6, STEP = 7.2;
+const tilePos = i => [(i % COLS - (COLS - 1) / 2) * STEP, 0, (Math.floor(i / COLS) - 2) * STEP];
+const IDX = l => LETTERS.indexOf(l);
 
-// ------------------------------------------------------------ eigener Soldat (Helm, Tarnhemd, Megafon)
-function soldier(x, fy, s, o = {}) {
-  RIG_T = o.t || 0;
-  const P = person(x, fy, { s, c2: "#5a7a3a", skin: "#e0a982", legs: "#3a4a2a", shoes: "#2a2a22", f: o.f || "wide", seed: 7, arm: o.arm, look: o.look || 0 });
-  const u = s * 1.45;
-  // Tarnflecken
-  ctx.fillStyle = "rgba(40,60,30,0.55)";
-  for (const [dx, dy, r] of [[-18, 110, 9], [14, 130, 11], [-6, 160, 8], [20, 175, 7], [-24, 185, 9]]) { ctx.beginPath(); ctx.ellipse(x + dx * u, P.hy + dy * u * 0.6, r * u, r * 0.7 * u, 0.4, 0, Math.PI * 2); ctx.fill(); }
-  // Helm
-  ctx.fillStyle = "#4a6a2e"; ctx.beginPath(); ctx.ellipse(x, P.hy - 6 * u, 36 * u, 26 * u, 0, Math.PI, 0); ctx.fill();
-  ctx.fillStyle = "#3a5424"; rr(x - 40 * u, P.hy - 8 * u, 80 * u, 9 * u, 4 * u); ctx.fill();
-  if (o.mega) {                                               // Megafon vor dem Mund
-    ctx.save(); ctx.translate(x + 30 * u, P.hy + 18 * u); ctx.rotate(-0.2);
-    ctx.fillStyle = "#e9e4d8"; ctx.beginPath(); ctx.moveTo(0, -8 * u); ctx.lineTo(40 * u, -22 * u); ctx.lineTo(40 * u, 22 * u); ctx.lineTo(0, 8 * u); ctx.fill();
-    ctx.fillStyle = "#d9443c"; ctx.fillRect(-6 * u, -9 * u, 10 * u, 18 * u);
-    ctx.restore();
-    ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 4;
-    for (let i = 0; i < 3; i++) { const p = ((o.t || 0) * 2 + i / 3) % 1; ctx.globalAlpha = 1 - p; ctx.beginPath(); ctx.arc(x + 80 * u, P.hy + 14 * u, (20 + p * 50) * u, -0.6, 0.6); ctx.stroke(); }
-    ctx.globalAlpha = 1;
-  }
-  return P;
-}
-function miniSoldier(x, y, s, col) {                        // kleiner Soldat für die Armee
-  circle(x, y - 22 * s, 9 * s, "#e0a982");
-  ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(x, y - 25 * s, 10 * s, 7 * s, 0, Math.PI, 0); ctx.fill();
-  rr(x - 8 * s, y - 14 * s, 16 * s, 16 * s, 4 * s); ctx.fill();
-}
-
-// ------------------------------------------------------------ Hintergründe
-function sky() {
-  const g = ctx.createLinearGradient(0, 0, 0, 1100); g.addColorStop(0, "#6aa8e0"); g.addColorStop(1, "#cfe6f6");
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 1100);
-  for (const [x, y, s] of [[160, 620, 1], [820, 560, 1.3], [520, 720, 0.8]]) { ctx.fillStyle = "rgba(255,255,255,0.9)"; for (const [dx, r] of [[-40, 30], [0, 42], [44, 32]]) { ctx.beginPath(); ctx.arc(x + dx * s, y, r * s, 0, Math.PI * 2); ctx.fill(); } }
-}
-function field(t, k, highlight) {                          // 26 Buchstaben-Kacheln in Perspektive
-  sky();
-  const g = ctx.createLinearGradient(0, 1000, 0, H); g.addColorStop(0, "#6aaa4a"); g.addColorStop(1, "#3a7a2a");
-  ctx.fillStyle = g; ctx.fillRect(0, 1000, W, H - 1000);
-  for (let i = 0; i < 26; i++) {
-    const row = Math.floor(i / 4), col = i % 4;
-    const rows = 7, depth = row / (rows - 1);
-    const y = lerp(1060, 1760, 1 - depth) ;
-    const sc = lerp(0.55, 1.15, 1 - depth);
-    const x = 540 + (col - 1.5) * 200 * sc;
-    const p = back(ramp(k, i / 26 * 0.8, i / 26 * 0.8 + 0.2));
-    if (p <= 0) continue;
-    const L = LETTERS[25 - i];
-    ctx.save(); ctx.translate(x, y); ctx.scale(sc * p, sc * p * 0.62);
-    const hi = highlight === L;
-    ctx.fillStyle = hi ? `rgba(255,70,80,${0.6 + 0.4 * Math.sin(t * 10)})` : "rgba(255,255,255,0.18)"; rr(-86, -86, 172, 172, 18); ctx.fill();
-    ctx.strokeStyle = hi ? "#ff3b4b" : "rgba(255,255,255,0.55)"; ctx.lineWidth = 6; rr(-86, -86, 172, 172, 18); ctx.stroke();
-    ctx.restore();
-    ctx.save(); ctx.translate(x, y - 10 * sc); ctx.scale(sc * p, sc * p);
-    ctx.fillStyle = hi ? "#fff" : LCOL[i % LCOL.length]; ctx.font = "900 84px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 6; ctx.fillText(L, 0, 0);
-    ctx.restore();
-  }
-}
-function badge(txt, x, y, s, col = "#ffd23a", tc = "#1d1d22", size = 44) {
-  if (s <= 0) return;
-  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
-  ctx.font = `900 ${size}px InterX`; const w = ctx.measureText(txt).width + 60;
-  ctx.fillStyle = col; ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 12; rr(-w / 2, -size * 0.75, w, size * 1.5, size * 0.5); ctx.fill();
-  ctx.shadowColor = "transparent"; ctx.fillStyle = tc; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, 0, 2);
-  ctx.restore();
-}
-function rankBoard(t, t0) {                                 // Rangliste: alle Buchstaben bei 0
-  ctx.fillStyle = "rgba(14,18,30,0.92)"; rr(90, 760, 900, 820, 30); ctx.fill();
-  ctx.fillStyle = "#ffd23a"; ctx.font = "900 40px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("RANGLISTE · TAG 1", 540, 820);
-  for (let i = 0; i < 26; i++) {
-    const p = back(ramp(t, t0 + i * 0.03, t0 + i * 0.03 + 0.25)); if (p <= 0) continue;
-    const col = i % 4, row = Math.floor(i / 4);
-    const x = 210 + col * 220, y = 900 + row * 96;
-    ctx.save(); ctx.translate(x, y); ctx.scale(p, p);
-    ctx.fillStyle = LCOL[i % LCOL.length]; rr(-90, -36, 76, 72, 14); ctx.fill();
-    ctx.fillStyle = "#fff"; ctx.font = "900 42px InterX"; ctx.fillText(LETTERS[i], -52, 2);
-    ctx.fillStyle = "#e9ebf1"; ctx.font = "800 34px InterX"; ctx.textAlign = "left"; ctx.fillText("0", 2, 2); ctx.textAlign = "center";
-    ctx.restore();
-  }
-}
-
-// ------------------------------------------------------------ Szenen je Satz
-function scene(t, si) {
-  const st = S[si];
-  if (si <= 1) {
-    if (si === 0) {
-      sky(); ctx.fillStyle = "#5a9a3a"; ctx.fillRect(0, 1400, W, H - 1400);
-      soldier(480, 1900, 2.2, { t, mega: true, f: "wide", arm: [{ side: 1, ang: -1.6 }] });
-      const L = LETTERS[Math.floor(t * 8) % 26];
-      badge(L, 760, 620, back(ramp(t, 0.2, 0.5)), "#3b7dd8", "#fff", 110);
-    } else {
-      field(t, ramp(t, st, st + 1.6), null);
-      badge("ALPHABET-ARMEE", 540, 700, back(ramp(t, Wt(1, "ARMEE!"), Wt(1, "ARMEE!") + 0.3)), "#ffd23a", "#1d1d22", 52);
-    }
-  } else if (si === 2 || si === 3) {
-    field(t, 1, "E");
-    // Beispiel-Kommentar
-    const k = back(ramp(t, S[2], S[2] + 0.35));
-    ctx.save(); ctx.translate(540, 760); ctx.scale(k, k);
-    ctx.fillStyle = "rgba(255,255,255,0.97)"; ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 16; rr(-380, -80, 760, 160, 28); ctx.fill(); ctx.shadowColor = "transparent";
-    circle(-300, 0, 40, "#e86a9a"); ctx.fillStyle = "#fff"; ctx.font = "900 40px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("E", -300, 2);
-    ctx.textAlign = "left"; ctx.fillStyle = "#8a8f9c"; ctx.font = "700 26px InterX"; ctx.fillText("@du", -240, -26);
-    ctx.fillStyle = "#1d1d22"; ctx.font = "800 46px InterX"; ctx.fillText("Emma", -240, 22);
-    ctx.fillStyle = "#b8bcc6"; ctx.font = "800 22px InterX"; ctx.letterSpacing = "3px"; ctx.fillText("BEISPIEL", 150, -40); ctx.letterSpacing = "0px";
-    ctx.restore();
-    if (si === 3) {
-      const m = ramp(t, S[3], S[3] + 1.4);
-      miniSoldier(lerp(540, 450, m), lerp(900, 1330, m), 2.4, "#4a6a2e");
-      badge("+1 SOLDAT", 700, 980, back(ramp(t, Wt(3, "Soldat"), Wt(3, "Soldat") + 0.3)), "#2fbf6a", "#fff", 46);
-    }
-  } else if (si === 4 || si === 5) {
-    field(t, 1, null);
-    if (si === 4) badge("TAG 1", 540, 900, back(ramp(t, Wt(4, "TAG"), Wt(4, "TAG") + 0.35)), "#ffd23a", "#1d1d22", 120);
-    else rankBoard(t, S[5]);
-  } else if (si === 6) {
-    field(t, 1, "X");
-    badge("LETZTER PLATZ FLIEGT RAUS", 540, 760, back(ramp(t, Wt(6, "LETZTE"), Wt(6, "LETZTE") + 0.35)), "#e8343c", "#fff", 40);
-    soldier(860, 1950, 1.5, { t, f: "sad", arm: [{ side: 1, ang: -2.7 }] });
-  } else if (si === 7) {
-    sky(); ctx.fillStyle = "#5a9a3a"; ctx.fillRect(0, 1400, W, H - 1400);
-    soldier(540, 1950, 1.9, { t, f: "happy", arm: [{ side: -1, ang: 2.4 }, { side: 1, ang: -2.4 }] });
-    [["FOLGEN", "#e8343c", "Folgen,"], ["LIKEN", "#e86a9a", "liken,"], ["SPEICHERN", "#f2a33a", "speichern"]].forEach(([lab, col, w], i) => {
-      const k = back(ramp(t, Wt(7, w), Wt(7, w) + 0.3));
-      badge(lab, 220 + i * 320, 760, k, col, "#fff", 40);
+// ------------------------------------------------------------------ Welt
+let TILES = [], TILE_MATS = [];
+let SOLDIER = null, SOLDIER_PARTS = {}, FACE_OPEN, FACE_SHUT, FACE_SMILE;
+let ARMY = null, ARMY_PTS = [], RUNNER = null;
+function buildWorld() {
+  scene.background = canvasTex(8, 256, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, "#5f8fd8"); g.addColorStop(0.55, "#a9c8f0"); g.addColorStop(1, "#e6eefa");
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+  });
+  scene.fog = new THREE.Fog(0xdfe8f6, 60, 170);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8899bb, 1.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(20, 40, 25); scene.add(sun);
+  // Boden mit Raster
+  const grid = canvasTex(512, 512, (c, w, h) => {
+    c.fillStyle = "#a9b8d3"; c.fillRect(0, 0, w, h);
+    c.strokeStyle = "rgba(255,255,255,0.55)"; c.lineWidth = 6; c.strokeRect(0, 0, w, h);
+    c.strokeStyle = "rgba(255,255,255,0.18)"; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(w / 2, 0); c.lineTo(w / 2, h); c.moveTo(0, h / 2); c.lineTo(w, h / 2); c.stroke();
+  });
+  grid.wrapS = grid.wrapT = THREE.RepeatWrapping; grid.repeat.set(60, 60);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshLambertMaterial({ map: grid }));
+  floor.rotation.x = -Math.PI / 2; scene.add(floor);
+  // Buchstaben-Kacheln
+  LETTERS.forEach((L, i) => {
+    const tex = canvasTex(256, 256, (c, w, h) => {
+      c.fillStyle = "#c7d3e8"; rr(c, 6, 6, w - 12, h - 12, 26); c.fill();
+      c.strokeStyle = "rgba(255,255,255,0.9)"; c.lineWidth = 8; c.stroke();
+      c.font = "900 200px InterBlk"; c.textAlign = "center"; c.textBaseline = "middle";
+      c.fillStyle = "rgba(0,0,0,0.18)"; c.fillText(L, w / 2 + 6, h / 2 + 18);
+      c.fillStyle = LCOL[i]; c.fillText(L, w / 2, h / 2 + 12);
     });
-  } else if (si === 8) {
-    field(t, 1, null);
-    ctx.fillStyle = "rgba(14,18,30,0.9)"; rr(140, 760, 800, 560, 28); ctx.fill();
-    ctx.fillStyle = "#ffd23a"; ctx.font = "900 38px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("DEINE ARMEE", 540, 820);
-    for (let i = 0; i < 8; i++) {
-      const p = back(ramp(t, S[8] + 0.3 + i * 0.12, S[8] + 0.6 + i * 0.12)); if (p <= 0) continue;
-      const x = 330 + (i % 2) * 420, y = 900 + Math.floor(i / 2) * 100;
-      ctx.save(); ctx.translate(x, y); ctx.scale(p, p);
-      ctx.strokeStyle = "rgba(255,255,255,0.4)"; ctx.setLineDash([10, 8]); ctx.lineWidth = 3; rr(-170, -34, 340, 68, 14); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle = i === 0 ? "#fff" : "rgba(255,255,255,0.35)"; ctx.font = "800 30px InterX"; ctx.fillText(i === 0 ? "DEIN NAME?" : "…", 0, 2);
-      ctx.restore();
+    const top = new THREE.MeshLambertMaterial({ map: tex });
+    const side = new THREE.MeshLambertMaterial({ color: 0x9fb0cc });
+    const m = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.35, 5.6), [side, side, top, side, side, side]);
+    const [x, , z] = tilePos(i); m.position.set(x, 0.18, z); scene.add(m);
+    TILES.push(m); TILE_MATS.push(top);
+  });
+  buildSoldier();
+  buildArmy("E");
+  RUNNER = miniSoldier(LCOL[IDX("E")], 2.2); scene.add(RUNNER);
+}
+
+// Soldat mit Megafon (Nahaufnahme), Klötzchen-Stil
+function faceTex(kind) {
+  return canvasTex(256, 256, (c, w, h) => {
+    c.fillStyle = "#f2c79a"; c.fillRect(0, 0, w, h);
+    c.fillStyle = "#fff"; c.strokeStyle = "#1b1b1b"; c.lineWidth = 7;
+    for (const x of [78, 178]) { c.beginPath(); c.ellipse(x, 120, 30, kind === "smile" ? 16 : 34, 0, 0, 7); c.fill(); c.stroke(); }
+    c.fillStyle = "#1b1b1b";
+    if (kind !== "smile") for (const x of [84, 172]) { c.beginPath(); c.arc(x, 124, 13, 0, 7); c.fill(); }
+    c.lineWidth = 14; c.lineCap = "round";
+    if (kind === "smile") { c.beginPath(); c.moveTo(50, 78); c.lineTo(104, 84); c.moveTo(152, 84); c.lineTo(206, 78); c.stroke(); }
+    else { c.beginPath(); c.moveTo(46, 70); c.lineTo(108, 92); c.moveTo(148, 92); c.lineTo(210, 70); c.stroke(); }
+    if (kind === "open") { c.fillStyle = "#7a1d22"; c.beginPath(); c.ellipse(128, 200, 40, 30, 0, 0, 7); c.fill(); c.fillStyle = "#fff"; c.fillRect(98, 176, 60, 10); }
+    else if (kind === "smile") { c.lineWidth = 10; c.beginPath(); c.arc(128, 170, 44, 0.2, Math.PI - 0.2); c.stroke(); }
+    else { c.lineWidth = 10; c.beginPath(); c.moveTo(100, 200); c.lineTo(156, 200); c.stroke(); }
+  });
+}
+function camoTex() {
+  return canvasTex(256, 256, (c, w, h) => {
+    c.fillStyle = "#5f7a3c"; c.fillRect(0, 0, w, h);
+    const R = rng(7);
+    for (const col of ["#3f5428", "#8a9a5b", "#2e3b1f"]) for (let i = 0; i < 18; i++) {
+      c.fillStyle = col; c.beginPath(); c.ellipse(R() * w, R() * h, 14 + R() * 26, 9 + R() * 16, R() * 3, 0, 7); c.fill();
     }
-  } else {
-    sky(); ctx.fillStyle = "#5a9a3a"; ctx.fillRect(0, 1400, W, H - 1400);
-    soldier(380, 1950, 1.9, { t, f: si === 9 ? "wide" : "smile", mega: si === 10, arm: [{ side: 1, ang: -1.9 }] });
-    const k = back(ramp(t, Wt(9, "X?"), Wt(9, "X?") + 0.35));
-    ctx.save(); ctx.translate(780, 900); ctx.scale(k, k); ctx.rotate(Math.sin(t * 4) * 0.06);
-    ctx.fillStyle = "#8a4ad9"; rr(-130, -130, 260, 260, 30); ctx.fill();
-    ctx.fillStyle = "#fff"; ctx.font = "900 190px InterX"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("X", 0, 10);
-    ctx.restore();
-    if (si === 10) {
-      badge("KENNST DU EIN X? SCHICK DAS.", 540, 1180, back(ramp(t, S[10], S[10] + 0.35)), "#ffd23a", "#1d1d22", 36);
-      badge("1 KOMMENTAR = 1 SOLDAT · RANGLISTE MORGEN", 540, 1290, back(ramp(t, S[10] + 0.8, S[10] + 1.1)), "#ffffff", "#1d1d22", 28);
+  });
+}
+function buildSoldier() {
+  const g = new THREE.Group();
+  FACE_OPEN = faceTex("open"); FACE_SHUT = faceTex("shut"); FACE_SMILE = faceTex("smile");
+  const skin = new THREE.MeshLambertMaterial({ color: 0xf2c79a });
+  const faceMat = new THREE.MeshLambertMaterial({ map: FACE_OPEN });
+  const camo = new THREE.MeshLambertMaterial({ map: camoTex() });
+  const helmetMat = new THREE.MeshLambertMaterial({ color: 0x4f6b31 });
+  const head = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), [skin, skin, skin, skin, faceMat, skin]);
+  head.position.y = 4.1;
+  const helmet = new THREE.Mesh(new THREE.BoxGeometry(2.25, 0.85, 2.25), helmetMat); helmet.position.y = 5.3;
+  const brim = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.18, 0.7), helmetMat); brim.position.set(0, 4.95, 1.2);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.3, 1.1), camo); body.position.y = 1.95;
+  const armL = new THREE.Group(); armL.position.set(-1.35, 2.9, 0);
+  const armLm = new THREE.Mesh(new THREE.BoxGeometry(0.7, 2.1, 0.7), camo); armLm.position.y = -0.9; armL.add(armLm);
+  const armR = new THREE.Group(); armR.position.set(1.35, 2.9, 0);
+  const armRm = new THREE.Mesh(new THREE.BoxGeometry(0.7, 2.1, 0.7), camo); armRm.position.y = -0.9; armR.add(armRm);
+  const hand = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), skin); hand.position.y = -2.05; armR.add(hand);
+  // Megafon in der rechten Hand
+  const mega = new THREE.Group();
+  const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.25, 1.5, 24, 1, true), new THREE.MeshLambertMaterial({ color: 0xf2f2f2, side: THREE.DoubleSide }));
+  cone.rotation.x = Math.PI / 2; mega.add(cone);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.12, 8, 28), new THREE.MeshLambertMaterial({ color: 0xd8312b }));
+  rim.position.z = 0.75; mega.add(rim);
+  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.74, 24), new THREE.MeshLambertMaterial({ color: 0x222222 }));
+  inner.position.z = 0.7; mega.add(inner);
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), new THREE.MeshLambertMaterial({ color: 0x333333 })); handle.position.set(0, -0.6, -0.5); mega.add(handle);
+  g.add(head, helmet, brim, body, armL, armR, mega);
+  const legs = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.6, 1.0), new THREE.MeshLambertMaterial({ color: 0x3b4a2a })); legs.position.y = 0.0; g.add(legs);
+  g.position.set(0, 0, 60);
+  scene.add(g);
+  SOLDIER = g;
+  SOLDIER_PARTS = { head, faceMat, armL, armR, mega, helmet, brim };
+}
+function poseSoldier(t, mode) {
+  const P = SOLDIER_PARTS;
+  const talk = Math.sin(t * 22) > -0.2;
+  if (mode === "shout") {
+    P.faceMat.map = talk ? FACE_OPEN : FACE_SHUT;
+    P.armR.rotation.set(-1.35, 0, -0.15); P.armL.rotation.set(0, 0, 0.1);
+    const shake = Math.sin(t * 40) * 0.04;
+    P.mega.position.set(0.75 + shake, 3.3, 1.9); P.mega.rotation.set(0.12, -0.15, 0);
+    P.head.rotation.set(0, 0, Math.sin(t * 6) * 0.04);
+  } else {      // Gruß
+    P.faceMat.map = FACE_SMILE;
+    P.armR.rotation.set(-0.45, 0, -2.6); P.armL.rotation.set(0, 0, 0.1);
+    P.mega.position.set(-1.5, 1.2, 0.6); P.mega.rotation.set(0.4, 0.6, 0);
+    P.head.rotation.set(0, 0, 0);
+  }
+  P.faceMat.needsUpdate = true;
+}
+
+// Kleine Soldaten als Instanzen (Beispiel-Armee in Buchstabenform)
+function miniSoldier(col, s = 1) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.5, 0.28), new THREE.MeshLambertMaterial({ color: col }));
+  body.position.y = 0.42;
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 0.28), new THREE.MeshLambertMaterial({ color: 0xf2c79a })); head.position.y = 0.82;
+  const helm = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.12, 0.32), new THREE.MeshLambertMaterial({ color: 0x3e5527 })); helm.position.y = 1.0;
+  const legs = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.18, 0.24), new THREE.MeshLambertMaterial({ color: 0x2c3a20 })); legs.position.y = 0.09;
+  g.add(body, head, helm, legs); g.scale.setScalar(s); g.visible = false;
+  return g;
+}
+function buildArmy(L) {
+  const c = document.createElement("canvas"); c.width = c.height = 200;
+  const x = c.getContext("2d");
+  x.font = "900 190px InterBlk"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#000";
+  x.fillText(L, 100, 112);
+  const d = x.getImageData(0, 0, 200, 200).data;
+  const R = rng(3);
+  const [cx, , cz] = tilePos(IDX(L));
+  const SIZE = 13;
+  for (let py = 0; py < 200; py += 6) for (let px = 0; px < 200; px += 6) {
+    if (d[(py * 200 + px) * 4 + 3] > 128) ARMY_PTS.push({ x: cx + (px - 100) / 200 * SIZE + (R() - 0.5) * 0.12, z: cz + 3 + (py - 100) / 200 * SIZE, d: R() });
+  }
+  ARMY_PTS.sort((a, b) => a.d - b.d);
+  const n = ARMY_PTS.length;
+  const mk = (geo, col) => { const m = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ color: col }), n); m.frustumCulled = false; scene.add(m); return m; };
+  ARMY = {
+    body: mk(new THREE.BoxGeometry(0.36, 0.5, 0.28), LCOL[IDX(L)]),
+    head: mk(new THREE.BoxGeometry(0.28, 0.28, 0.28), 0xf2c79a),
+    helm: mk(new THREE.BoxGeometry(0.3, 0.12, 0.3), new THREE.Color(LCOL[IDX(L)]).multiplyScalar(0.55)),
+  };
+}
+const _m = new THREE.Matrix4();
+function placeArmy(t, t0, t1, gone) {
+  const n = ARMY_PTS.length;
+  let count = 0;
+  for (let i = 0; i < n; i++) {
+    const p = ARMY_PTS[i];
+    const ta = lerp(t0, t1, i / n);
+    let y = -50, sc = 1;
+    if (t >= ta) {
+      const u = t - ta;
+      y = Math.max(0, 6 - 55 * u * u);
+      if (y === 0) { const b = u - Math.sqrt(6 / 55); y = b < 0.18 ? Math.sin(b / 0.18 * Math.PI) * 0.25 : 0; }
+      count++;
     }
-  }
-}
-
-// ------------------------------------------------------------ Figuren-Rig (eigener Flat-Stil: Gelenke, Kleidung, Blinzeln, Atmen)
-// Kompatibel zur alten person(x, fy, o): o.f = Ausdruck, o.arm = [{side, ang}], o.walk = Phase, o.look, o.s
-const SKINS = ["#f2c7a5", "#e0a982", "#c98e6a", "#f6d6bd", "#a8714f"];
-function hashStr(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
-function shade(hex, k) {             // k < 0 dunkler, k > 0 heller
-  const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
-  const f = v => Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k);
-  return `rgb(${f(r)},${f(g)},${f(b)})`;
-}
-function limb(a, b, c, w, col) {     // zweiteiliges Glied mit runden Gelenken
-  ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = "round"; ctx.lineJoin = "round";
-  ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.stroke();
-}
-function polar(p, ang, len) { return [p[0] + Math.sin(ang) * len, p[1] + Math.cos(ang) * len]; }
-const BLINK = t => { const p = (t % 3.7) / 3.7; return p > 0.965 ? 1 : 0; };
-
-function eyesMouth(x, y, u, f, look, t, seed) {
-  const blink = f === "happy" || f === "laugh" || f === "closed" ? 0 : BLINK(t + seed);
-  const lx = look * 3.2 * u, ey = y - 2 * u;
-  ctx.lineCap = "round";
-  // Augenbrauen
-  ctx.strokeStyle = "#3a2a24"; ctx.lineWidth = 2.6 * u;
-  const bro = f === "sad" ? 1 : f === "annoyed" ? -1 : f === "wide" ? -0.6 : 0;
-  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x + s * 13 * u - 6 * u + lx, ey - 12 * u - (s * bro > 0 ? 3 * u : 0)); ctx.lineTo(x + s * 13 * u + 6 * u + lx, ey - 12 * u - (s * bro < 0 ? 3 * u : 0)); ctx.stroke(); }
-  // Augen
-  for (const s of [-1, 1]) {
-    const ex = x + s * 12.5 * u + lx;
-    if (f === "happy" || f === "laugh") { ctx.strokeStyle = "#2a2226"; ctx.lineWidth = 3 * u; ctx.beginPath(); ctx.arc(ex, ey + 2 * u, 5 * u, 1.15 * Math.PI, 1.85 * Math.PI); ctx.stroke(); continue; }
-    if (f === "closed") { ctx.strokeStyle = "#2a2226"; ctx.lineWidth = 3 * u; ctx.beginPath(); ctx.arc(ex, ey - 2 * u, 5 * u, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke(); continue; }
-    if (f === "annoyed" || blink) { ctx.strokeStyle = "#2a2226"; ctx.lineWidth = 3 * u; ctx.beginPath(); ctx.moveTo(ex - 5 * u, ey); ctx.lineTo(ex + 5 * u, ey); ctx.stroke(); continue; }
-    const big = f === "wide" ? 1.25 : 1;
-    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(ex, ey, 6.2 * u * big, 7 * u * big, 0, 0, Math.PI * 2); ctx.fill();
-    circle(ex + look * 1.8 * u, ey + 0.8 * u, 3.6 * u * big, "#2a2226");
-    circle(ex + look * 1.8 * u + 1.4 * u, ey - 1 * u, 1.2 * u, "#fff");
-  }
-  // Nase
-  ctx.strokeStyle = "rgba(120,60,40,0.35)"; ctx.lineWidth = 2.2 * u; ctx.beginPath(); ctx.arc(x + lx * 0.6, y + 6 * u, 3 * u, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke();
-  // Mund
-  const my = y + 15 * u;
-  ctx.strokeStyle = "#5a2a2a"; ctx.fillStyle = "#6a2a30"; ctx.lineWidth = 2.6 * u;
-  if (f === "laugh") { ctx.beginPath(); ctx.arc(x + lx * 0.5, my - 1 * u, 8 * u, 0, Math.PI); ctx.closePath(); ctx.fill(); ctx.fillStyle = "#f6f2ee"; ctx.fillRect(x + lx * 0.5 - 6 * u, my - 1 * u, 12 * u, 3 * u); }
-  else if (f === "smile" || f === "happy" || f === "closed") { ctx.beginPath(); ctx.arc(x + lx * 0.5, my - 4 * u, 7 * u, 0.2 * Math.PI, 0.8 * Math.PI); ctx.stroke(); }
-  else if (f === "sad") { ctx.beginPath(); ctx.arc(x + lx * 0.5, my + 5 * u, 6 * u, 1.2 * Math.PI, 1.8 * Math.PI); ctx.stroke(); }
-  else if (f === "whistle") { ctx.beginPath(); ctx.ellipse(x + lx * 0.5 + 4 * u, my, 3 * u, 3.8 * u, 0, 0, Math.PI * 2); ctx.fill(); }
-  else if (f === "wide") { ctx.beginPath(); ctx.ellipse(x + lx * 0.5, my, 3.6 * u, 4.6 * u, 0, 0, Math.PI * 2); ctx.fill(); }
-  else { ctx.beginPath(); ctx.moveTo(x + lx * 0.5 - 5 * u, my); ctx.quadraticCurveTo(x + lx * 0.5, my + 1.5 * u, x + lx * 0.5 + 5 * u, my); ctx.stroke(); }
-}
-
-function person(x, fy, o) {
-  const t = RIG_T;
-  const u = (o.s || 1) * 1.45;
-  const seed = (o.seed !== undefined ? o.seed : hashStr(JSON.stringify(o.c2 || "") + (o.hair || ""))) % 7;
-  const skin = o.skin || SKINS[seed % SKINS.length];
-  const top = o.c2 || "#7fa8d8", topD = shade(top, -0.18), topL = shade(top, 0.15);
-  const pants = o.legs || "#34405e", shoes = o.shoes || "#f4f2ee";
-  const walking = !!o.walk, ph = o.walk || 0;
-  const breath = walking ? 0 : Math.sin(t * 2.2 + seed) * 1.2 * u;
-  const bob = walking ? Math.abs(Math.sin(ph)) * 4 * u : 0;
-  const hipY = fy - 92 * u - bob, shY = hipY - 78 * u - breath, neckY = shY - 6 * u, hy = neckY - 36 * u;
-  const tilt = (o.look || 0) * 0.04 + Math.sin(t * 0.9 + seed) * 0.015;
-  // Schatten
-  ctx.fillStyle = "rgba(0,0,0,0.22)"; ctx.beginPath(); ctx.ellipse(x, fy + 2, 44 * u, 8 * u, 0, 0, Math.PI * 2); ctx.fill();
-  // Beine (Hüfte -> Knie -> Fuß)
-  for (const sd of [-1, 1]) {
-    const swing = walking ? Math.sin(ph + (sd > 0 ? 0 : Math.PI)) * 0.42 : 0;
-    const hip = [x + sd * 13 * u, hipY];
-    const knee = polar(hip, swing, 46 * u);
-    const kneeBend = walking ? Math.max(0, -Math.sin(ph + (sd > 0 ? 0 : Math.PI))) * 0.6 : 0;
-    const foot = polar(knee, swing - kneeBend, 44 * u);
-    limb(hip, knee, foot, 21 * u, pants);
-    ctx.fillStyle = shoes; ctx.beginPath(); ctx.ellipse(foot[0] + sd * 4 * u, foot[1] + 1 * u, 13 * u, 7 * u, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.fillRect(foot[0] + sd * 4 * u - 12 * u, foot[1] + 4 * u, 24 * u, 2.5 * u);
-  }
-  // Rumpf (Oberteil)
-  const g = ctx.createLinearGradient(x - 40 * u, 0, x + 40 * u, 0);
-  g.addColorStop(0, topL); g.addColorStop(0.55, top); g.addColorStop(1, topD);
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.moveTo(x - 36 * u, shY + 10 * u); ctx.quadraticCurveTo(x - 38 * u, shY - 2 * u, x - 22 * u, shY - 2 * u);
-  ctx.lineTo(x + 22 * u, shY - 2 * u); ctx.quadraticCurveTo(x + 38 * u, shY - 2 * u, x + 36 * u, shY + 10 * u);
-  ctx.lineTo(x + 31 * u, hipY + 6 * u); ctx.quadraticCurveTo(x, hipY + 12 * u, x - 31 * u, hipY + 6 * u); ctx.closePath(); ctx.fill();
-  if (o.hood) {                                       // Kapuze, Tasche, Kordeln
-    ctx.fillStyle = topD; ctx.beginPath(); ctx.ellipse(x, shY + 2 * u, 26 * u, 9 * u, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = shade(top, -0.1); rr(x - 20 * u, hipY - 30 * u, 40 * u, 24 * u, 8 * u); ctx.fill();
-    ctx.strokeStyle = "#f6f2ee"; ctx.lineWidth = 2.4 * u; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x + sd * 7 * u, shY + 8 * u); ctx.lineTo(x + sd * 8 * u, shY + 30 * u); ctx.stroke(); circle(x + sd * 8 * u, shY + 31 * u, 2.4 * u, "#f6f2ee"); }
-  }
-  if (o.apron) {
-    ctx.fillStyle = "#7a5034"; rr(x - 24 * u, shY + 18 * u, 48 * u, hipY - shY + 20 * u, 6 * u); ctx.fill();
-    ctx.fillStyle = "#64412a"; rr(x - 14 * u, hipY - 26 * u, 28 * u, 18 * u, 4 * u); ctx.fill();
-    ctx.strokeStyle = "#7a5034"; ctx.lineWidth = 3 * u; ctx.beginPath(); ctx.moveTo(x - 20 * u, shY + 20 * u); ctx.lineTo(x - 10 * u, shY - 1 * u); ctx.moveTo(x + 20 * u, shY + 20 * u); ctx.lineTo(x + 10 * u, shY - 1 * u); ctx.stroke();
-  }
-  if (o.collar) { ctx.fillStyle = "#f6f2ee"; ctx.beginPath(); ctx.moveTo(x - 12 * u, shY - 2 * u); ctx.lineTo(x, shY + 12 * u); ctx.lineTo(x + 12 * u, shY - 2 * u); ctx.fill(); }
-  // Hals + Kopf
-  ctx.fillStyle = shade(skin, -0.12); rr(x - 7 * u, neckY - 10 * u, 14 * u, 16 * u, 4 * u); ctx.fill();
-  ctx.save(); ctx.translate(x, hy + 30 * u); ctx.rotate(tilt); ctx.translate(-x, -(hy + 30 * u));
-  for (const sd of [-1, 1]) circle(x + sd * 31 * u, hy + 2 * u, 7 * u, shade(skin, -0.06));        // Ohren
-  const hg = ctx.createRadialGradient(x - 10 * u, hy - 12 * u, 4 * u, x, hy, 36 * u);
-  hg.addColorStop(0, shade(skin, 0.12)); hg.addColorStop(1, skin);
-  ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(x, hy, 31 * u, 34 * u, 0, 0, Math.PI * 2); ctx.fill();
-  // Haare
-  if (o.white) {                                      // Opa: Glatze, weiße Seiten
-    ctx.fillStyle = "#eceef2"; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.ellipse(x + sd * 26 * u, hy - 6 * u, 9 * u, 16 * u, sd * 0.3, 0, Math.PI * 2); ctx.fill(); }
-    ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.beginPath(); ctx.ellipse(x - 8 * u, hy - 24 * u, 10 * u, 5 * u, -0.3, 0, Math.PI * 2); ctx.fill();
-  } else if (o.hair) {
-    ctx.fillStyle = o.hair;
-    ctx.beginPath(); ctx.ellipse(x, hy - 16 * u, 33 * u, 22 * u, 0, Math.PI, 0); ctx.lineTo(x + 33 * u, hy - 4 * u);
-    ctx.quadraticCurveTo(x + 18 * u, hy - 20 * u, x - 6 * u, hy - 18 * u); ctx.quadraticCurveTo(x - 24 * u, hy - 16 * u, x - 33 * u, hy - 2 * u); ctx.closePath(); ctx.fill();
-    if (o.long) { ctx.beginPath(); ctx.ellipse(x - 28 * u, hy + 14 * u, 9 * u, 26 * u, 0.1, 0, Math.PI * 2); ctx.ellipse(x + 28 * u, hy + 14 * u, 9 * u, 26 * u, -0.1, 0, Math.PI * 2); ctx.fill(); }
-  }
-  eyesMouth(x, hy + 2 * u, u, o.f || "neutral", o.look || 0, t, seed);
-  if (o.beard) { ctx.fillStyle = "#eceef2"; ctx.beginPath(); ctx.ellipse(x - 7 * u, hy + 12 * u, 9 * u, 4.5 * u, 0.25, 0, Math.PI * 2); ctx.ellipse(x + 7 * u, hy + 12 * u, 9 * u, 4.5 * u, -0.25, 0, Math.PI * 2); ctx.fill(); }
-  if (o.glasses) { ctx.strokeStyle = "#3a3d4a"; ctx.lineWidth = 2.4 * u; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.arc(x + sd * 12.5 * u + (o.look || 0) * 3.2 * u, hy, 9.5 * u, 0, Math.PI * 2); ctx.stroke(); } ctx.beginPath(); ctx.moveTo(x - 3 * u, hy - 1 * u); ctx.lineTo(x + 3 * u, hy - 1 * u); ctx.stroke(); }
-  if (o.cap) { ctx.fillStyle = o.cap; ctx.beginPath(); ctx.ellipse(x, hy - 16 * u, 33 * u, 22 * u, 0, Math.PI, 0); ctx.fill(); ctx.fillStyle = shade(o.cap, -0.2); rr(x - 4 * u, hy - 20 * u, 46 * u, 9 * u, 4 * u); ctx.fill(); }
-  if (o.blush) { ctx.fillStyle = "rgba(240,110,110,0.3)"; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.ellipse(x + sd * 19 * u, hy + 10 * u, 6 * u, 3.6 * u, 0, 0, Math.PI * 2); ctx.fill(); } }
-  ctx.restore();
-  // Arme (Schulter -> Ellbogen -> Hand), Ärmel in Oberteil-Farbe
-  const arms = o.arm || [];
-  for (const sd of [-1, 1]) {
-    const a = arms.find(q => q.side === sd);
-    let ang;
-    if (a) ang = -a.ang;                             // alte Konvention: negativer Winkel = Arm nach oben (rechts)
-    else ang = walking ? Math.sin(ph + (sd > 0 ? Math.PI : 0)) * 0.45 : sd * 0.12 + Math.sin(t * 2.2 + seed) * 0.02;
-    const sh = [x + sd * 32 * u, shY + 8 * u];
-    const elbow = polar(sh, ang * (sd > 0 ? 1 : 1), 38 * u);
-    const bend = a ? (Math.abs(a.ang) > 1.6 ? 0.35 : 0.2) * sd : (walking ? 0.25 : 0.12) * sd;
-    const hand = polar(elbow, ang + bend * (a && a.ang < 0 ? -1 : 1), 34 * u);
-    limb(sh, elbow, hand, 17 * u, top);
-    ctx.strokeStyle = topD; ctx.lineWidth = 3 * u; ctx.beginPath(); const cuff = polar(elbow, ang + bend, 26 * u); ctx.moveTo(cuff[0] - 7 * u, cuff[1]); ctx.lineTo(cuff[0] + 7 * u, cuff[1]); ctx.stroke();
-    circle(hand[0], hand[1], 8.5 * u, skin);
-  }
-  return { hx: x, hy: hy - 6 * u };
-}
-let RIG_T = 0;
-
-// ------------------------------------------------------------------ Text
-const SIZES = { plain: 64, big: 82, italic: 96, heavy: 120, spaced: 36, counter: 250 };
-const LH = { plain: 1.22, big: 1.18, italic: 1.08, heavy: 1.0, spaced: 1.7, counter: 0.98 };
-const ASC = { plain: 0.95, big: 0.95, italic: 0.88, heavy: 0.86, spaced: 1.0, counter: 0.86 };
-
-function setFont(style, size) {
-  ctx.letterSpacing = "0px";
-  if (style === "italic") ctx.font = `italic 400 ${size}px ISerif`;
-  else if (style === "heavy" || style === "counter") { ctx.font = `900 ${size}px InterBlk`; ctx.letterSpacing = `${-size * 0.015}px`; }
-  else if (style === "spaced") { ctx.font = `600 ${size}px InterSB`; ctx.letterSpacing = `${size * 0.45}px`; }
-  else ctx.font = `600 ${size}px InterSB`;
-}
-
-const LAYOUT = new Map();
-function layoutCard(card) {
-  if (LAYOUT.has(card)) return LAYOUT.get(card);
-  const lines = [];
-  let y = 0;
-  for (const line of card.lines) {
-    let scale = 1, items, width;
-    for (let pass = 0; pass < 2; pass++) {
-      items = []; width = 0;
-      line.forEach((tok, i) => {
-        const size = SIZES[tok.style] * scale;
-        setFont(tok.style, size);
-        const w = ctx.measureText(tok.text).width;
-        const gap = i ? (tok.style === "heavy" ? size * 0.22 : size * 0.27) : 0;
-        width += gap;
-        items.push({ tok, size, x: width, w });
-        width += w;
-      });
-      if (width <= TEXT_W) break;
-      scale *= TEXT_W / width;
-    }
-    const big = items.reduce((a, b) => (b.size > a.size ? b : a));
-    const st = big.tok.style;
-    const lh = big.size * LH[st];
-    lines.push({ items, width, y: y + big.size * ASC[st], lh });
-    y += lh;
-  }
-  const res = { lines, height: y };
-  LAYOUT.set(card, res);
-  return res;
-}
-
-function drawCard(card, t) {
-  const L = layoutCard(card);
-  const out = ramp(t, card.end - 0.22, card.end);
-  if (out >= 1) return;
-  for (const line of L.lines) {
-    const x0 = TEXT_CX - line.width / 2;
-    for (const it of line.items) {
-      const tok = it.tok;
-      const p = ramp(t, tok.s - 0.04, tok.s + 0.26);
-      if (p <= 0) continue;
-      const a = easeOut(p) * (1 - out);
-      const blur = (1 - p) * 10 + out * 14;
-      const dy = (1 - easeOut(p)) * 18;
-      setFont(tok.style, it.size);
-      ctx.globalAlpha = a;
-      ctx.filter = blur > 0.3 ? `blur(${blur.toFixed(1)}px)` : "none";
-      const heavy = tok.style === "heavy";
-      ctx.shadowColor = `rgba(255,255,255,${heavy ? 0.5 : 0.3})`;
-      ctx.shadowBlur = heavy ? 30 : 14;
-      ctx.fillStyle = heavy && card.sentence === 1 ? "#ffd23a" : "#fff";
-      ctx.fillText(tok.text, x0 + it.x, TEXT_TOP + line.y + dy);
+    if (gone != null && t > gone) { sc = Math.max(0.001, 1 - (t - gone - p.d * 0.25) / 0.2); if (sc <= 0.001) y = -50; }
+    for (const [mesh, off] of [[ARMY.body, 0.42], [ARMY.head, 0.82], [ARMY.helm, 1.0]]) {
+      _m.makeScale(sc, sc, sc).setPosition(p.x, y + off * sc, p.z);
+      mesh.setMatrixAt(i, _m);
     }
   }
-  ctx.filter = "none"; ctx.shadowBlur = 0; ctx.globalAlpha = 1; ctx.letterSpacing = "0px";
+  for (const m of [ARMY.body, ARMY.head, ARMY.helm]) m.instanceMatrix.needsUpdate = true;
+  return count;
 }
 
+// ------------------------------------------------------------------ Kamera
+function look(pos, tgt) { camera.position.set(...pos); camera.lookAt(...tgt); }
+
+// ------------------------------------------------------------------ 2D-Elemente
+function pill(x, y, txt, bg, fg, size, p = 1, opts = {}) {
+  if (p <= 0) return;
+  const c = octx; c.save(); c.translate(x, y); const s = back(p); c.scale(s, s); c.globalAlpha = clamp(p * 3);
+  c.font = `900 ${size}px InterBlk`; c.letterSpacing = "1px";
+  const w = c.measureText(txt).width + size * 1.2 + (opts.icon ? size * 1.1 : 0), h = size * 1.75;
+  c.shadowColor = "rgba(0,0,0,0.35)"; c.shadowBlur = 14; c.shadowOffsetY = 5;
+  c.fillStyle = bg; rr(c, -w / 2, -h / 2, w, h, opts.round ?? h / 2); c.fill();
+  c.shadowColor = "transparent";
+  c.lineWidth = 4; c.strokeStyle = opts.stroke || "rgba(0,0,0,0.85)"; c.stroke();
+  c.fillStyle = fg; c.textAlign = "center"; c.textBaseline = "middle";
+  c.fillText(txt, (opts.icon ? size * 0.55 : 0), 2);
+  if (opts.icon) opts.icon(c, -w / 2 + size * 0.95, 0, size);
+  c.restore();
+}
+function helmetIcon(c, x, y, s) {
+  c.fillStyle = "#3e5527"; c.beginPath(); c.arc(x, y + s * 0.1, s * 0.42, Math.PI, 0); c.fill();
+  c.fillRect(x - s * 0.55, y + s * 0.08, s * 1.1, s * 0.14);
+}
+function comment(t, t0) {
+  const p = ramp(t, t0, t0 + 0.3);
+  if (p <= 0) return;
+  const c = octx; c.save(); c.translate(490, 610); c.scale(back(p), back(p)); c.globalAlpha = clamp(p * 3);
+  c.shadowColor = "rgba(0,0,0,0.3)"; c.shadowBlur = 20; c.shadowOffsetY = 6;
+  c.fillStyle = "#ffffff"; rr(c, -330, -80, 660, 160, 30); c.fill(); c.shadowColor = "transparent";
+  c.fillStyle = "#f2a6c8"; c.beginPath(); c.arc(-250, 0, 44, 0, 7); c.fill();
+  c.fillStyle = "#fff"; c.font = "900 44px InterBlk"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("E", -250, 3);
+  c.textAlign = "left"; c.fillStyle = "#9a9a9a"; c.font = "600 26px InterSB"; c.fillText("@du", -185, -28);
+  c.fillStyle = "#151515"; c.font = "900 52px InterBlk"; c.fillText("Emma", -185, 18);
+  c.fillStyle = "#e8e8e8"; rr(c, 150, -54, 150, 40, 20); c.fill();
+  c.fillStyle = "#8a8a8a"; c.font = "900 20px InterBlk"; c.textAlign = "center"; c.fillText("BEISPIEL", 225, -33);
+  const q = ramp(t, Wt(4, "Plus"), Wt(4, "Plus") + 0.25);
+  if (q > 0) { c.save(); c.translate(225, 28); c.scale(back(q), back(q)); c.fillStyle = "#3fc35a"; rr(c, -60, -24, 120, 48, 24); c.fill(); c.fillStyle = "#fff"; c.font = "900 32px InterBlk"; c.fillText("+1", 0, 2); c.restore(); }
+  c.restore();
+}
+function scoreboard(t, t0, t1) {
+  const p = easeOut(ramp(t, t0, t0 + 0.4)) * (1 - ramp(t, t1 - 0.2, t1));
+  if (p <= 0) return;
+  const c = octx; c.save(); c.globalAlpha = p; c.translate(490, 850 + (1 - p) * 60);
+  c.fillStyle = "rgba(18,22,34,0.92)"; rr(c, -380, -360, 760, 720, 36); c.fill();
+  c.lineWidth = 5; c.strokeStyle = "#f4c430"; c.stroke();
+  c.fillStyle = "#f4c430"; rr(c, -220, -390, 440, 64, 32); c.fill();
+  c.fillStyle = "#151515"; c.font = "900 32px InterBlk"; c.textAlign = "center"; c.textBaseline = "middle";
+  c.fillText("RANGLISTE · TAG 1", 0, -357);
+  const zero = Wt(6, "null");
+  LETTERS.forEach((L, i) => {
+    const col = Math.floor(i / 13), row = i % 13;
+    const x = -330 + col * 380, y = -300 + row * 50;
+    const a = ramp(t, t0 + 0.1 + i * 0.02, t0 + 0.3 + i * 0.02);
+    c.globalAlpha = p * a;
+    c.fillStyle = LCOL[i]; rr(c, x, y - 20, 40, 40, 9); c.fill();
+    c.fillStyle = "#fff"; c.font = "900 26px InterBlk"; c.textAlign = "center"; c.fillText(L, x + 20, y + 1);
+    c.textAlign = "left"; c.fillStyle = "rgba(255,255,255,0.75)"; c.font = "600 24px InterSB"; c.fillText(`#${i + 1}`, x + 56, y + 1);
+    c.fillStyle = "rgba(255,255,255,0.12)"; rr(c, x + 112, y - 9, 150, 18, 9); c.fill();
+    const pulse = t > zero && t < zero + 0.6 ? 1 + 0.25 * Math.sin((t - zero) / 0.6 * Math.PI) : 1;
+    c.save(); c.translate(x + 300, y + 1); c.scale(pulse, pulse);
+    c.fillStyle = "#ffffff"; c.font = "900 30px InterBlk"; c.textAlign = "right"; c.fillText("0", 0, 0); c.restore();
+  });
+  c.restore();
+}
+function nameBoard(t, t0, t1) {
+  const p = easeOut(ramp(t, t0, t0 + 0.4)) * (1 - ramp(t, t1 - 0.2, t1));
+  if (p <= 0) return;
+  const c = octx; c.save(); c.globalAlpha = p; c.translate(490, 860 + (1 - p) * 60);
+  c.fillStyle = "rgba(18,22,34,0.92)"; rr(c, -380, -330, 760, 660, 36); c.fill();
+  c.lineWidth = 5; c.strokeStyle = "#ffffff"; c.stroke();
+  c.fillStyle = "#ffffff"; rr(c, -250, -360, 500, 64, 32); c.fill();
+  c.fillStyle = "#151515"; c.font = "900 30px InterBlk"; c.textAlign = "center"; c.textBaseline = "middle";
+  c.fillText("⏸  FINDE DEINEN NAMEN", 0, -327);
+  const blink = 0.6 + 0.4 * Math.sin(t * 9);
+  for (let r = 0; r < 9; r++) for (let k = 0; k < 3; k++) {
+    const x = -335 + k * 228, y = -265 + r * 62;
+    const you = r === 3 && k === 1;
+    c.fillStyle = you ? `rgba(244,196,48,${0.25 + 0.35 * blink})` : "rgba(255,255,255,0.07)";
+    rr(c, x, y, 212, 48, 12); c.fill();
+    if (you) { c.strokeStyle = "#f4c430"; c.lineWidth = 3; c.stroke(); }
+    c.fillStyle = you ? "#ffffff" : "rgba(255,255,255,0.35)"; c.font = you ? "900 26px InterBlk" : "600 24px InterSB";
+    c.fillText(you ? "DEIN NAME?" : "…", x + 106, y + 25);
+  }
+  c.restore();
+}
+function icons(t, keys) {
+  const items = [["FOLGEN", "#ef4b3f", keys[0], "plus"], ["LIKEN", "#ef5ca8", keys[1], "heart"], ["SPEICHERN", "#f4c430", keys[2], "save"]];
+  items.forEach(([txt, col, tk, ic], i) => {
+    const p = ramp(t, tk, tk + 0.3);
+    if (p <= 0) return;
+    const c = octx; c.save(); c.translate(250 + i * 240, 660); c.scale(back(p), back(p)); c.globalAlpha = clamp(p * 3);
+    c.shadowColor = "rgba(0,0,0,0.3)"; c.shadowBlur = 16; c.shadowOffsetY = 6;
+    c.fillStyle = "#fff"; rr(c, -100, -110, 200, 220, 30); c.fill(); c.shadowColor = "transparent";
+    c.fillStyle = col; c.strokeStyle = col; c.lineWidth = 12; c.lineCap = "round";
+    if (ic === "plus") { c.beginPath(); c.arc(0, -25, 48, 0, 7); c.fill(); c.strokeStyle = "#fff"; c.beginPath(); c.moveTo(-22, -25); c.lineTo(22, -25); c.moveTo(0, -47); c.lineTo(0, -3); c.stroke(); }
+    if (ic === "heart") { c.beginPath(); c.moveTo(0, 15); c.bezierCurveTo(-70, -30, -35, -85, 0, -50); c.bezierCurveTo(35, -85, 70, -30, 0, 15); c.fill(); }
+    if (ic === "save") { c.beginPath(); c.moveTo(-32, -72); c.lineTo(32, -72); c.lineTo(32, 18); c.lineTo(0, -10); c.lineTo(-32, 18); c.closePath(); c.fill(); }
+    c.fillStyle = "#151515"; c.font = "900 30px InterBlk"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(txt, 0, 70);
+    c.restore();
+  });
+}
+function warn(c, x, y, s) {
+  c.fillStyle = "#151515"; c.beginPath(); c.moveTo(x, y - s * 0.5); c.lineTo(x + s * 0.55, y + s * 0.45); c.lineTo(x - s * 0.55, y + s * 0.45); c.closePath(); c.fill();
+  c.fillStyle = "#ffd43b"; c.font = `900 ${s * 0.6}px InterBlk`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("!", x, y + s * 0.1);
+}
+function share(c, x, y, s) {
+  c.strokeStyle = "#151515"; c.lineWidth = s * 0.14; c.lineCap = "round"; c.lineJoin = "round";
+  c.beginPath(); c.moveTo(x - s * 0.4, y + s * 0.3); c.quadraticCurveTo(x - s * 0.3, y - s * 0.2, x + s * 0.25, y - s * 0.2); c.stroke();
+  c.beginPath(); c.moveTo(x + s * 0.05, y - s * 0.45); c.lineTo(x + s * 0.35, y - s * 0.2); c.lineTo(x + s * 0.05, y + s * 0.05); c.stroke();
+}
+
+// ------------------------------------------------------------------ Untertitel (Wort für Wort, unter der Szene)
+const CAPS = [];
+function buildCaptions() {
+  for (const card of TL.cards) {
+    const lines = card.lines.map(l => l.map(k => ({ ...k })));
+    CAPS.push({ start: card.start, end: card.end, lines });
+  }
+}
+function caption(t) {
+  const card = CAPS.find(c => t >= c.start - 0.05 && t < c.end);
+  if (!card) return;
+  const c = octx; c.save();
+  c.textBaseline = "alphabetic"; c.lineJoin = "round";
+  const size = 74, lh = 92;
+  card.lines.forEach((line, li) => {
+    c.font = `900 ${size}px InterBlk`;
+    const words = line.map(k => k.text.toUpperCase());
+    const ws = words.map(w => c.measureText(w).width), gap = size * 0.28;
+    const tot = ws.reduce((a, b) => a + b, 0) + gap * (words.length - 1);
+    const scale = Math.min(1, 860 / tot);
+    let x = CAP_X - tot * scale / 2;
+    const y = CAP_Y + li * lh;
+    line.forEach((k, i) => {
+      const p = ramp(t, k.s - 0.03, k.s + 0.12);
+      if (p <= 0) { x += (ws[i] + gap) * scale; return; }
+      const s = scale * (1 + 0.18 * (1 - easeOut(p)));
+      c.save(); c.translate(x + ws[i] * scale / 2, y); c.scale(s, s);
+      c.font = `900 ${size}px InterBlk`; c.textAlign = "center";
+      c.lineWidth = 14; c.strokeStyle = "#111"; c.strokeText(words[i], 0, 0);
+      const hot = k.style === "heavy";
+      c.fillStyle = hot ? "#ffd43b" : "#ffffff";
+      c.fillText(words[i], 0, 0);
+      c.restore();
+      x += (ws[i] + gap) * scale;
+    });
+  });
+  c.restore();
+}
+
+// ------------------------------------------------------------------ Einstellungen
+let SHOTS = [];
+const ARMY_END = () => S[5] + 0.5 * (S[6] - S[5]);
+function buildShots() {
+  const E_I = IDX("E"), X_I = IDX("X");
+  const [ex, , ez] = tilePos(E_I), [xx, , xz] = tilePos(X_I);
+  const sold = SOLDIER.position;
+  SHOTS = [
+    // 1 Nahaufnahme: Soldat mit Megafon
+    [0, (t, u) => {
+      SOLDIER.visible = true; poseSoldier(t, "shout");
+      const punch = easeOut(ramp(t, Wt(1, "deiner") - 0.1, Wt(1, "deiner") + 0.15));
+      const z = lerp(12, 10.5, u) - punch * 1.6;
+      look([sold.x + Math.sin(t * 2) * 0.3, 4.8, sold.z + z], [sold.x, 3.9, sold.z]);
+    }],
+    // 2 Kranfahrt über das Buchstaben-Feld
+    [S[2], (t, u) => {
+      look(lerp3([0, 34, 46], [0, 24, 30], easeIO(u)), [0, 0, -2]);
+      const v = Wt(2, "Vorname");
+      TILES.forEach((m, i) => { const d = (i % COLS + Math.floor(i / COLS)) * 0.05; const b = ramp(t, v + d, v + d + 0.35); m.position.y = 0.18 + Math.sin(b * Math.PI) * 1.2; });
+    }],
+    // 3 Ein Kommentar = ein Soldat; Emma -> +1 für E
+    [S[3], (t, u) => {
+      look(lerp3([ex - 8, 13, ez + 20], [ex - 2, 10, ez + 15], easeIO(u)), [ex, 0, ez + 1]);
+      const drop = Wt(4, "Plus");
+      if (t > drop) {
+        RUNNER.visible = true;
+        const k = t - drop;
+        const y = Math.max(0, 10 - 35 * k * k);
+        RUNNER.position.set(ex, 0.35 + y + (y === 0 ? Math.max(0, Math.sin((k - 0.53) * 18) * 0.4 * Math.exp(-(k - 0.53) * 6)) : 0), ez);
+        RUNNER.rotation.y = Math.sin(t * 3) * 0.2;
+      }
+    }],
+    // 4 Beispiel: Armee wächst in Buchstabenform
+    [S[5], (t, u) => {
+      look(lerp3([ex, 21, ez + 19], [ex, 31, ez + 16], easeIO(u)), [ex, 0, ez + 2.5]);
+      placeArmy(t, S[5], ARMY_END(), S[6] + 0.35);
+    }],
+    // 5 Tag 1: alle bei null (Rangliste über dem Feld)
+    [S[6], (t, u) => {
+      placeArmy(t, S[5], ARMY_END(), S[6] + 0.35);
+      look([Math.sin(u * 0.8) * 10, 30, 36 - u * 4], [0, 0, -4]);
+    }],
+    // 6 Letzter Platz fliegt raus: X
+    [S[7], (t, u) => {
+      look(lerp3([xx - 6, 7, xz + 13], [xx - 3, 5, xz + 9], easeIO(u)), [xx, 0.5, xz]);
+      const r = Wt(7, "raus");
+      const f = 0.5 + 0.5 * Math.sin(t * 16);
+      TILE_MATS[X_I].color.setRGB(1, lerp(1, 0.55, f), lerp(1, 0.55, f));
+      if (t > r) { TILES[X_I].position.y = 0.18 - easeOut(ramp(t, r, r + 0.4)) * 0.6; TILES[X_I].rotation.z = Math.sin((t - r) * 30) * 0.05 * (1 - ramp(t, r, r + 0.6)); }
+    }],
+    // 7 Folgen, liken, speichern: Soldat grüßt
+    [S[8], (t, u) => {
+      SOLDIER.visible = true; poseSoldier(t, "salute");
+      look([sold.x - 1.5, 4.3, sold.z + lerp(11.5, 10, u)], [sold.x - 0.3, 4.0, sold.z]);
+    }],
+    // 8 Morgen: Namen finden
+    [S[9], (t, u) => {
+      look([lerp(-6, 6, u), 26, 32], [0, 0, -4]);
+    }],
+    // 9 Kennst du ein X?
+    [S[10], (t, u) => {
+      look(lerp3([xx + 2, 6, xz + 10], [xx + 0.5, 4.5, xz + 7], easeIO(u)), [xx, 0.4, xz]);
+      const v = Wt(11, "verschwindet");
+      const shake = Math.sin(t * 38) * 0.06;
+      TILES[X_I].position.set(xx + shake, 0.18, xz);
+      TILES[X_I].rotation.z = 0;
+      const fl = t > v ? (Math.sin(t * 50) > 0 ? 0.35 : 1) : 1;
+      TILE_MATS[X_I].color.setRGB(1, fl, fl);
+    }],
+  ];
+}
 
 // ------------------------------------------------------------------ Bild
-let GRAIN = [];
-window.renderFrame = function (t) {
-  RIG_T = t;
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = "none";
-  ctx.fillStyle = "#0b0c12"; ctx.fillRect(0, 0, W, H);
-  const si = sentenceAt(t);
-  const drawSc = (k, dx) => {
-    ctx.save(); ctx.translate(dx, 0);
-    const z = 1 + 0.03 * ramp(t, S[k] - 0.15, (S[k + 1] || TL.duration) - 0.15);
-    ctx.translate(540, 1200); ctx.scale(z, z); ctx.translate(-540, -1200);
-    scene(t, k);
-    ctx.restore();
-  };
-  const tr = si > 0 ? ramp(t, S[si] - 0.15, S[si] + 0.2) : 1;
-  if (tr < 1) { const k = easeIO(tr); drawSc(si - 1, -W * k); drawSc(si, W * (1 - k)); } else drawSc(si, 0);
-  const tg = ctx.createLinearGradient(0, 100, 0, 620);
-  tg.addColorStop(0, "rgba(8,9,14,0.7)"); tg.addColorStop(1, "rgba(8,9,14,0)");
-  ctx.fillStyle = tg; ctx.fillRect(0, 0, W, 620); ctx.fillStyle = "rgba(8,9,14,0.7)"; ctx.fillRect(0, 0, W, 100);
-  for (const card of TL.cards) if (t >= card.start - 0.1 && t <= card.end + 0.05) drawCard(card, t);
-  ctx.globalAlpha = 0.03; ctx.fillStyle = GRAIN[Math.floor(t * 10) % GRAIN.length]; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
-  const fade = Math.max(1 - ramp(t, 0, 0.25), ramp(t, TL.duration - 1.0, TL.duration - 0.1));
-  if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0, 0, W, H); }
-};
-window.exportEvents = function () {
-  return { scenes: S, duration: TL.duration, armee: Wt(1, "ARMEE!"), soldat: Wt(3, "Soldat"), tag: Wt(4, "TAG"), rank: S[5], letzte: Wt(6, "LETZTE"),
-    buttons: [Wt(7, "Folgen,"), Wt(7, "liken,"), Wt(7, "speichern")], x: Wt(9, "X?"), end: [S[10], S[10] + 0.8] };
-};
-window.setup = async function (timeline) {
-  TL = timeline; S = TL.sentences.map(s => s.start);
-  TOK = []; for (const c of TL.cards) for (const l of c.lines) for (const k of l) TOK.push({ ...k, si: c.sentence });
-  await Promise.all([document.fonts.load("900 37px InterX"), document.fonts.load("800 16px InterX"), document.fonts.load("italic 80px ISerif"), document.fonts.load("600 50px InterSB"), document.fonts.load("900 50px InterBlk")]);
-  let seed = 97; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let k = 0; k < 6; k++) {
-    const c = document.createElement("canvas"); c.width = c.height = 256;
-    const x = c.getContext("2d"); const im = x.createImageData(256, 256);
-    for (let i = 0; i < im.data.length; i += 4) { const v = 120 + r() * 135; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
-    x.putImageData(im, 0, 0); GRAIN.push(ctx.createPattern(c, "repeat"));
+function resetWorld() {
+  SOLDIER.visible = false; RUNNER.visible = false;
+  TILES.forEach((m, i) => { const [x, , z] = tilePos(i); m.position.set(x, 0.18, z); m.rotation.set(0, 0, 0); TILE_MATS[i].color.setRGB(1, 1, 1); });
+  for (const m of [ARMY.body, ARMY.head, ARMY.helm]) { for (let i = 0; i < ARMY_PTS.length; i++) { _m.makeTranslation(0, -50, 0); m.setMatrixAt(i, _m); } m.instanceMatrix.needsUpdate = true; }
+}
+function overlays(t) {
+  // Abzeichen oben
+  pill(200, HUD_Y, "TAG 1", "#e8392f", "#ffffff", 34, ramp(t, 0.05, 0.3), { round: 16 });
+  pill(700, HUD_Y, "ALPHABET-ARMEE", "#f4c430", "#151515", 34, ramp(t, 0.15, 0.4), { round: 16, icon: helmetIcon });
+  // Hook: Fragezeichen
+  const q = Wt(1, "deiner");
+  if (t < S[2]) pill(490, 640, "?", "#ffffff", "#151515", 90, ramp(t, q - 0.15, q + 0.1), { round: 24 });
+  // 1 Kommentar = 1 Soldat
+  if (t >= S[3] && t < S[5]) {
+    pill(490, 560, "1 KOMMENTAR = 1 SOLDAT", "#ffffff", "#151515", 40, ramp(t, Wt(3, "Kommentar"), Wt(3, "Kommentar") + 0.3) * (1 - ramp(t, S[4] - 0.15, S[4])));
+    comment(t, S[4]);
   }
+  if (t >= S[5] && t < S[6]) {
+    pill(490, 560, "BEISPIEL", "#ffffff", "#151515", 40, ramp(t, S[5], S[5] + 0.25));
+    const n = Math.round(ARMY_PTS.length * clamp((t - S[5]) / (ARMY_END() - S[5])));
+    pill(490, 670, `E · ${n} SOLDATEN`, "#3d8ef0", "#ffffff", 40, ramp(t, S[5] + 0.1, S[5] + 0.35));
+  }
+  if (t >= S[6] && t < S[7]) scoreboard(t, S[6] + 0.1, S[7]);
+  if (t >= S[7] && t < S[8]) pill(490, 600, "LETZTER PLATZ FLIEGT RAUS", "#e8392f", "#ffffff", 40, ramp(t, Wt(7, "letzte") - 0.1, Wt(7, "letzte") + 0.2), { round: 18, icon: warn });
+  if (t >= S[8] && t < S[9]) icons(t, [Wt(8, "Folgen"), Wt(8, "Folgen") + Math.max(0.35, (S[9] - Wt(8, "Folgen")) * 0.3), Wt(8, "speichern")]);
+  if (t >= S[9] && t < S[10]) nameBoard(t, S[9] + 0.05, S[10]);
+  if (t >= S[10]) pill(490, 600, "KENNST DU EIN X? SCHICK DAS.", "#f4c430", "#151515", 38, ramp(t, S[10] + 0.1, S[10] + 0.4), { round: 18, icon: share });
+}
+window.renderFrame = function (t) {
+  resetWorld();
+  let i = 0;
+  while (i + 1 < SHOTS.length && t >= SHOTS[i + 1][0]) i++;
+  const t0 = SHOTS[i][0], t1 = i + 1 < SHOTS.length ? SHOTS[i + 1][0] : TL.duration;
+  SHOTS[i][1](t, ramp(t, t0, t1), t1 - t0);
+  renderer.render(scene, camera);
+  octx.setTransform(1, 0, 0, 1, 0, 0);
+  octx.drawImage(glc, 0, 0);
+  // dunkler Verlauf unten, damit der Text gut lesbar ist (läuft ohne Kante aus)
+  const vg = octx.createLinearGradient(0, 1150, 0, H);
+  vg.addColorStop(0, "rgba(10,14,28,0)"); vg.addColorStop(0.45, "rgba(10,14,28,0.45)"); vg.addColorStop(1, "rgba(10,14,28,0.6)");
+  octx.fillStyle = vg; octx.fillRect(0, 1150, W, H - 1150);
+  overlays(t);
+  caption(t);
+  // Weißblitz bei harten Schnitten
+  for (const s of SHOTS.slice(1)) { const f = 1 - ramp(t, s[0], s[0] + 0.12); if (t >= s[0] && f > 0) { octx.fillStyle = `rgba(255,255,255,${0.35 * f})`; octx.fillRect(0, 0, W, H); } }
+};
+
+window.exportEvents = function () {
+  return {
+    duration: TL.duration,
+    cuts: SHOTS.slice(1).map(s => s[0]),
+    question: Wt(1, "deiner"),
+    tiles: Wt(2, "Vorname"), equal: Wt(3, "Kommentar"), card: S[4], drop: Wt(4, "Plus") + 0.53, plus: Wt(4, "Plus"),
+    army: [S[5], ARMY_END(), ARMY_PTS.length], poof: S[6] + 0.35, board: S[6] + 0.1, zero: Wt(6, "null"),
+    alarm: [S[7], S[8]], raus: Wt(7, "raus"), icons: [Wt(8, "Folgen"), Wt(8, "speichern")], names: S[9] + 0.05,
+    share: S[10] + 0.1, vanish: Wt(11, "verschwindet"),
+  };
+};
+
+window.setup = async function (timeline) {
+  TL = timeline;
+  S = TL.sentences.map(s => s.start);
+  E = TL.sentences.map(s => s.end);
+  TOK = [];
+  for (const c of TL.cards) for (const l of c.lines) for (const k of l) TOK.push({ ...k, si: c.sentence });
+  TL.duration = Math.round((E[E.length - 1] + 0.6) * 100) / 100;     // endet direkt nach dem letzten Wort (Loop)
+  window.DURATION = TL.duration;
+  await Promise.all([document.fonts.load("900 50px InterBlk"), document.fonts.load("600 50px InterSB")]);
+  buildWorld();
+  buildCaptions();
+  buildShots();
   return true;
 };

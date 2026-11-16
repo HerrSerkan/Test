@@ -1,24 +1,18 @@
-"""Sprechertext, Stimme (Edge TTS) und Zeitplan für "Alphabet-Armee – Tag 1" (Vorlage: falle/script.py).
+"""Sprechertext und Zeitplan für "Alphabet-Armee – Tag 1" (deutsche Version).
 
-Erzeugt:
-  build/voice_XX.mp3        Stimme pro Satz (Microsoft Edge TTS, Stimme de-DE-ConradNeural)
-  build/timeline.json       Karten, Wort-Zeiten, Satz-Start/Ende
-  build/voice.wav           komplette Sprecherspur
+    python3 alphabet/script.py --text                      # Sprechertext (für ElevenLabs, am Stück)
+    python3 alphabet/script.py --edge                      # Ersatzstimme (Edge TTS) -> build/take_edge.mp3
+    python3 alphabet/voice_prep.py take.mp3 alphabet/build/voice_el.wav 1.05
+    python3 alphabet/script.py --voice build/voice_el.wav  # Wortzeiten per Whisper -> build/timeline.json
 
-Markup in den Karten:
+Markup in den Karten (Text unter der Szene, alles in Großbuchstaben):
   /        Zeilenumbruch
-  *wort*   kursiv (Serif)
-  ^WORT^   fett, Großbuchstaben (Black)
-  +wort+   groß, halbfett
-  ~WORT~   klein, gesperrt
-  {100}    Zähler (gesprochen: "hundert")
+  ^wort^   Schlüsselwort (gelb hervorgehoben)
 """
-import asyncio
 import difflib
 import json
 import os
 import re
-import ssl
 import subprocess
 import sys
 
@@ -26,26 +20,24 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 BUILD = os.path.join(HERE, "build")
 os.makedirs(BUILD, exist_ok=True)
 
-VOICE = "de-DE-ConradNeural"
-RATE = "+16%"
-PITCH = "-11Hz"
+NUM_WORDS = {"1": "eins", "0": "null"}
 
-# (Startzeit im Original, Karten)
 SENTENCES = [
-    (0, ["Was ist der / ^ERSTE BUCHSTABE^ / deines Namens?"]),
-    (0, ["Dieser Buchstabe / ist jetzt / deine ^ARMEE!^"]),
-    (0, ["Kommentier / deinen *Vornamen.*"]),
-    (0, ["Jeder Kommentar / ist ein Soldat / für deinen Buchstaben."]),
-    (0, ["Heute ist / ^TAG 1.^"]),
-    (0, ["Alle Buchstaben / starten bei *null.*"]),
-    (0, ["Morgen fliegt / der ^LETZTE PLATZ^ / raus."]),
-    (0, ["Folgen, / liken, / speichern –"]),
-    (0, ["und morgen / findest du deinen Namen / in der *Armee.*"]),
-    (0, ["Kennst du jemanden / mit ^X?^"]),
-    (0, ["Schick ihm das, / bevor X / *verschwindet.*"]),
+    ["Nur ein ^Buchstabe^ / überlebt."],                     # 0
+    ["Ist es ^deiner?^"],                                    # 1
+    ["Dein ^Vorname^ ist / deine ^Armee!^"],                 # 2
+    ["Ein ^Kommentar,^ / ein ^Soldat.^"],                    # 3
+    ["Emma ^kommentiert?^", "Plus eins / für ^E!^"],         # 4
+    ["So ^wächst^ / deine Armee."],                          # 5
+    ["Heute ist / ^Tag^ ^eins.^", "Alle starten / bei ^null.^"],   # 6
+    ["Und morgen fliegt / der ^letzte^ ^Platz^ raus!"],      # 7
+    ["^Folgen,^ ^liken,^ / ^speichern^"],                    # 8
+    ["und morgen / findest du", "deinen ^Namen^ / in der Armee."],   # 9
+    ["Kennst du / ein ^X?^"],                                # 10
+    ["Schick ihm das, / bevor X", "^verschwindet!^"],        # 11
 ]
 
-MARK = re.compile(r"(\*[^*]+\*|\^[^^]+\^|\+[^+]+\+|~[^~]+~|\{\d+\}|/|[^\s/]+)")
+MARK = re.compile(r"(\*[^*]+\*|\^[^^]+\^|\+[^+]+\+|\{\d+\}|/|[^\s/]+)")
 
 
 def parse_card(card):
@@ -63,53 +55,34 @@ def parse_card(card):
             style, m = "heavy", m[1:-1]
         elif m.startswith("+"):
             style, m = "big", m[1:-1]
-        elif m.startswith("~"):
-            style, m = "spaced", m[1:-1]
         elif m.startswith("{"):
             style, m = "counter", m[1:-1]
-        # Gruppen (z.B. ^DUMM MACHEN.^) in einzelne Wörter teilen
         for w in m.split():
-            if w == "/":
-                lines.append(cur)
-                cur = []
-            else:
-                cur.append(dict(text=w, style=style))
+            cur.append(dict(text=w, style=style))
     lines.append(cur)
     return [l for l in lines if l]
 
 
 def norm(w):
-    w = w.lower()
-    if w == "100":
-        return "hundert"
-    return re.sub(r"[^a-z0-9äöüß]", "", w)
+    w = re.sub(r"[^a-z0-9äöüß]", "", w.lower())
+    return NUM_WORDS.get(w, w)
 
 
-def spoken_text(cards):
+def spoken_sentence(cards):
     words = []
     for c in cards:
         for line in parse_card(c):
             for tok in line:
                 t = tok["text"]
-                words.append("hundert" if tok["style"] == "counter" else t.lower() if tok["style"] in ("heavy", "spaced") else t)
+                if tok["style"] == "counter":
+                    t = NUM_WORDS[t]
+                words.append(t)
     s = " ".join(words)
     return s[0].upper() + s[1:]
 
 
-async def tts(text, out):
-    import edge_tts
-    import edge_tts.communicate as c
-    c._SSL_CTX = ssl.create_default_context(cafile="/root/.ccr/ca-bundle.crt")
-    com = edge_tts.Communicate(text, VOICE, rate=RATE, pitch=PITCH, boundary="WordBoundary",
-                              proxy=os.environ.get("HTTPS_PROXY"), connect_timeout=20, receive_timeout=60)
-    words = []
-    with open(out, "wb") as f:
-        async for ch in com.stream():
-            if ch["type"] == "audio":
-                f.write(ch["data"])
-            elif ch["type"] == "WordBoundary":
-                words.append(dict(w=ch["text"], s=ch["offset"] / 1e7, e=(ch["offset"] + ch["duration"]) / 1e7))
-    return words
+def spoken_text():
+    return "\n".join(spoken_sentence(c) for c in SENTENCES)
 
 
 def duration(path):
@@ -119,8 +92,8 @@ def duration(path):
 
 
 def align(tokens, words):
-    """Display-Tokens auf TTS-Wörter abbilden (Start/Ende je Token)."""
-    a = [norm(t["text"]) if t["style"] != "counter" else "hundert" for t in tokens]
+    """Display-Tokens auf erkannte Wörter abbilden (Start/Ende je Token)."""
+    a = [norm(t["text"]) for t in tokens]
     b = [norm(w["w"]) for w in words]
     sm = difflib.SequenceMatcher(a=a, b=b, autojunk=False)
     times = [None] * len(a)
@@ -128,7 +101,9 @@ def align(tokens, words):
         for k in range(blk.size):
             w = words[blk.b + k]
             times[blk.a + k] = (w["s"], w["e"])
-    # Lücken interpolieren
+    miss = sum(1 for x in times if x is None)
+    if miss:
+        print("nicht erkannt:", [tokens[i]["text"] for i, x in enumerate(times) if x is None])
     for i in range(len(times)):
         if times[i] is None:
             prev = next((times[j] for j in range(i - 1, -1, -1) if times[j]), (0, 0))
@@ -138,61 +113,6 @@ def align(tokens, words):
     return times
 
 
-def main(force=False):
-    timeline = dict(sentences=[], cards=[])
-    t_cursor = 0.0
-    clips = []
-    for si, (orig, cards) in enumerate(SENTENCES):
-        mp3 = os.path.join(BUILD, f"voice_{si:02d}.mp3")
-        wj = mp3 + ".words.json"
-        text = spoken_text(cards)
-        if force or not os.path.exists(wj) or json.load(open(wj)).get("text") != text:
-            words = asyncio.run(tts(text, mp3))
-            json.dump(dict(text=text, words=words), open(wj, "w"), ensure_ascii=False)
-        words = json.load(open(wj))["words"]
-        dur = duration(mp3)
-        start = max(orig, t_cursor + (0.35 if si else 0.0))
-        clips.append((mp3, start))
-        tokens_all = []
-        card_tok = []
-        for c in cards:
-            lines = parse_card(c)
-            card_tok.append(lines)
-            for line in lines:
-                tokens_all.extend(line)
-        times = align(tokens_all, words)
-        k = 0
-        for lines in card_tok:
-            for line in lines:
-                for tok in line:
-                    tok["s"] = round(start + times[k][0], 3)
-                    tok["e"] = round(start + times[k][1], 3)
-                    k += 1
-            first = lines[0][0]["s"]
-            timeline["cards"].append(dict(sentence=si, lines=lines, start=first))
-        speech_end = start + (words[-1]["e"] if words else dur)
-        timeline["sentences"].append(dict(start=round(start, 3), end=round(speech_end, 3), text=text))
-        t_cursor = speech_end
-        print(f"{si:2d} {start:6.2f}-{speech_end:6.2f}  {text}")
-    # Kartenende = Start der nächsten Karte
-    for i, c in enumerate(timeline["cards"]):
-        nxt = timeline["cards"][i + 1]["start"] if i + 1 < len(timeline["cards"]) else t_cursor + 1.6
-        c["end"] = round(nxt, 3)
-    total = round(t_cursor + 3.2, 2)
-    timeline["duration"] = total
-    json.dump(timeline, open(os.path.join(BUILD, "timeline.json"), "w"), ensure_ascii=False, indent=1)
-
-    # Sprecherspur zusammensetzen
-    inputs, filt = [], []
-    for i, (mp3, st) in enumerate(clips):
-        inputs += ["-i", mp3]
-        filt.append(f"[{i}:a]aresample=44100,adelay={int(st * 1000)}:all=1[a{i}]")
-    filt.append("".join(f"[a{i}]" for i in range(len(clips))) + f"amix=inputs={len(clips)}:normalize=0,apad,atrim=0:{total}[out]")
-    subprocess.run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(filt),
-                    "-map", "[out]", "-ac", "1", "-ar", "44100", os.path.join(BUILD, "voice.wav")], check=True)
-    print("Gesamtdauer:", total)
-
-
 def transcribe_words(path):
     """Wortzeiten einer fertigen Aufnahme per Spracherkennung (faster-whisper)."""
     import numpy as np
@@ -200,24 +120,42 @@ def transcribe_words(path):
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
                          capture_output=True, check=True).stdout
     audio = np.frombuffer(raw, np.int16).astype(np.float32) / 32768
-    prompt = " ".join(spoken_text(c) for _, c in SENTENCES)
     model = WhisperModel("small", device="cpu", compute_type="int8")
-    segs, _ = model.transcribe(audio, language="de", word_timestamps=True, initial_prompt=prompt[:800])
-    return [dict(w=w.word.strip(), s=w.start, e=w.end) for sg in segs for w in sg.words]
+    segs, _ = model.transcribe(audio, language="de", word_timestamps=True, initial_prompt=spoken_text()[:800])
+    words = []
+    for sg in segs:
+        for w in sg.words:
+            # Zahlen als Ziffern ("500") in mehrere Tokens zerlegen ist nicht nötig: norm() bildet sie ab
+            words.append(dict(w=w.word.strip(), s=w.start, e=w.end))
+    return words
 
 
-def main_external(voice_file, lead=0.25):
-    """Timeline aus EINER fertigen Aufnahme (z.B. ElevenLabs) bauen."""
+def clean_words(words):
+    """Whisper klebt an Satzgrenzen manchmal Müll vor ein Wort (".BRUNDenn"): Wort herauslösen,
+    Startzeit auf das Wortende beziehen (der Müll deckt die Pause davor ab)."""
+    out = []
+    for w in words:
+        m = re.search(r"[A-ZÄÖÜ][a-zäöüß]+[,.!?:]*$", w["w"])
+        if re.match(r"^[^A-Za-zÄÖÜäöüß]", w["w"]) and m:
+            w = dict(w=m.group(0), s=max(w["s"], w["e"] - 0.32), e=w["e"])
+        out.append(w)
+    return out
+
+
+def main_external(voice_file, lead=0.35):
     cache = os.path.join(BUILD, "external_words.json")
-    if os.path.exists(cache) and json.load(open(cache)).get("file") == os.path.abspath(voice_file):
+    if os.path.exists(cache) and json.load(open(cache)).get("file") == os.path.abspath(voice_file) \
+            and json.load(open(cache)).get("mtime") == os.path.getmtime(voice_file):
         words = json.load(open(cache))["words"]
     else:
         words = transcribe_words(voice_file)
-        json.dump(dict(file=os.path.abspath(voice_file), words=words), open(cache, "w"), ensure_ascii=False)
+        json.dump(dict(file=os.path.abspath(voice_file), mtime=os.path.getmtime(voice_file), words=words),
+                  open(cache, "w"), ensure_ascii=False)
+    words = clean_words(words)
     print(" ".join(w["w"] for w in words))
     timeline = dict(sentences=[], cards=[])
     tokens_all, per_sentence = [], []
-    for si, (_, cards) in enumerate(SENTENCES):
+    for cards in SENTENCES:
         cl = [parse_card(c) for c in cards]
         per_sentence.append(cl)
         for lines in cl:
@@ -236,14 +174,14 @@ def main_external(voice_file, lead=0.25):
                     s_end = tok["e"]
                     k += 1
             timeline["cards"].append(dict(sentence=si, lines=lines, start=lines[0][0]["s"]))
-        text = spoken_text(SENTENCES[si][1])
+        text = spoken_sentence(SENTENCES[si])
         timeline["sentences"].append(dict(start=s_start, end=s_end, text=text))
         print(f"{si:2d} {s_start:6.2f}-{s_end:6.2f}  {text}")
     last = timeline["sentences"][-1]["end"]
     for i, c in enumerate(timeline["cards"]):
-        nxt = timeline["cards"][i + 1]["start"] if i + 1 < len(timeline["cards"]) else last + 1.6
+        nxt = timeline["cards"][i + 1]["start"] if i + 1 < len(timeline["cards"]) else last + 2.2
         c["end"] = round(nxt, 3)
-    total = round(max(last + 3.2, lead + duration(voice_file) + 0.5), 2)
+    total = round(max(last + 2.6, lead + duration(voice_file) + 0.5), 2)
     timeline["duration"] = total
     json.dump(timeline, open(os.path.join(BUILD, "timeline.json"), "w"), ensure_ascii=False, indent=1)
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", voice_file, "-af",
@@ -253,7 +191,15 @@ def main_external(voice_file, lead=0.25):
 
 
 if __name__ == "__main__":
-    if "--voice" in sys.argv:
-        main_external(sys.argv[sys.argv.index("--voice") + 1])
+    if "--text" in sys.argv:
+        print(spoken_text())
+    elif "--edge" in sys.argv:
+        import asyncio, ssl
+        import edge_tts
+        import edge_tts.communicate as c
+        c._SSL_CTX = ssl.create_default_context(cafile="/root/.ccr/ca-bundle.crt")
+        txt = " ".join(spoken_text().split("\n"))
+        asyncio.run(edge_tts.Communicate(txt, "de-DE-ConradNeural", rate="+8%", pitch="-6Hz").save(os.path.join(BUILD, "take_edge.mp3")))
+        print("build/take_edge.mp3")
     else:
-        main(force="--force" in sys.argv)
+        main_external(sys.argv[sys.argv.index("--voice") + 1])

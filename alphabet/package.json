@@ -1,0 +1,6 @@
+{
+  "name": "alphabet-armee",
+  "private": true,
+  "description": "Alphabet-Armee Tag 1 – 3D-Szene mit three.js",
+  "dependencies": { "three": "0.170.0" }
+}
