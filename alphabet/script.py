@@ -27,8 +27,8 @@ BUILD = os.path.join(HERE, "build")
 os.makedirs(BUILD, exist_ok=True)
 
 VOICE = "de-DE-ConradNeural"
-RATE = "+10%"
-PITCH = "-2Hz"
+RATE = "+16%"
+PITCH = "-11Hz"
 
 # (Startzeit im Original, Karten)
 SENTENCES = [
