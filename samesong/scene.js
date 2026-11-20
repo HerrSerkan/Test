@@ -37,6 +37,19 @@ const COL = {
 const PAL = ["#3fae6a", "#7b3fe4", "#c43ab2", "#e07a2a", "#c9c33f", "#2fb3b0", "#4452d6", "#d8435f", "#9b4fe0", "#58c26a"];
 const CX = [88, 288, 488];
 
+// ---------- Texte (Englisch = Original, Deutsch über window.LANG = "de")
+const TXT = (window.LANG === "de") ? {
+  title: "GLEICHER SONG.", sub: "3 verschiedene Gehirne:", playing: "läuft gerade",
+  labels: ["DIE MEISTEN", "GÄNSEHAUT", "SEHEN FARBEN"], subs: ["", "(FRISSON)", "(CHROMÄSTHESIE)"],
+  b1: ["schöner Song", "ooh, lila"], chills: "GÄNSEHAUT", woah: "WOAHHH",
+  b3: ["guter Song.", "nochmal. jetzt."], last: ["Moment… ihr seht", "die Farben nicht?"],
+} : {
+  title: "SAME SONG.", sub: "3 different brains:", playing: "now playing",
+  labels: ["MOST PEOPLE", "GET CHILLS", "SEE COLORS"], subs: ["", "(FRISSON)", "(CHROMESTHESIA)"],
+  b1: ["nice song", "ooh, purple"], chills: "CHILLS", woah: "WOAHHH",
+  b3: ["good song.", "again. now."], last: ["wait… you guys", "don’t see the colors?"],
+};
+
 // ---------- Partikel (Farben der Synästhesie)
 const parts = [];
 (function makeParts() {
@@ -299,15 +312,16 @@ function bubble(lines, cx, cy, tIn, t, opt = {}) {
 
 function header(t) {
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = COL.cream; ctx.font = "800 44px Pop"; ctx.fillText("SAME SONG.", 288, 69);
-  ctx.fillStyle = COL.lav; ctx.font = "700 20px Pop"; ctx.fillText("3 different brains:", 288, 106);
+  ctx.fillStyle = COL.cream; ctx.font = `800 ${TXT.title.length > 11 ? 40 : 44}px Pop`; ctx.fillText(TXT.title, 288, 69);
+  ctx.fillStyle = COL.lav; ctx.font = "700 20px Pop"; ctx.fillText(TXT.sub, 288, 106);
 
   // Pille "now playing"
   ctx.fillStyle = "rgba(34,28,58,0.85)"; rr(165.5, 138.5, 245, 44, 22); ctx.fill();
   ctx.strokeStyle = "rgba(200,190,235,0.18)"; ctx.lineWidth = 1.2; ctx.stroke();
   ctx.fillStyle = "#f39a2d"; rr(187, 151, 18, 18, 3); ctx.fill();
   ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(193, 155); ctx.lineTo(201, 160); ctx.lineTo(193, 165); ctx.fill();
-  ctx.fillStyle = "#e9e2f0"; ctx.font = "600 16px Pop"; ctx.textAlign = "left"; ctx.fillText("now playing", 210, 166);
+  ctx.fillStyle = "#e9e2f0"; ctx.font = "600 16px Pop"; ctx.textAlign = "left"; ctx.fillText(TXT.playing, 210, 166);
+  const eqX = 210 + ctx.measureText(TXT.playing).width + 4;
 
   // Equalizer
   const drop = t >= T.drop && t < T.dropOut, build = t >= T.build && t < T.drop;
@@ -316,7 +330,7 @@ function header(t) {
     const n = 0.5 + 0.5 * Math.sin(t * (7 + b * 1.7) + b * 2.1) * Math.sin(t * (3.1 + b * 0.6) + b);
     const h = 4 + n * 15 * energy + (drop ? 2 : 0);
     ctx.fillStyle = drop ? PAL[(b * 3 + Math.floor(t * 4)) % PAL.length] : "#f2cf5a";
-    rr(312 + b * 8, 160 - h / 2, 4.2, h, 2); ctx.fill();
+    rr(eqX + b * 8, 160 - h / 2, 4.2, h, 2); ctx.fill();
   }
 }
 
@@ -335,7 +349,7 @@ function spotlights(t) {
 
 function labels() {
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-  const L = ["MOST PEOPLE", "GET CHILLS", "SEE COLORS"], SUB = ["", "(FRISSON)", "(CHROMESTHESIA)"];
+  const L = TXT.labels, SUB = TXT.subs;
   for (let i = 0; i < 3; i++) {
     ctx.fillStyle = COL.label[i]; ctx.font = "700 15px Pop"; ctx.letterSpacing = "1px"; ctx.fillText(L[i], CX[i] - 2, 859);
     if (SUB[i]) { ctx.fillStyle = COL.sub; ctx.font = "600 11px Pop"; ctx.letterSpacing = "1.6px"; ctx.fillText(SUB[i], CX[i] - 1, 880); }
@@ -388,15 +402,15 @@ function frame(t) {
 
   // Sprechblasen
   const o1 = { tOut: T.bubbles1Out }, o2 = { tOut: T.dropOut };
-  bubble(["nice song"], 86, 437, T.bubbles1[0], t, o1);
+  bubble([TXT.b1[0]], 86, 437, T.bubbles1[0], t, o1);
   bubble([""], 288, 437, T.bubbles1[1], t, { ...o1, icon: "dots" });
-  bubble(["ooh, purple"], 478, 437, T.bubbles1[2], t, o1);
+  bubble([TXT.b1[1]], 478, 437, T.bubbles1[2], t, o1);
   bubble([""], 86, 437, T.drop + 0.05, t, { ...o2, icon: "notes" });
-  bubble(["CHILLS"], 288, 437, T.drop + 0.1, t, { ...o2, weight: 800, size: 19 });
-  bubble(["WOAHHH"], 478, 431, T.drop + 0.15, t, { ...o2, weight: 800, size: 19 });
-  bubble(["good song."], 86, 437, T.bubbles3[0], t);
-  bubble(["again. now."], 288, 437, T.bubbles3[1], t);
-  bubble(["wait… you guys", "don’t see the colors?"], 416, 341, T.bubbles3[2], t, { tail: 473 });
+  bubble([TXT.chills], 288, 437, T.drop + 0.1, t, { ...o2, weight: 800, size: 19 });
+  bubble([TXT.woah], 478, 431, T.drop + 0.15, t, { ...o2, weight: 800, size: 19 });
+  bubble([TXT.b3[0]], 86, 437, T.bubbles3[0], t);
+  bubble([TXT.b3[1]], 288, 437, T.bubbles3[1], t);
+  bubble(TXT.last, 416, 341, T.bubbles3[2], t, { tail: 473 });
 }
 
 window.setup = async () => {
