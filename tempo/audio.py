@@ -51,7 +51,7 @@ for a, b in [(10.5, 14.4), (27.0, 34.8)]:
     L = b - a; t2 = tr.x(L)
     tr.place(a, tr.bp(tr.noise(L), 800, 7000) * (t2 / L) ** 2 * 0.5 + np.sin(2 * np.pi * np.cumsum(200 * 2 ** (t2 / L * 2.5)) / SR) * (t2 / L) ** 2 * 0.15, 0.6)
 # Knopf + Motor
-tr.place(0.6, tr.tick(1400) * 2 + tr.thump(200, 30) * 0.5, 0.6)
+tr.place(0.6, tr.tick(1400) * 2, 0.6); tr.place(0.6, tr.thump(200, 30), 0.3)
 L = 16; t2 = tr.x(L); f = 40 * 2 ** (np.minimum(t2, 14) / 3.2)
 eng = (np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * 0.3 + np.sin(2 * np.pi * np.cumsum(f * 2) / SR) * 0.3)
 tr.place(0.7, tr.lp(eng, 1800) * np.minimum(1, t2 / 0.3) * np.clip((14.4 - t2 - 0.7) / 0.2, 0, 1), 0.25)
@@ -65,7 +65,7 @@ tr.place(14.42, boom, 1.0)
 # Glas
 for k in range(40):
     t0 = 16.9 + np.random.default_rng(k).uniform(0, 1.4)
-    tr.place(t0, tr.bell(np.random.default_rng(k + 99).uniform(2500, 6500), 0.25) * 0.5 + tr.crunch(0.08), 0.08)
+    tr.place(t0, tr.bell(np.random.default_rng(k + 99).uniform(2500, 6500), 0.25), 0.04); tr.place(t0, tr.crunch(0.08), 0.08)
 # Wind / Feuer / Plasma
 wind = tr.bp(tr.noise(DUR), 200, 3000)
 wenv = env_seg(14.5, 35.0, 1.5) * (0.4 + 0.6 * env_seg(20.8, 33.5, 0.6))
