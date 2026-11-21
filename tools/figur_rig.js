@@ -117,6 +117,7 @@ function person(x, fy, o) {
   ctx.restore();
   // Arme (Schulter -> Ellbogen -> Hand), Ärmel in Oberteil-Farbe
   const arms = o.arm || [];
+  const hands = {};
   for (const sd of [-1, 1]) {
     const a = arms.find(q => q.side === sd);
     let ang;
@@ -129,7 +130,8 @@ function person(x, fy, o) {
     limb(sh, elbow, hand, 17 * u, top);
     ctx.strokeStyle = topD; ctx.lineWidth = 3 * u; ctx.beginPath(); const cuff = polar(elbow, ang + bend, 26 * u); ctx.moveTo(cuff[0] - 7 * u, cuff[1]); ctx.lineTo(cuff[0] + 7 * u, cuff[1]); ctx.stroke();
     circle(hand[0], hand[1], 8.5 * u, skin);
+    hands[sd] = hand;
   }
-  return { hx: x, hy: hy - 6 * u };
+  return { hx: x, hy: hy - 6 * u, hands, u };
 }
 let RIG_T = 0;
