@@ -3,6 +3,7 @@
 //
 //   node tools/canvas_render.js <ordner> --preview 1 4.5      -> <ordner>/build/preview_*.png
 //   node tools/canvas_render.js <ordner> --out video.mp4 [--audio ton.wav] [--fps 60]
+//   --http: Szene über einen lokalen Webserver laden (nötig für ES-Module wie three.js) und WebGL einschalten
 const { chromium } = require("playwright");
 const { spawn } = require("child_process");
 const fs = require("fs");
@@ -13,13 +14,28 @@ const dir = path.resolve(process.argv[2]);
 const args = process.argv.slice(3);
 const opt = k => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
 const FPS = parseInt(opt("--fps") || "30", 10);   // optional: --fps 60
+const HTTP = args.includes("--http");
+let BASE = "file://" + dir;
+function serve() {
+  const http = require("http");
+  const root = path.resolve(dir, "..");
+  const types = { ".html": "text/html", ".js": "text/javascript", ".ttf": "font/ttf", ".woff2": "font/woff2", ".png": "image/png", ".json": "application/json" };
+  return new Promise(res => {
+    const srv = http.createServer((q, r) => {
+      const f = path.join(root, decodeURIComponent(q.url.split("?")[0]));
+      if (!f.startsWith(root) || !fs.existsSync(f)) { r.writeHead(404); return r.end(); }
+      r.writeHead(200, { "Content-Type": types[path.extname(f)] || "application/octet-stream" }); fs.createReadStream(f).pipe(r);
+    }).listen(0, "127.0.0.1", () => { BASE = `http://127.0.0.1:${srv.address().port}/${path.basename(dir)}`; srv.unref(); res(); });
+  });
+}
 fs.mkdirSync(path.join(dir, "build"), { recursive: true });
 
 async function openPage(browser) {
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
   page.on("pageerror", e => console.error("Seitenfehler:", e.message));
   page.on("console", m => m.type() === "error" && console.error("Konsole:", m.text()));
-  await page.goto("file://" + path.join(dir, "scene.html"));
+  await page.goto(BASE + "/scene.html");
+  await page.waitForFunction(() => typeof window.setup === "function");
   const info = await page.evaluate(() => window.setup());
   return { page, info };
 }
@@ -31,10 +47,11 @@ const grab = (page, t, type) =>
   }, [t, type]);
 
 (async () => {
-  const browser = await chromium.launch({ args: ["--allow-file-access-from-files"] });
+  if (HTTP) await serve();
+  const browser = await chromium.launch({ args: ["--allow-file-access-from-files", ...(HTTP ? ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] : [])] });
   if (args[0] === "--preview") {
     const { page } = await openPage(browser);
-    for (const s of args.slice(1)) {
+    for (const s of args.slice(1).filter(a => !a.startsWith("--"))) {
       const b64 = await grab(page, parseFloat(s), "image/png");
       fs.writeFileSync(path.join(dir, "build", `preview_${s}.png`), Buffer.from(b64, "base64"));
     }
