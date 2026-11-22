@@ -25,7 +25,7 @@ const R = new THREE.WebGLRenderer({ canvas: glc, antialias: true, preserveDrawin
 R.setPixelRatio(1); R.setSize(GW, GH, false);
 R.outputColorSpace = THREE.SRGBColorSpace;
 const scene = new THREE.Scene();
-const cam = new THREE.PerspectiveCamera(55, GW / GH, 0.1, 60000);
+const cam = new THREE.PerspectiveCamera(55, GW / GH, 0.6, 60000);
 const hemi = new THREE.HemisphereLight(0xdfeeff, 0x8a7a5a, 1.6); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff1dc, 2.2); sun.position.set(-40, 80, 30); scene.add(sun);
 const fog = new THREE.Fog(0xcfdbe6, 120, 900); scene.fog = fog;
@@ -138,7 +138,7 @@ function updateCity(t, ref, o = {}) {
 }
 
 // ---------------------------------------------------------------- Wüste / Felder
-const fieldTex = canvasTex(512, 512, (g, w, h) => { const r = rnd(4); const cols = ["#b99a6a", "#c8a878", "#a88a5a", "#8fa25a", "#a8b46a", "#c4b080", "#9a8a5a"]; for (let i = 0; i < 70; i++) { g.fillStyle = cols[Math.floor(r() * cols.length)]; g.fillRect(r() * w, r() * h, 40 + r() * 140, 30 + r() * 120); } }, [60, 60]);
+const fieldTex = canvasTex(512, 512, (g, w, h) => { const r = rnd(4); g.fillStyle = "#b39a6c"; g.fillRect(0, 0, w, h); const cols = ["#b99a6a", "#c8a878", "#a88a5a", "#8fa25a", "#a8b46a", "#c4b080", "#9a8a5a"]; for (let i = 0; i < 70; i++) { g.fillStyle = cols[Math.floor(r() * cols.length)]; g.fillRect(r() * w, r() * h, 40 + r() * 140, 30 + r() * 120); } }, [60, 60]);
 const desert = new THREE.Mesh(new THREE.PlaneGeometry(40000, 40000), new THREE.MeshLambertMaterial({ map: fieldTex })); desert.rotation.x = -Math.PI / 2; scene.add(desert);
 const dRoad = new THREE.Mesh(new THREE.PlaneGeometry(12, 40000), lam(0x3a3b40)); dRoad.rotation.x = -Math.PI / 2; dRoad.position.y = 0.05; scene.add(dRoad);
 const dLine = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 40000), new THREE.MeshBasicMaterial({ color: 0xf2efe6 })); dLine.rotation.x = -Math.PI / 2; dLine.position.y = 0.08; scene.add(dLine);
@@ -163,7 +163,7 @@ const earthTex = canvasTex(2048, 1024, (g, w, h) => {
 });
 const earth = new THREE.Mesh(new THREE.SphereGeometry(1000, 96, 64), new THREE.MeshLambertMaterial({ map: earthTex })); scene.add(earth);
 const atmo = new THREE.Mesh(new THREE.SphereGeometry(1035, 96, 64), new THREE.MeshBasicMaterial({ color: 0x4f8fff, transparent: true, opacity: 0.22, side: THREE.BackSide, blending: THREE.AdditiveBlending, fog: false })); scene.add(atmo);
-const moon = new THREE.Mesh(new THREE.SphereGeometry(10, 32, 24), lam(0xc8c8cc, { flatShading: false })); scene.add(moon);
+const moon = new THREE.Mesh(new THREE.SphereGeometry(2.2, 32, 24), lam(0xc8c8cc, { flatShading: false })); scene.add(moon);
 
 // ---------------------------------------------------------------- Kamera-Helfer
 const look = new THREE.Vector3();
@@ -224,7 +224,7 @@ function render3D(t) {
     if (t < 23) { hero.visible = false; setCam(0, 1.2, z, 0, 1.0, z - 100, 62); }
     else if (t < 25.5) { hero.position.set(0, 0, z); setCam(-14, 2.4, z - 1, 0, 1.0, z - 1, 30); hero.position.y = 0.05 * Math.sin(t * 40); plasma.position.set(0, 1.0, z - 3.0); plasma.scale.set(4.2, 4.2, 1); }
     else {
-      hero.position.set(0, alt + 1, z); hero.rotation.x = 0.35 * ss(25.5, 26.5, t);
+      hero.position.set(0, alt + 1, z); hero.rotation.x = 0.35 * ss(25.5, 26.5, t); dLine.visible = false;
       setCam(0, alt + 7, z + 13, 0, alt - 6, z - 25, 55);
       plasma.position.set(0, alt + 1.6, z - 1.5); plasma.scale.set(7.5, 7.5, 1);
       for (const c of clouds) { const u = c.userData; c.position.set(u.x, u.y, z - 200 + u.z * 0.4); }
@@ -242,7 +242,7 @@ function render3D(t) {
     const k = ss(39, 44, t);
     earth.position.set(-200, -1000 - lerp(14, 60, k), -lerp(60, 160, k)); atmo.position.copy(earth.position); earth.rotation.set(Math.PI / 2.4, t * 0.01, 0.4);
     hero.rotation.set(-0.2, 0.1, 0); setCam(0.3, 3.2, 11, 0, -2.6, -8, 55);
-  } else if (t < 53) { hero.rotation.set(-0.3, -0.35, 0); setCam(-2.0, -1.0, 14, -1.1, 0.1, 0, 42); moon.position.set(lerp(-60, -30, ss(47.5, 52, t)), 26, lerp(-150, -40, ss(47.5, 52.5, t))); }
+  } else if (t < 53) { hero.rotation.set(-0.3, -0.35, 0); setCam(-2.0, -1.0, 14, -1.1, 0.1, 0, 42); moon.position.set(lerp(-16, -6, ss(47.5, 52, t)), lerp(34, 16, ss(47.5, 52, t)), lerp(-150, -50, ss(47.5, 52.5, t))); }
   else { hero.rotation.set(-0.15, -0.3, 0); setCam(-1.6, 2.4, 7.0 - (t - 53) * 0.3, -0.7, 2.3, -3, 55); }
 }
 
@@ -422,5 +422,4 @@ function frame(t) {
 
 window.setup = async () => { await document.fonts.load("50px Serif"); await document.fonts.load("italic 50px Serif"); await document.fonts.load("600 16px Sans"); return { duration: DUR }; };
 window.renderFrame = frame;
-window.dbg = t => { frame(t); V.set(0, 0.8, 0).project(cam); return [V.x.toFixed(2), V.y.toFixed(2), cam.position.toArray().map(v => v.toFixed(1)).join(",")]; };
 window.exportEvents = () => ({ duration: DUR });
