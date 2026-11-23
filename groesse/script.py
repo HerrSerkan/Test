@@ -209,7 +209,7 @@ if __name__ == "__main__":
         import edge_tts.communicate as c
         c._SSL_CTX = ssl.create_default_context(cafile="/root/.ccr/ca-bundle.crt")
         txt = " ".join(spoken_text().split("\n"))
-        asyncio.run(edge_tts.Communicate(txt, "de-DE-ConradNeural", rate="+4%", pitch="-4Hz").save(os.path.join(BUILD, "take_edge.mp3")))
+        asyncio.run(edge_tts.Communicate(txt, "de-DE-FlorianMultilingualNeural", rate="+0%").save(os.path.join(BUILD, "take_edge.mp3")))
         print("build/take_edge.mp3")
     else:
         main_external(sys.argv[sys.argv.index("--voice") + 1])

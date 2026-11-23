@@ -12,4 +12,4 @@ Eiweiß; Springen/Sprinten stärkt Knochen; 23 Bandscheiben, abends ca. 2 cm kle
     python3 tools/synth_music.py groesse/build/music_synth.wav 80 92 cool 11   # nur ohne build/music.mp3
     python3 groesse/audio.py && node groesse/render.js                # Video -> groesse/groesse.mp4
 
-Ersatzstimme, solange ElevenLabs nicht verfügbar ist: python3 groesse/script.py --edge (Tempo 1.12).
+Ersatzstimme, solange ElevenLabs nicht verfügbar ist: python3 groesse/script.py --edge (Microsoft „Florian Multilingual“, natürlicher; Tempo 1.08).
