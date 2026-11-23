@@ -197,7 +197,7 @@ place(EV["send"], bell(1318.5, 1.4), 0.06)
 t_ = np.arange(N) / SR
 END_ENV = np.clip((DUR - t_) / 0.4, 0, 1).astype(np.float32) * np.minimum(1, t_ / 0.05).astype(np.float32)
 MUSIC_ENV = np.ones(N, np.float32)
-MUSIC_LUFS = -17.5
+MUSIC_LUFS = -16.0
 
 # ---------------------------------------------------------------- Ausgabe: Effekte + Hintergrundmusik
 import re

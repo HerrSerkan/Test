@@ -7,5 +7,5 @@ Idee: @the_best_month_wins. Animation ohne Sprecher, 64 s, 1080×1920, Musik + S
 Schluss: „SCHICK DAS JEMANDEM, DER VERLOREN HAT“.
 
     node monate/render.js --events
-    python3 tools/synth_music.py monate/build/music_synth.wav 66 120 verspielt 23   # nur ohne build/music.mp3
+    node monate/render.js --events && python3 monate/race_music.py   # spannende Renn-Musik (nur ohne build/music.mp3)
     python3 monate/audio.py && node monate/render.js     # Video -> monate/monate.mp4 (-14 LUFS)
