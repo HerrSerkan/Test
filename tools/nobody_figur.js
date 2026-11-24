@@ -198,14 +198,15 @@
     c.save(); c.textAlign = "center"; c.textBaseline = "alphabetic"; c.lineJoin = "round";
     c.globalAlpha = t < sw ? 1 - NB.ramp(t, sw - 0.12, sw) : NB.clamp(NB.ramp(t, sw, sw + 0.15));
     let yy = y;
-    for (const [txt, size, col] of lines) {
+    lines.forEach(([txt, size, col], li) => {
+      if (li > 0) yy += size * 1.06;
       c.save(); c.translate(x, yy); c.scale(p, p);
       c.font = `900 ${size}px InterBlk`;
       c.lineWidth = 10; c.strokeStyle = "rgba(20,10,20,0.9)"; c.strokeText(txt, 0, 0);
       c.fillStyle = col; c.fillText(txt, 0, 0);
       c.restore();
-      yy += size * 1.14;
-    }
+      yy += size * 0.1;
+    });
     if (t > sw && t < sw + 0.6) {
       const u = (t - sw) / 0.6;
       for (let i = 0; i < 12; i++) {
